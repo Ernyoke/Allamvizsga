@@ -21,6 +21,8 @@ void Speaker::startRecording() {
     QAudioFormat *format;
     format = settings->getSpeakerAudioFormat();
 
+    qDebug() << "Sample Rate:" << format->sampleRate();
+
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
     if (!info.isFormatSupported(*format)) {
         qWarning()<<"raw audio format not supported by backend, cannot play audio.";
@@ -68,6 +70,6 @@ void Speaker::stopRecording()
 {
   audioInput->stop();
   //outputFile.close();
-  //delete audioInput;
+  delete audioInput;
   //intermediateDevice->close();
 }

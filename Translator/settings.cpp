@@ -50,7 +50,7 @@ QAudioFormat* Settings::getSpeakerAudioFormat() {
 }
 
 QAudioFormat* Settings::getListennerAudioFormat() {
-    return formatSpeaker;
+    return formatListenner;
 }
 
 QVariant Settings::boxValue(const QComboBox *box)
@@ -81,5 +81,5 @@ void Settings::applySettings() {
 }
 
 void Settings::cancelSetting() {
-    this->close();
+    this->hide();
 }

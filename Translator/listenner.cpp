@@ -20,20 +20,9 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
 
     settings = gui->getSettings();
 
-    format = settings->getListennerAudioFormat();
 
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(*format)) {
-        qWarning()<<"raw audio format not supported by backend, cannot play audio.";
-        return;
-
-    }
-    m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
-
-    m_output= m_audioOutput->start();
-
-    qreal volume = gui->getVolume();
-    m_audioOutput->setVolume(volume);
+    //qreal volume = gui->getVolume();
+    //m_audioOutput->setVolume(volume);
 
 }
 
@@ -81,6 +70,8 @@ void Listenner::receiveDatagramm() {
 }
 
 void Listenner::playback() {
+    format = settings->getListennerAudioFormat();
+    m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
     m_output = m_audioOutput->start();
     connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
     if(socket->bytesAvailable()) {
@@ -91,6 +82,7 @@ void Listenner::playback() {
 void Listenner::stopPlayback() {
     m_audioOutput->stop();
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+    delete m_audioOutput;
 }
 
 void Listenner::volumeChanged() {
@@ -100,7 +92,9 @@ void Listenner::volumeChanged() {
 }
 
 void Listenner::portChanged(int port) {
-    stopPlayback();
+    if(m_audioOutput != NULL) {
+        stopPlayback();
+    }
     if(socket->state() == QUdpSocket::BoundState) {
         socket->leaveMulticastGroup(groupAddress);
     }
