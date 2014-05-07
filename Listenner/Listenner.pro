@@ -16,9 +16,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         gui.cpp \
-    listenner.cpp
+    listenner.cpp \
+    settings.cpp \
+    g711.cpp
 
 HEADERS  += gui.h \
-    listenner.h
+    listenner.h \
+    settings.h \
+    g711.h
 
-FORMS    += gui.ui
+FORMS    += gui.ui \
+    settings.ui

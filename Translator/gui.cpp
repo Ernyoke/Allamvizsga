@@ -37,7 +37,7 @@ GUI::GUI(QWidget *parent) :
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playbackButtonPushed()));
     connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(getItemData(QListWidgetItem*)));
     connect(ui->broadcastButton, SIGNAL(pressed()), this, SLOT(btn()));
-    connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(showSettings()));
+    connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->newChannelButton, SIGNAL(pressed()), this, SLOT(addNewChannel()));
     connect(ui->portChange, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
 
@@ -178,8 +178,13 @@ int GUI::getBroadcastingPort() {
     return this->broadcasting_port;
 }
 
-void GUI::showSettings() {
-    settings->exec();
+void GUI::menuTriggered(QAction* action) {
+    if(action == ui->actionSettings) {
+        settings->exec();
+    }
+    else {
+        //exit
+    }
 }
 
 Settings* GUI::getSettings() {

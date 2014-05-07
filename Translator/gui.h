@@ -82,7 +82,7 @@ public slots:
     void updateBroadcastTime();
 
     //general
-    void showSettings();
+    void menuTriggered(QAction* action);
 
 
 };

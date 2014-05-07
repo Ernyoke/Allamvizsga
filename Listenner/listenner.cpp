@@ -6,37 +6,23 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
     m_Outputdevice(QAudioDeviceInfo::defaultOutputDevice()),
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
-    QObject(parent)
+    QThread(parent)
 {
     socket = new QUdpSocket(this);
     buffer = new QByteArray();
+    outputBuffer = new QMap<qint64, QByteArray>();
 
     this->gui = gui;
+    binded_port = -1;
+    timestamp = 0;
 
-    socket->bind(QHostAddress::AnyIPv4, 45000, QUdpSocket::ShareAddress);
     groupAddress = QHostAddress("239.255.43.21");
-    socket->joinMulticastGroup(groupAddress);
 
-    format.setSampleRate(8000);
-    format.setChannelCount(1);
-    format.setSampleSize(16);
-    format.setCodec("audio/pcm");
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::UnSignedInt);
+    settings = gui->getSettings();
 
 
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(format)) {
-        qWarning()<<"raw audio format not supported by backend, cannot play audio.";
-        return;
-
-    }
-    m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
-
-    m_output= m_audioOutput->start();
-
-    qreal volume = gui->getVolume();
-    m_audioOutput->setVolume(volume);
+    //qreal volume = gui->getVolume();
+    //m_audioOutput->setVolume(volume);
 
     connect(gui, SIGNAL(startPlayback()), this, SLOT(playback()));
     connect(gui, SIGNAL(stopPlayback()), this, SLOT(stopPlayback()));
@@ -47,19 +33,44 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
 
 void Listenner::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
+    qint64 temp;
     if(length > 0) {
-        QByteArray *m_buffer = new QByteArray;
-        m_buffer->resize(length);
-        socket->readDatagram(m_buffer->data(), length);
+        QByteArray m_buffer;
+        m_buffer.resize(length);
+        socket->readDatagram(m_buffer.data(), length);
         gui->setDataReceived(length);
-        m_output->write((char*)m_buffer->data(), length);
+        memcpy(&temp, m_buffer.data(), sizeof(qint64));
+        if(timestamp < temp) {
+            m_buffer.remove(0, sizeof(qint64));
+            outputBuffer->insert(temp, m_buffer);
+            QByteArray aux;
+            if(outputBuffer->size() == 4) {
+                for(QMap<qint64, QByteArray>::iterator iter = outputBuffer->begin(); iter != outputBuffer->end(); ++iter) {
+                    QByteArray out = iter.value();
+                    aux.append(out);
+                    timestamp = temp;
+                }
+                QByteArray decomp;
+                decomp.append(aux);
+               /* for(int i = 0; i < asd.size(); ++i) {
+                    short tmp = G711::Snack_Alaw2Lin(asd[i]);
+                    decomp.append(tmp);
+                    decomp.append(tmp >> 8);
+                }*/
+                m_output->write(decomp.data(), decomp.size());
+                outputBuffer->clear();
+            }
+        }
+        else {
+            qDebug() << temp;
+        }
     }
-    qDebug() << length;
 }
 
 void Listenner::playback() {
+    format = settings->getListennerAudioFormat();
+    m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
     m_output = m_audioOutput->start();
-    qDebug() << "start";
     connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
     if(socket->bytesAvailable()) {
         receiveDatagramm();
@@ -69,6 +80,7 @@ void Listenner::playback() {
 void Listenner::stopPlayback() {
     m_audioOutput->stop();
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+    delete m_audioOutput;
 }
 
 void Listenner::volumeChanged() {
@@ -78,12 +90,15 @@ void Listenner::volumeChanged() {
 }
 
 void Listenner::portChanged(int port) {
-    stopPlayback();
-    socket->leaveMulticastGroup(groupAddress);
+    if(m_audioOutput != NULL) {
+        stopPlayback();
+    }
+    if(socket->state() == QUdpSocket::BoundState) {
+        socket->leaveMulticastGroup(groupAddress);
+    }
     delete socket;
     socket = new QUdpSocket(this);
     socket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress);
     socket->joinMulticastGroup(groupAddress);
     playback();
-    gui->playbackButtonPushed();
 }
