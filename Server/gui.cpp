@@ -18,6 +18,7 @@ GUI::~GUI()
 
 void GUI::startChannel() {
     channelCounter++;
+    ui->aux->setText("start");
     int portIn, portOut;
     QString port1 = ui->portIn->text();
     QString port2 = ui->portOut->text();
