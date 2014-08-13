@@ -1,8 +1,8 @@
-#include "listenner.h"
+#include "listener.h"
 
 const int BufferSize = 14096;
 
-Listenner::Listenner(GUI *gui, QObject *parent) :
+Listener::Listener(GUI *gui, QObject *parent) :
     m_Outputdevice(QAudioDeviceInfo::defaultOutputDevice()),
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
@@ -15,8 +15,6 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
     this->gui = gui;
     binded_port = -1;
     timestamp = 0;
-
-    //groupAddress = QHostAddress("239.255.43.21");
 
     settings = gui->getSettings();
 
@@ -31,11 +29,11 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
 
 }
 
-Listenner::~Listenner() {
+Listener::~Listener() {
     delete buffer;
 }
 
-void Listenner::receiveDatagramm() {
+void Listener::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
     qint64 temp;
     if(length > 0) {
@@ -71,7 +69,7 @@ void Listenner::receiveDatagramm() {
     }
 }
 
-void Listenner::playback() {
+void Listener::playback() {
     format = settings->getListennerAudioFormat();
     m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
     m_output = m_audioOutput->start();
@@ -81,20 +79,20 @@ void Listenner::playback() {
     }
 }
 
-void Listenner::stopPlayback() {
+void Listener::stopPlayback() {
     m_audioOutput->stop();
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
     delete m_audioOutput;
     m_audioOutput = NULL;
 }
 
-void Listenner::volumeChanged() {
+void Listener::volumeChanged() {
     qreal volume = gui->getVolume();
     qDebug() << volume;
     m_audioOutput->setVolume(volume/100);
 }
 
-void Listenner::portChanged(int port) {
+void Listener::portChanged(int port) {
     if(m_audioOutput != NULL) {
         stopPlayback();
     }
