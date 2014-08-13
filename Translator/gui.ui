@@ -170,7 +170,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Listenner</string>
+       <string>Listener</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0">

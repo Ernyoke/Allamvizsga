@@ -16,16 +16,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         gui.cpp \
-    listenner.cpp \
     speaker.cpp \
     g711.cpp \
-    settings.cpp
+    settings.cpp \
+    listener.cpp
 
 HEADERS  += gui.h \
-    listenner.h \
     speaker.h \
     g711.h \
-    settings.h
+    settings.h \
+    listener.h
 
 FORMS    += gui.ui \
     settings.ui

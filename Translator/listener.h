@@ -1,5 +1,5 @@
-#ifndef LISTENNER_H
-#define LISTENNER_H
+#ifndef LISTENER_H
+#define LISTENER_H
 
 #include <QObject>
 #include <QUdpSocket>
@@ -18,11 +18,11 @@
 #include "g711.h"
 #include "settings.h"
 
-class Listenner : public QThread
+class Listener : public QThread
 {
     Q_OBJECT
 public:
-    explicit Listenner(GUI *gui, QObject *parent = 0);
+    explicit Listener(GUI *gui, QObject *parent = 0);
 
 private:
     QUdpSocket *socket;
@@ -59,4 +59,4 @@ public slots:
 };
 
 
-#endif // LISTENNER_H
+#endif // LISTENER_H
