@@ -16,7 +16,7 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
     binded_port = -1;
     timestamp = 0;
 
-    groupAddress = QHostAddress("239.255.43.21");
+    //groupAddress = QHostAddress("239.255.43.21");
 
     settings = gui->getSettings();
 
@@ -29,6 +29,10 @@ Listenner::Listenner(GUI *gui, QObject *parent) :
     connect(gui, SIGNAL(volumeChanged()), this, SLOT(volumeChanged()));
     connect(gui, SIGNAL(portChanged(int)), this, SLOT(portChanged(int)));
 
+}
+
+Listenner::~Listenner() {
+    delete buffer;
 }
 
 void Listenner::receiveDatagramm() {
@@ -81,6 +85,7 @@ void Listenner::stopPlayback() {
     m_audioOutput->stop();
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
     delete m_audioOutput;
+    m_audioOutput = NULL;
 }
 
 void Listenner::volumeChanged() {
@@ -94,11 +99,11 @@ void Listenner::portChanged(int port) {
         stopPlayback();
     }
     if(socket->state() == QUdpSocket::BoundState) {
-        socket->leaveMulticastGroup(groupAddress);
+       // socket->leaveMulticastGroup(groupAddress);
     }
     delete socket;
     socket = new QUdpSocket(this);
-    socket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress);
-    socket->joinMulticastGroup(groupAddress);
+    socket->bind(port, QUdpSocket::ShareAddress);
+    //socket->joinMulticastGroup(groupAddress);
     playback();
 }

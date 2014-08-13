@@ -23,6 +23,7 @@ class Listenner : public QThread
     Q_OBJECT
 public:
     explicit Listenner(GUI *gui, QObject *parent = 0);
+    ~Listenner();
 
 private:
     QUdpSocket *socket;

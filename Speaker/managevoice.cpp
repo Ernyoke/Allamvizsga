@@ -40,10 +40,23 @@ void ManageVoice::transferData(){
         //qDebug() << audioInput->bytesReady();
         chunk = intermediateDevice->readAll();
         timestamp = now.currentDateTime().toMSecsSinceEpoch();
+        QString stm = "";
         for(int i = sizeof(qint64); i > 0; --i) {
-            short x = (timestamp >> ((i - 1) * 8));
+            char x = (timestamp >> ((i - 1) * 8));
             sendBuffer.prepend(x);
+
+           /* for(int j = 0; j < 8; ++j) {
+                if(x&1 == 1) {
+                    stm += "1";
+                }
+                    else {
+                        stm += "0";
+                    }
+                x = x >> 1;
+            }*/
+            //stm += QString::number(x) + " ";
         }
+
         sendBuffer.append(chunk);
         len = chunk.size();
         /*for(int i = 0; i < len; ++i) {
