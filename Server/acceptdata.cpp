@@ -21,3 +21,11 @@ void AcceptData::readData() {
     socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
     socket->writeDatagram(data.data(), data.size(), QHostAddress::Broadcast, portOut);
 }
+
+int AcceptData::getPortIn() {
+    return this->portIn;
+}
+
+int AcceptData::getPortOut() {
+    return this->portOut;
+}

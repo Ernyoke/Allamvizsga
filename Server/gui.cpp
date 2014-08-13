@@ -18,7 +18,6 @@ GUI::~GUI()
 
 void GUI::startChannel() {
     channelCounter++;
-    ui->aux->setText("start");
     int portIn, portOut;
     QString port1 = ui->portIn->text();
     QString port2 = ui->portOut->text();
@@ -39,12 +38,14 @@ void GUI::startChannel() {
         msg.exec();
         return;
     }
-    AcceptData *channel = new AcceptData(portIn, portOut, this);
-    channels.insert(channelCounter, channel);
-    QListWidgetItem *item = new QListWidgetItem("Channel (" + port1 + " => " + port2 + ")");
-    item->setData(Qt::UserRole, QVariant(channelCounter));
-    ui->chList->addItem(item);
-    channel->start();
+    if(this->checkUsedPorts(portIn, portOut)) {
+        AcceptData *channel = new AcceptData(portIn, portOut, this);
+        channels.insert(channelCounter, channel);
+        QListWidgetItem *item = new QListWidgetItem("Channel (" + port1 + " => " + port2 + ")");
+        item->setData(Qt::UserRole, QVariant(channelCounter));
+        ui->chList->addItem(item);
+        channel->start();
+    }
 }
 
 void GUI::stopChannel() {
@@ -64,4 +65,17 @@ void GUI::stopChannel() {
     else {
         //
     }
+}
+
+bool GUI::checkUsedPorts(int portIn, int portOut) {
+    for(QMap<int, AcceptData*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+        if((*it)->getPortIn() == portIn || (*it)->getPortOut() == portIn || (*it)->getPortIn() == portOut || (*it)->getPortOut() == portOut) {
+            QMessageBox msg;
+            msg.setText("A port is already used!");
+            msg.setStandardButtons(QMessageBox::Ok);
+            msg.exec();
+            return false;
+        }
+    }
+    return true;
 }

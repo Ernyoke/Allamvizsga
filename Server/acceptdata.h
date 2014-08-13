@@ -12,6 +12,9 @@ class AcceptData : public QThread
 public:
     explicit AcceptData(int portIn, int portOut, QObject *parent = 0);
 
+    int getPortIn();
+    int getPortOut();
+
 private:
     void run();
 

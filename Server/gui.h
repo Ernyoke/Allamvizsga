@@ -22,6 +22,8 @@ private:
     int channelCounter;
     QMap<int, AcceptData*>channels;
 
+    bool checkUsedPorts(int, int);
+
 private slots:
     void startChannel();
     void stopChannel();
