@@ -15,15 +15,20 @@ class ManageVoice : public QObject
     Q_OBJECT
 public:
     explicit ManageVoice(QUdpSocket *socket, GUI *gui, QObject *parent = 0);
+    ~ManageVoice();
 
 private:
     QAudioInput *audioInput;
+    QAudioFormat *format;
     QIODevice *intermediateDevice;
     GUI *gui;
     QUdpSocket *socket;
 
     Settings *settings;
     int broadcasting_port;
+
+    qint64 timestamp;
+    qint64 prevstamp;
 
 signals:
 

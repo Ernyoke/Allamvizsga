@@ -72,6 +72,7 @@ void Listener::receiveDatagramm() {
 void Listener::playback() {
     format = settings->getListennerAudioFormat();
     m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
+    m_audioOutput->setBufferSize(10000);
     m_output = m_audioOutput->start();
     connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
     if(socket->bytesAvailable()) {

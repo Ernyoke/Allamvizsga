@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GUI</string>
+   <string>Listener</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QListWidget" name="listWidget">
@@ -163,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>409</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
