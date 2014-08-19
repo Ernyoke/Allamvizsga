@@ -2,36 +2,52 @@
 
 const int BufferSize = 14096;
 
-Listener::Listener(GUI *gui, QObject *parent) :
+Listener::Listener(QObject *parent) :
     m_Outputdevice(QAudioDeviceInfo::defaultOutputDevice()),
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
     QThread(parent)
 {
     socket = new QUdpSocket(this);
-    buffer = new QByteArray();
     outputBuffer = new QMap<qint64, QByteArray>();
 
-    this->gui = gui;
+    gui = new GUI();
     binded_port = -1;
     timestamp = 0;
 
     settings = gui->getSettings();
+    format = settings->getListennerAudioFormat();
 
-
-    //qreal volume = gui->getVolume();
-    //m_audioOutput->setVolume(volume);
+    isPlaying = false;
 
     connect(gui, SIGNAL(startPlayback()), this, SLOT(playback()));
     connect(gui, SIGNAL(stopPlayback()), this, SLOT(stopPlayback()));
     connect(gui, SIGNAL(volumeChanged()), this, SLOT(volumeChanged()));
     connect(gui, SIGNAL(portChanged(int)), this, SLOT(portChanged(int)));
 
+    m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
+
+    qreal volume = gui->getVolume();
+    m_audioOutput->setVolume(volume);
+    isPlaying = false;
+
 }
 
 Listener::~Listener() {
-    delete buffer;
+    this->stopPlayback();
+    if(m_audioOutput != NULL) {
+        delete m_audioOutput;
+    }
+    outputBuffer->clear();
+    delete outputBuffer;
+    delete gui;
+    qDebug() << "Listener destruct!";
 }
+
+void Listener::showGUI() {
+    gui->show();
+}
+
 
 void Listener::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
@@ -70,21 +86,22 @@ void Listener::receiveDatagramm() {
 }
 
 void Listener::playback() {
-    format = settings->getListennerAudioFormat();
-    m_audioOutput = new QAudioOutput(m_Outputdevice, *format, this);
-    m_audioOutput->setBufferSize(10000);
-    m_output = m_audioOutput->start();
-    connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
-    if(socket->bytesAvailable()) {
-        receiveDatagramm();
+    if(!isPlaying) {
+        m_output = m_audioOutput->start();
+        connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+        if(socket->bytesAvailable()) {
+            receiveDatagramm();
+        }
+        isPlaying = true;
     }
 }
 
 void Listener::stopPlayback() {
-    m_audioOutput->stop();
-    disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
-    delete m_audioOutput;
-    m_audioOutput = NULL;
+    if(isPlaying) {
+        m_audioOutput->stop();
+        disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+        isPlaying = false;
+    }
 }
 
 void Listener::volumeChanged() {
@@ -94,15 +111,9 @@ void Listener::volumeChanged() {
 }
 
 void Listener::portChanged(int port) {
-    if(m_audioOutput != NULL) {
-        stopPlayback();
-    }
-    if(socket->state() == QUdpSocket::BoundState) {
-       // socket->leaveMulticastGroup(groupAddress);
-    }
+    stopPlayback();
     delete socket;
     socket = new QUdpSocket(this);
-    socket->bind(port, QUdpSocket::ShareAddress);
-    //socket->joinMulticastGroup(groupAddress);
+    socket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress);
     playback();
 }

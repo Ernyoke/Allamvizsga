@@ -14,12 +14,14 @@ class ManageVoice : public QObject
 {
     Q_OBJECT
 public:
-    explicit ManageVoice(QUdpSocket *socket, GUI *gui, QObject *parent = 0);
+    explicit ManageVoice(QUdpSocket *socket, QObject *parent = 0);
     ~ManageVoice();
+
+    void showGUI();
 
 private:
     QAudioInput *audioInput;
-    QAudioFormat *format;
+    QAudioFormat format;
     QIODevice *intermediateDevice;
     GUI *gui;
     QUdpSocket *socket;
@@ -27,8 +29,9 @@ private:
     Settings *settings;
     int broadcasting_port;
 
+    bool isRecording;
+
     qint64 timestamp;
-    qint64 prevstamp;
 
 signals:
 
@@ -36,7 +39,6 @@ public slots:
     void startRecording();
     void stopRecording();
     void transferData();
-
 };
 
 #endif // MANAGEVOICE_H

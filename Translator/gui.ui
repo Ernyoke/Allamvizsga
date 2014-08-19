@@ -30,7 +30,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Speaker</string>
+       <string>Listenner</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="0">
@@ -170,7 +170,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Listener</string>
+       <string>Speaker</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0">

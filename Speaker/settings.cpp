@@ -24,8 +24,6 @@ Settings::Settings(QWidget *parent) :
 
     ui->sampleSizeBox->setCurrentIndex(1); //*******//
 
-    formatSpeaker = new QAudioFormat;
-
     applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
@@ -35,11 +33,10 @@ Settings::Settings(QWidget *parent) :
 Settings::~Settings()
 {
     delete ui;
-
-
+    qDebug() << "Settings destruct!";
 }
 
-QAudioFormat* Settings::getSpeakerAudioFormat() {
+QAudioFormat Settings::getSpeakerAudioFormat() {
     return formatSpeaker;
 }
 
@@ -54,13 +51,13 @@ QVariant Settings::boxValue(const QComboBox *box)
 }
 
 void Settings::applySettings() {
-    formatSpeaker->setByteOrder(QAudioFormat::LittleEndian);
-    formatSpeaker->setSampleType(QAudioFormat::UnSignedInt);
+    formatSpeaker.setByteOrder(QAudioFormat::LittleEndian);
+    formatSpeaker.setSampleType(QAudioFormat::UnSignedInt);
 
-    formatSpeaker->setCodec(boxValue(ui->codecBox_2).toString());
-    formatSpeaker->setSampleRate(boxValue(ui->sampleRateBox).toInt());
-    formatSpeaker->setChannelCount(boxValue(ui->channelBox).toInt());
-    formatSpeaker->setSampleSize(boxValue(ui->sampleSizeBox).toInt());
+    formatSpeaker.setCodec(boxValue(ui->codecBox_2).toString());
+    formatSpeaker.setSampleRate(boxValue(ui->sampleRateBox).toInt());
+    formatSpeaker.setChannelCount(boxValue(ui->channelBox).toInt());
+    formatSpeaker.setSampleSize(boxValue(ui->sampleSizeBox).toInt());
 }
 
 void Settings::cancelSetting() {

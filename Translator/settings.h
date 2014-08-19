@@ -17,13 +17,13 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioFormat* getSpeakerAudioFormat();
-    QAudioFormat* getListennerAudioFormat();
+    QAudioFormat getSpeakerAudioFormat();
+    QAudioFormat getListennerAudioFormat();
 
 private:
     Ui::Settings *ui;
-    QAudioFormat *formatSpeaker;
-    QAudioFormat *formatListenner;
+    QAudioFormat formatSpeaker;
+    QAudioFormat formatListenner;
 
     QVariant boxValue(const QComboBox *box);
 

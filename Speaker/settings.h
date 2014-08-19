@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QAudioDeviceInfo>
 #include <QComboBox>
+#include <QDebug>
 
 namespace Ui {
 class Settings;
@@ -17,11 +18,11 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioFormat* getSpeakerAudioFormat();
+    QAudioFormat getSpeakerAudioFormat();
 
 private:
     Ui::Settings *ui;
-    QAudioFormat *formatSpeaker;
+    QAudioFormat formatSpeaker;
 
     QVariant boxValue(const QComboBox *box);
 

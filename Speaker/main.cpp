@@ -9,14 +9,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QUdpSocket socket;
-    QByteArray sendBuffer, receiveBuffer;
-    int ID;
-    GUI w;
-
-    w.show();
-
-    ManageVoice voice(&socket, &w);
-
+    ManageVoice voice(&socket);
+    voice.showGUI();
 
     return a.exec();
 }

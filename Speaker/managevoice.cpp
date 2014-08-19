@@ -1,10 +1,10 @@
 #include "managevoice.h"
 
-ManageVoice::ManageVoice(QUdpSocket *socket, GUI *gui, QObject *parent) :
+ManageVoice::ManageVoice(QUdpSocket *socket, QObject *parent) :
     QObject(parent)
 {
     this->socket = socket;
-    this->gui = gui;
+    this->gui = new GUI();
 
     settings = gui->getSettings();
 
@@ -14,38 +14,40 @@ ManageVoice::ManageVoice(QUdpSocket *socket, GUI *gui, QObject *parent) :
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
     timestamp = now.currentDateTime().toMSecsSinceEpoch();
+
+    isRecording = false;
+
+}
+
+void ManageVoice::showGUI() {
+    gui->show();
 }
 
 void ManageVoice::startRecording() {
-    broadcasting_port = gui->getBroadcastingPort();
-    format = settings->getSpeakerAudioFormat();
+    if(!isRecording) {
+        broadcasting_port = gui->getBroadcastingPort();
+        format = settings->getSpeakerAudioFormat();
 
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(*format)) {
-        qWarning()<<"raw audio format not supported by backend, cannot play audio.";
-        return;
+        QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+        if (!info.isFormatSupported(format)) {
+            qWarning()<<"raw audio format not supported by backend, cannot play audio.";
+            return;
+        }
+
+       audioInput = new QAudioInput(format, this);
+       intermediateDevice  = audioInput->start();
+       connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
+
+       isRecording = true;
     }
-
-   audioInput = new QAudioInput(*format, this);
-   audioInput->setBufferSize(1000);
-   intermediateDevice  = audioInput->start();
-   connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
-
 }
 
 void ManageVoice::transferData(){
-    int len = 640;
-    qDebug() << audioInput->bytesReady();
-    if(audioInput->bytesReady() >= len) {
+    if(audioInput->bytesReady() > 0) {
         QByteArray chunk;
         QByteArray sendBuffer;
-        QDateTime now = QDateTime::currentDateTime();
-        chunk = intermediateDevice->read(len);
-        //timestamp = now.currentDateTime().toMSecsSinceEpoch();
-            timestamp++;
-        prevstamp = timestamp;
-        //qDebug() << timestamp;
-        QString stm = "";
+        chunk = intermediateDevice->readAll();
+        timestamp++;
         for(int i = sizeof(qint64); i > 0; --i) {
             char x = (timestamp >> ((i - 1) * 8));
             sendBuffer.prepend(x);
@@ -68,16 +70,18 @@ void ManageVoice::transferData(){
 
 void ManageVoice::stopRecording()
 {
-  audioInput->stop();
-  //outputFile.close();
-  //delete audioInput;
-  //intermediateDevice->close();
+    if(isRecording) {
+        audioInput->stop();
+        isRecording = false;
+    }
 }
 
 ManageVoice::~ManageVoice() {
     if(audioInput != NULL) {
+        audioInput->stop();
         delete audioInput;
-        delete format;
     }
+    delete gui;
+    qDebug() << "Managevoice destruct!";
 }
 

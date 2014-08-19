@@ -29,9 +29,6 @@ Settings::Settings(QWidget *parent) :
     ui->sampleSizeBox->setCurrentIndex(1); //*******//
     ui->sampleSizeBox_2->setCurrentIndex(1);
 
-    formatSpeaker = new QAudioFormat;
-    formatListenner = new QAudioFormat;
-
     applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
@@ -43,12 +40,12 @@ Settings::~Settings()
     delete ui;
 }
 
-QAudioFormat* Settings::getSpeakerAudioFormat() {
+QAudioFormat Settings::getSpeakerAudioFormat() {
     return formatSpeaker;
 }
 
-QAudioFormat* Settings::getListennerAudioFormat() {
-    return formatListenner;
+QAudioFormat Settings::getListennerAudioFormat() {
+    return formatSpeaker;
 }
 
 QVariant Settings::boxValue(const QComboBox *box)
@@ -61,21 +58,21 @@ QVariant Settings::boxValue(const QComboBox *box)
 }
 
 void Settings::applySettings() {
-    formatSpeaker->setByteOrder(QAudioFormat::LittleEndian);
-    formatSpeaker->setSampleType(QAudioFormat::UnSignedInt);
+    formatSpeaker.setByteOrder(QAudioFormat::LittleEndian);
+    formatSpeaker.setSampleType(QAudioFormat::UnSignedInt);
 
-    formatSpeaker->setCodec(boxValue(ui->codecBox_2).toString());
-    formatSpeaker->setSampleRate(boxValue(ui->sampleRateBox).toInt());
-    formatSpeaker->setChannelCount(boxValue(ui->channelBox).toInt());
-    formatSpeaker->setSampleSize(boxValue(ui->sampleSizeBox).toInt());
+    formatSpeaker.setCodec(boxValue(ui->codecBox_2).toString());
+    formatSpeaker.setSampleRate(boxValue(ui->sampleRateBox).toInt());
+    formatSpeaker.setChannelCount(boxValue(ui->channelBox).toInt());
+    formatSpeaker.setSampleSize(boxValue(ui->sampleSizeBox).toInt());
 
-    formatListenner->setByteOrder(QAudioFormat::LittleEndian);
-    formatListenner->setSampleType(QAudioFormat::UnSignedInt);
+    formatListenner.setByteOrder(QAudioFormat::LittleEndian);
+    formatListenner.setSampleType(QAudioFormat::UnSignedInt);
 
-    formatListenner->setCodec(boxValue(ui->codecBox_3).toString());
-    formatListenner->setSampleRate(boxValue(ui->sampleRateBox_2).toInt());
-    formatListenner->setChannelCount(boxValue(ui->channelBox_2).toInt());
-    formatListenner->setSampleSize(boxValue(ui->sampleSizeBox_2).toInt());
+    formatListenner.setCodec(boxValue(ui->codecBox_3).toString());
+    formatListenner.setSampleRate(boxValue(ui->sampleRateBox_2).toInt());
+    formatListenner.setChannelCount(boxValue(ui->channelBox_2).toInt());
+    formatListenner.setSampleSize(boxValue(ui->sampleSizeBox_2).toInt());
 }
 
 void Settings::cancelSetting() {

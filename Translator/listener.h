@@ -23,14 +23,14 @@ class Listener : public QThread
     Q_OBJECT
 public:
     explicit Listener(GUI *gui, QObject *parent = 0);
+    ~Listener();
 
 private:
     QUdpSocket *socket;
-    QByteArray *buffer;
     GUI *gui;
     QHostAddress groupAddress;
 
-    QAudioFormat* format;
+    QAudioFormat format;
     QAudioDeviceInfo m_Outputdevice;
     QAudioOutput *m_audioOutput;
     QIODevice *m_output;
@@ -39,6 +39,8 @@ private:
 
     qint64 timestamp;
     int binded_port;
+
+    bool isPlaying;
 
     Settings *settings;
 

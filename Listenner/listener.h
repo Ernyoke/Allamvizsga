@@ -22,16 +22,17 @@ class Listener : public QThread
 {
     Q_OBJECT
 public:
-    explicit Listener(GUI *gui, QObject *parent = 0);
+    explicit Listener(QObject *parent = 0);
     ~Listener();
+
+    void showGUI();
 
 private:
     QUdpSocket *socket;
-    QByteArray *buffer;
     GUI *gui;
     QHostAddress groupAddress;
 
-    QAudioFormat* format;
+    QAudioFormat format;
     QAudioDeviceInfo m_Outputdevice;
     QAudioOutput *m_audioOutput;
     QIODevice *m_output;
@@ -42,6 +43,8 @@ private:
     int binded_port;
 
     Settings *settings;
+
+    bool isPlaying;
 
     short Snack_Alaw2Lin(unsigned char);
 
@@ -57,4 +60,4 @@ public slots:
 
 };
 
-#endif // LISTENNER_H
+#endif // LISTENER_H

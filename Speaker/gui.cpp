@@ -23,6 +23,7 @@ GUI::GUI(QWidget *parent) :
 GUI::~GUI()
 {
     delete ui;
+    qDebug() << "GUI destruct!";
 }
 
 void GUI::setDataSent(int size) {

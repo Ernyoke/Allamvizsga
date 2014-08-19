@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QTimer>
 #include "settings.h"
+#include <QDebug>
 
 namespace Ui {
 class GUI;

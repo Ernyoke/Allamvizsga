@@ -1,14 +1,25 @@
 #include "speaker.h"
 
-Speaker::Speaker(QUdpSocket *socket, GUI *gui, QObject *parent) :
+Speaker::Speaker(GUI *gui, QObject *parent) :
     QThread(parent)
 {
-    this->socket = socket;
+    this->socket = new QUdpSocket(this);
     this->gui = gui;
 
     settings = gui->getSettings();
-    //time = new QDateTime(this);
 
+    audioInput = NULL;
+    QDateTime now = QDateTime::currentDateTime();
+    timestamp = now.currentDateTime().toMSecsSinceEpoch();
+    isRecording = false;
+}
+
+Speaker::~Speaker() {
+    stopRecording();
+    if(audioInput != NULL) {
+        delete audioInput;
+    }
+    qDebug() << "Speaker deleted!";
 }
 
 void Speaker::run() {
@@ -17,41 +28,41 @@ void Speaker::run() {
 }
 
 void Speaker::startRecording() {
-    broadcasting_port = gui->getBroadcastingPort();
-    QAudioFormat *format;
-    format = settings->getSpeakerAudioFormat();
+    if(!isRecording) {
+        broadcasting_port = gui->getBroadcastingPort();
+        format = settings->getSpeakerAudioFormat();
 
-    qDebug() << "Sample Rate:" << format->sampleRate();
+        QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+        if (!info.isFormatSupported(format)) {
+            qWarning()<<"raw audio format not supported by backend, cannot play audio.";
+            return;
+        }
 
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(*format)) {
-        qWarning()<<"raw audio format not supported by backend, cannot play audio.";
-        return;
+        audioInput = new QAudioInput(format, this);
+        intermediateDevice  = audioInput->start();
+        connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
+
+        QDateTime now = QDateTime::currentDateTime();
+        timestamp = now.currentDateTime().toMSecsSinceEpoch();
+
+        isRecording = true;
     }
-
-   audioInput = new QAudioInput(*format, this);
-   intermediateDevice  = audioInput->start();
-   audioInput->setNotifyInterval(5);
-   connect(audioInput, SIGNAL(notify()), this, SLOT(transferData()));
 
 }
 
 void Speaker::transferData(){
-    int len = 640;
-    if(audioInput->bytesReady() >= 0) {
+    if(audioInput->bytesReady() > 0) {
         QByteArray chunk;
         QByteArray sendBuffer;
-        qint64 timestamp;
-        QDateTime now = QDateTime::currentDateTime();
-        //qDebug() << audioInput->bytesReady();
         chunk = intermediateDevice->readAll();
-        timestamp = now.currentDateTime().toMSecsSinceEpoch();
+        timestamp++;
+        qDebug() << timestamp;
         for(int i = sizeof(qint64); i > 0; --i) {
-            short x = (timestamp >> ((i - 1) * 8));
+            char x = (timestamp >> ((i - 1) * 8));
             sendBuffer.prepend(x);
         }
+
         sendBuffer.append(chunk);
-        len = chunk.size();
         /*for(int i = 0; i < len; ++i) {
             //short pcm_value = chunk[i + 1];
             //pcm_value = (pcm_value << 8) | chunk[i];
@@ -60,7 +71,7 @@ void Speaker::transferData(){
             sendBuffer.append(chunk[i]);
         }*/
 
-          gui->setDataSent(sendBuffer.size());
+        gui->setDataSent(sendBuffer.size());
 
         socket->writeDatagram(sendBuffer, QHostAddress::LocalHost, broadcasting_port);
     }
@@ -68,8 +79,8 @@ void Speaker::transferData(){
 
 void Speaker::stopRecording()
 {
-  audioInput->stop();
-  //outputFile.close();
-  delete audioInput;
-  //intermediateDevice->close();
+    if(isRecording) {
+        audioInput->stop();
+        isRecording = false;
+    }
 }

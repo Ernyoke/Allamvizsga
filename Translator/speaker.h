@@ -17,18 +17,22 @@ class Speaker : public QThread
 {
     Q_OBJECT
 public:
-    explicit Speaker(QUdpSocket *socket, GUI *gui, QObject *parent = 0);
+    explicit Speaker(GUI *gui, QObject *parent = 0);
+    ~Speaker();
 
 private:
     QAudioInput *audioInput;
+    QAudioFormat format;
     QIODevice *intermediateDevice;
     GUI *gui;
     QUdpSocket *socket;
-    QDateTime *time;
 
     Settings *settings;
 
     int broadcasting_port;
+    qint64 timestamp;
+
+    bool isRecording;
 
     unsigned char Snack_Lin2Alaw(short);
     short search(short, short*, short);

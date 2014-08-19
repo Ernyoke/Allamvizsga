@@ -5,9 +5,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    GUI w;
-    Listener listen(&w);
-    w.show();
+    Listener listen;
+    listen.showGUI();
 
     return a.exec();
 }

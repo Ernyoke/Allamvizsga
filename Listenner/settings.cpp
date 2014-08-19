@@ -24,8 +24,6 @@ Settings::Settings(QWidget *parent) :
 
     ui->sampleSizeBox->setCurrentIndex(1); //*******//
 
-    formatListenner = new QAudioFormat;
-
     applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
@@ -39,7 +37,7 @@ Settings::~Settings()
 
 }
 
-QAudioFormat* Settings::getListennerAudioFormat() {
+QAudioFormat Settings::getListennerAudioFormat() {
     return formatListenner;
 }
 
@@ -53,13 +51,13 @@ QVariant Settings::boxValue(const QComboBox *box)
 }
 
 void Settings::applySettings() {
-    formatListenner->setByteOrder(QAudioFormat::LittleEndian);
-    formatListenner->setSampleType(QAudioFormat::UnSignedInt);
+    formatListenner.setByteOrder(QAudioFormat::LittleEndian);
+    formatListenner.setSampleType(QAudioFormat::UnSignedInt);
 
-    formatListenner->setCodec(boxValue(ui->codecBox_2).toString());
-    formatListenner->setSampleRate(boxValue(ui->sampleRateBox).toInt());
-    formatListenner->setChannelCount(boxValue(ui->channelBox).toInt());
-    formatListenner->setSampleSize(boxValue(ui->sampleSizeBox).toInt());
+    formatListenner.setCodec(boxValue(ui->codecBox_2).toString());
+    formatListenner.setSampleRate(boxValue(ui->sampleRateBox).toInt());
+    formatListenner.setChannelCount(boxValue(ui->channelBox).toInt());
+    formatListenner.setSampleSize(boxValue(ui->sampleSizeBox).toInt());
 }
 
 void Settings::cancelSetting() {
