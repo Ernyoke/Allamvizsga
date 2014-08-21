@@ -7,26 +7,18 @@ Settings::Settings(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
-    foreach (const int it, info.supportedSampleRates()) {
-            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
-    }
-    foreach (const int it, info.supportedChannelCounts()) {
-            ui->channelBox->addItem(QString::number(it), QVariant(it));
-    }
-    foreach (const QString &it, info.supportedCodecs()) {
-            ui->codecBox_2->addItem(it, QVariant(it));
-    }
+    selectedDevice = QAudioDeviceInfo::defaultOutputDevice();
+    displayDeviceProperties(selectedDevice);
 
-    foreach (const int it, info.supportedSampleSizes()) {
-            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
+    output_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    foreach (const QAudioDeviceInfo it,output_devices) {
+            ui->deviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
-
-    ui->sampleSizeBox->setCurrentIndex(1); //*******//
 
     applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
+    connect(ui->deviceBox, SIGNAL(activated(int)), this, SLOT(changeDevice(int)));
 
 }
 
@@ -37,8 +29,39 @@ Settings::~Settings()
 
 }
 
+void Settings::changeDevice(int index) {
+    QAudioDeviceInfo selectedDevice = output_devices.at(index);
+    ui->sampleRateBox->clear();
+    ui->channelBox->clear();
+    ui->sampleSizeBox->clear();
+    ui->codecBox_2->clear();
+    displayDeviceProperties(selectedDevice);
+}
+
+void Settings::displayDeviceProperties(QAudioDeviceInfo device) {
+    foreach (const int it, device.supportedSampleRates()) {
+            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const int it, device.supportedChannelCounts()) {
+            ui->channelBox->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const QString &it, device.supportedCodecs()) {
+            ui->codecBox_2->addItem(it, QVariant(it));
+    }
+
+    foreach (const int it, device.supportedSampleSizes()) {
+            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
+    }
+
+    ui->sampleSizeBox->setCurrentIndex(1); //*******//
+}
+
 QAudioFormat Settings::getListennerAudioFormat() {
     return formatListenner;
+}
+
+QAudioDeviceInfo Settings::getOutputDevice() {
+    return selectedDevice;
 }
 
 QVariant Settings::boxValue(const QComboBox *box)

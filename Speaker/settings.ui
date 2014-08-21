@@ -32,8 +32,8 @@
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
-       <x>60</x>
-       <y>50</y>
+       <x>50</x>
+       <y>90</y>
        <width>71</width>
        <height>16</height>
       </rect>
@@ -45,8 +45,8 @@
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
-       <x>60</x>
-       <y>80</y>
+       <x>50</x>
+       <y>120</y>
        <width>46</width>
        <height>13</height>
       </rect>
@@ -58,8 +58,8 @@
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>60</x>
-       <y>110</y>
+       <x>50</x>
+       <y>150</y>
        <width>71</width>
        <height>16</height>
       </rect>
@@ -71,8 +71,8 @@
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>60</x>
-       <y>140</y>
+       <x>50</x>
+       <y>180</y>
        <width>46</width>
        <height>13</height>
       </rect>
@@ -84,8 +84,8 @@
     <widget class="QComboBox" name="sampleRateBox">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>50</y>
+       <x>120</x>
+       <y>90</y>
        <width>141</width>
        <height>22</height>
       </rect>
@@ -94,8 +94,8 @@
     <widget class="QComboBox" name="channelBox">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>80</y>
+       <x>120</x>
+       <y>120</y>
        <width>141</width>
        <height>22</height>
       </rect>
@@ -104,8 +104,8 @@
     <widget class="QComboBox" name="sampleSizeBox">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>110</y>
+       <x>120</x>
+       <y>150</y>
        <width>141</width>
        <height>22</height>
       </rect>
@@ -114,11 +114,34 @@
     <widget class="QComboBox" name="codecBox_2">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>140</y>
+       <x>120</x>
+       <y>180</y>
        <width>141</width>
        <height>22</height>
       </rect>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="deviceBox">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>60</y>
+       <width>141</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>60</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Input Device:</string>
      </property>
     </widget>
    </widget>

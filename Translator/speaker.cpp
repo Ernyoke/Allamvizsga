@@ -16,9 +16,6 @@ Speaker::Speaker(GUI *gui, QObject *parent) :
 
 Speaker::~Speaker() {
     stopRecording();
-    if(audioInput != NULL) {
-        delete audioInput;
-    }
     qDebug() << "Speaker deleted!";
 }
 
@@ -32,31 +29,29 @@ void Speaker::startRecording() {
         broadcasting_port = gui->getBroadcastingPort();
         format = settings->getSpeakerAudioFormat();
 
-        QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+        QAudioDeviceInfo info = settings->getInputDevice();
         if (!info.isFormatSupported(format)) {
             qWarning()<<"raw audio format not supported by backend, cannot play audio.";
             return;
         }
 
-        audioInput = new QAudioInput(format, this);
-        intermediateDevice  = audioInput->start();
-        connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
+       audioInput = new QAudioInput(info, format, this);
+       qDebug() << audioInput->bufferSize();
+       intermediateDevice  = audioInput->start();
+       connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
 
-        QDateTime now = QDateTime::currentDateTime();
-        timestamp = now.currentDateTime().toMSecsSinceEpoch();
-
-        isRecording = true;
+       buffLen = audioInput->periodSize();
+       isRecording = true;
     }
 
 }
 
 void Speaker::transferData(){
-    if(audioInput->bytesReady() > 0) {
+    if(audioInput->bytesReady() >= buffLen) {
         QByteArray chunk;
         QByteArray sendBuffer;
-        chunk = intermediateDevice->readAll();
+        chunk = intermediateDevice->read(buffLen);
         timestamp++;
-        qDebug() << timestamp;
         for(int i = sizeof(qint64); i > 0; --i) {
             char x = (timestamp >> ((i - 1) * 8));
             sendBuffer.prepend(x);
@@ -81,6 +76,7 @@ void Speaker::stopRecording()
 {
     if(isRecording) {
         audioInput->stop();
+        delete audioInput;
         isRecording = false;
     }
 }

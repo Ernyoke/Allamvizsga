@@ -28,25 +28,27 @@ void ManageVoice::startRecording() {
         broadcasting_port = gui->getBroadcastingPort();
         format = settings->getSpeakerAudioFormat();
 
-        QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+        QAudioDeviceInfo info = settings->getInputDevice();
         if (!info.isFormatSupported(format)) {
             qWarning()<<"raw audio format not supported by backend, cannot play audio.";
             return;
         }
 
-       audioInput = new QAudioInput(format, this);
+       audioInput = new QAudioInput(info, format, this);
+       qDebug() << audioInput->bufferSize();
        intermediateDevice  = audioInput->start();
        connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
 
+       buffLen = audioInput->periodSize();
        isRecording = true;
     }
 }
 
 void ManageVoice::transferData(){
-    if(audioInput->bytesReady() > 0) {
+    if(audioInput->bytesReady() >= buffLen) {
         QByteArray chunk;
         QByteArray sendBuffer;
-        chunk = intermediateDevice->readAll();
+        chunk = intermediateDevice->read(buffLen);
         timestamp++;
         for(int i = sizeof(qint64); i > 0; --i) {
             char x = (timestamp >> ((i - 1) * 8));
@@ -72,15 +74,13 @@ void ManageVoice::stopRecording()
 {
     if(isRecording) {
         audioInput->stop();
+        delete audioInput;
         isRecording = false;
     }
 }
 
 ManageVoice::~ManageVoice() {
-    if(audioInput != NULL) {
-        audioInput->stop();
-        delete audioInput;
-    }
+    stopRecording();
     delete gui;
     qDebug() << "Managevoice destruct!";
 }

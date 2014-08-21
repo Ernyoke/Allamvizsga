@@ -7,27 +7,21 @@ Settings::Settings(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QAudioDeviceInfo info = QAudioDeviceInfo::defaultInputDevice();
-    foreach (const int it, info.supportedSampleRates()) {
-            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
-            ui->sampleRateBox_2->addItem(QString::number(it), QVariant(it));
-    }
-    foreach (const int it, info.supportedChannelCounts()) {
-            ui->channelBox->addItem(QString::number(it), QVariant(it));
-            ui->channelBox_2->addItem(QString::number(it), QVariant(it));
-    }
-    foreach (const QString &it, info.supportedCodecs()) {
-            ui->codecBox_2->addItem(it, QVariant(it));
-            ui->codecBox_3->addItem(it, QVariant(it));
+    selectedInputDevice = QAudioDeviceInfo::defaultInputDevice();
+    selectedOutputDevice = QAudioDeviceInfo::defaultOutputDevice();
+
+    input_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    foreach (const QAudioDeviceInfo it,input_devices) {
+            ui->inputDeviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
 
-    foreach (const int it, info.supportedSampleSizes()) {
-            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
-            ui->sampleSizeBox_2->addItem(QString::number(it), QVariant(it));
+    output_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    foreach (const QAudioDeviceInfo it,output_devices) {
+            ui->outputDeviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
 
-    ui->sampleSizeBox->setCurrentIndex(1); //*******//
-    ui->sampleSizeBox_2->setCurrentIndex(1);
+    displayInputDeviceProperties(selectedInputDevice);
+    displayOutputDeviceProperties(selectedOutputDevice);
 
     applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
@@ -40,12 +34,56 @@ Settings::~Settings()
     delete ui;
 }
 
+void Settings::displayInputDeviceProperties(QAudioDeviceInfo device) {
+    foreach (const int it, device.supportedSampleRates()) {
+            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const int it, device.supportedChannelCounts()) {
+            ui->channelBox->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const QString &it, device.supportedCodecs()) {
+            ui->codecBox_2->addItem(it, QVariant(it));
+    }
+
+    foreach (const int it, device.supportedSampleSizes()) {
+            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
+    }
+
+    ui->sampleSizeBox->setCurrentIndex(1); //*******//
+}
+
+void Settings::displayOutputDeviceProperties(QAudioDeviceInfo device) {
+    foreach (const int it, device.supportedSampleRates()) {
+            ui->sampleRateBox_2->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const int it, device.supportedChannelCounts()) {
+            ui->channelBox_2->addItem(QString::number(it), QVariant(it));
+    }
+    foreach (const QString &it, device.supportedCodecs()) {
+            ui->codecBox_3->addItem(it, QVariant(it));
+    }
+
+    foreach (const int it, device.supportedSampleSizes()) {
+            ui->sampleSizeBox_2->addItem(QString::number(it), QVariant(it));
+    }
+
+    ui->sampleSizeBox_2->setCurrentIndex(1); //*******//
+}
+
 QAudioFormat Settings::getSpeakerAudioFormat() {
     return formatSpeaker;
 }
 
 QAudioFormat Settings::getListennerAudioFormat() {
     return formatSpeaker;
+}
+
+QAudioDeviceInfo Settings::getInputDevice() {
+    return selectedInputDevice;
+}
+
+QAudioDeviceInfo Settings::getOutputDevice() {
+    return selectedOutputDevice;
 }
 
 QVariant Settings::boxValue(const QComboBox *box)

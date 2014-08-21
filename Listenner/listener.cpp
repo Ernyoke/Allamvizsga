@@ -3,7 +3,6 @@
 const int BufferSize = 14096;
 
 Listener::Listener(QObject *parent) :
-    m_Outputdevice(QAudioDeviceInfo::defaultOutputDevice()),
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
     QThread(parent)
@@ -15,9 +14,6 @@ Listener::Listener(QObject *parent) :
     binded_port = -1;
     timestamp = 0;
 
-    settings = gui->getSettings();
-    format = settings->getListennerAudioFormat();
-
     isPlaying = false;
 
     connect(gui, SIGNAL(startPlayback()), this, SLOT(playback()));
@@ -25,19 +21,11 @@ Listener::Listener(QObject *parent) :
     connect(gui, SIGNAL(volumeChanged()), this, SLOT(volumeChanged()));
     connect(gui, SIGNAL(portChanged(int)), this, SLOT(portChanged(int)));
 
-    m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
-
-    qreal volume = gui->getVolume();
-    m_audioOutput->setVolume(volume);
-    isPlaying = false;
 
 }
 
 Listener::~Listener() {
     this->stopPlayback();
-    if(m_audioOutput != NULL) {
-        delete m_audioOutput;
-    }
     outputBuffer->clear();
     delete outputBuffer;
     delete gui;
@@ -87,6 +75,22 @@ void Listener::receiveDatagramm() {
 
 void Listener::playback() {
     if(!isPlaying) {
+
+        settings = gui->getSettings();
+        format = settings->getListennerAudioFormat();
+        m_Outputdevice = settings->getOutputDevice();
+
+        if(!m_Outputdevice.isFormatSupported(format)) {
+            qWarning() << "Format not supported!";
+            return;
+        }
+
+        m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
+        m_audioOutput->setBufferSize(8192);
+
+        qreal volume = gui->getVolume();
+        m_audioOutput->setVolume(volume);
+
         m_output = m_audioOutput->start();
         connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         if(socket->bytesAvailable()) {
@@ -99,6 +103,7 @@ void Listener::playback() {
 void Listener::stopPlayback() {
     if(isPlaying) {
         m_audioOutput->stop();
+        delete m_audioOutput;
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         isPlaying = false;
     }
@@ -106,8 +111,9 @@ void Listener::stopPlayback() {
 
 void Listener::volumeChanged() {
     qreal volume = gui->getVolume();
-    qDebug() << volume;
-    m_audioOutput->setVolume(volume/100);
+    if(isPlaying) {
+        m_audioOutput->setVolume(volume/100);
+    }
 }
 
 void Listener::portChanged(int port) {

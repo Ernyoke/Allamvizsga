@@ -19,13 +19,22 @@ public:
 
     QAudioFormat getSpeakerAudioFormat();
     QAudioFormat getListennerAudioFormat();
+    QAudioDeviceInfo getInputDevice();
+    QAudioDeviceInfo getOutputDevice();
 
 private:
     Ui::Settings *ui;
     QAudioFormat formatSpeaker;
     QAudioFormat formatListenner;
+    QAudioDeviceInfo selectedInputDevice;
+    QAudioDeviceInfo selectedOutputDevice;
+    QList<QAudioDeviceInfo> input_devices;
+    QList<QAudioDeviceInfo> output_devices;
 
     QVariant boxValue(const QComboBox *box);
+
+    void displayInputDeviceProperties(QAudioDeviceInfo);
+    void displayOutputDeviceProperties(QAudioDeviceInfo);
 
 private slots:
     void applySettings();

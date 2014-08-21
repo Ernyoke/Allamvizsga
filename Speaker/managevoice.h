@@ -28,6 +28,7 @@ private:
 
     Settings *settings;
     int broadcasting_port;
+    int buffLen;
 
     bool isRecording;
 

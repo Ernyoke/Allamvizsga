@@ -33,6 +33,7 @@ private:
     qint64 timestamp;
 
     bool isRecording;
+    int buffLen;
 
     unsigned char Snack_Lin2Alaw(short);
     short search(short, short*, short);
