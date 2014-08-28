@@ -7,7 +7,6 @@
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QAudioOutput>
-#include "gui.h"
 #include <QIODevice>
 #include <QAudioOutput>
 #include <QBuffer>
@@ -15,6 +14,9 @@
 #include <QThread>
 #include <QMap>
 
+#include "gui.h"
+#include "recordaudio.h"
+#include "recordwav.h"
 //#include "g711.h"
 #include "settings.h"
 
@@ -48,6 +50,10 @@ private:
 
     short Snack_Alaw2Lin(unsigned char);
 
+    RecordAudio *record;
+
+    void storeChunk(QByteArray);
+
 
 signals:
 
@@ -57,6 +63,9 @@ public slots:
     void stopPlayback();
     void volumeChanged();
     void portChanged(int);
+    void startRecord();
+    void pauseRecord();
+    void changePlaybackState();
 
 };
 

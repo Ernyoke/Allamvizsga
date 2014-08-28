@@ -40,6 +40,7 @@ public slots:
     void startRecording();
     void stopRecording();
     void transferData();
+    void changeRecordState();
 };
 
 #endif // MANAGEVOICE_H

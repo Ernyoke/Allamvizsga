@@ -143,7 +143,7 @@
      <string>New Channel</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="pauseRec">
     <property name="geometry">
      <rect>
       <x>280</x>
@@ -163,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>409</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

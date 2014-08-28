@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include "settings.h"
+#include "recordaudio.h"
 
 namespace Ui {
 class GUI;
@@ -23,15 +24,21 @@ public:
 
     //listenner
     void setDataReceived(int);
+    void setRecordAudioDev(RecordAudio *record);
     void receiverTimerStart();
     void receiverTimerStop();
+    int getVolume();
+    int getPort();
+    void changeRecordButtonState(RecordAudio::STATE);
+    void changePauseButtonState(RecordAudio::STATE);
+    void changePlayButtonState(bool isPlaying);
 
     //speaker
     void setDataSent(int);
-    int getVolume();
     int getBroadcastingPort();
     void broadcastTimerStart();
     void broadcastTimerStop();
+    void changeBroadcastButtonState(bool);
 
     //both
     void updateSpeed();
@@ -54,23 +61,28 @@ private:
     int broadcasting_port;
 
     //both
-    bool receiving;  //client status
     Settings *settings;
+    QStatusBar *sBar;
+
+    void initialize();
 
 signals:
     //signals for listenner
-    void startPlayback();
-    void stopPlayback();
     void volumeChanged();
+    void startRecord();
+    void stopRecord();
+    void pauseRecord();
+    void changePlayBackState();
     void portChanged(int);
 
     //signals for broadcast
-    void startButtonPressed();
-    void stopButtonPressed();
+    void broadcastStateChanged();
 
 public slots:
     //slots for listenner
     void playbackButtonPushed();
+    void startRecordPushed();
+    void pauseRecordPushed();
     void updateTime();
     void volumeChangedSlot();
     void getItemData(QListWidgetItem*);
@@ -83,6 +95,7 @@ public slots:
 
     //general
     void showSettings();
+    void menuTriggered(QAction*);
 
 
 };

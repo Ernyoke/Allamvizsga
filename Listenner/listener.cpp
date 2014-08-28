@@ -1,10 +1,8 @@
 #include "listener.h"
 
-const int BufferSize = 14096;
-
 Listener::Listener(QObject *parent) :
     m_audioOutput(0),
-    m_buffer(BufferSize, 0),
+    m_buffer(8192, 0),
     QThread(parent)
 {
     socket = new QUdpSocket(this);
@@ -15,17 +13,24 @@ Listener::Listener(QObject *parent) :
     timestamp = 0;
 
     isPlaying = false;
+    record = NULL;
 
-    connect(gui, SIGNAL(startPlayback()), this, SLOT(playback()));
-    connect(gui, SIGNAL(stopPlayback()), this, SLOT(stopPlayback()));
+    settings = gui->getSettings();
+
+    connect(gui, SIGNAL(changePlayBackState()), this, SLOT(changePlaybackState()));
     connect(gui, SIGNAL(volumeChanged()), this, SLOT(volumeChanged()));
     connect(gui, SIGNAL(portChanged(int)), this, SLOT(portChanged(int)));
-
+    connect(gui, SIGNAL(startRecord()), this, SLOT(startRecord()));
+    connect(gui, SIGNAL(pauseRecord()), this, SLOT(pauseRecord()));
 
 }
 
 Listener::~Listener() {
     this->stopPlayback();
+    if(record != NULL) {
+        record->stop();
+        delete record;
+    }
     outputBuffer->clear();
     delete outputBuffer;
     delete gui;
@@ -34,6 +39,21 @@ Listener::~Listener() {
 
 void Listener::showGUI() {
     gui->show();
+}
+
+//this SLOT is called when Start/Stop button is pushed
+void Listener::changePlaybackState() {
+    //if the client is receiveng packets then stop
+    if(isPlaying) {
+        qDebug() << "stopped";
+        this->stopPlayback();
+    }
+    //otherswise start receiving
+    else {
+        qDebug() << "playing";
+        binded_port = gui->getPort();
+        this->playback();
+    }
 }
 
 
@@ -64,6 +84,7 @@ void Listener::receiveDatagramm() {
                     decomp.append(tmp >> 8);
                 }*/
                 m_output->write(decomp.data(), decomp.size());
+                storeChunk(decomp);
                 outputBuffer->clear();
             }
         }
@@ -76,7 +97,9 @@ void Listener::receiveDatagramm() {
 void Listener::playback() {
     if(!isPlaying) {
 
-        settings = gui->getSettings();
+        socket = new QUdpSocket(this);
+        socket->bind(QHostAddress::AnyIPv4, binded_port, QUdpSocket::ShareAddress);
+
         format = settings->getListennerAudioFormat();
         m_Outputdevice = settings->getOutputDevice();
 
@@ -97,6 +120,7 @@ void Listener::playback() {
             receiveDatagramm();
         }
         isPlaying = true;
+        gui->changePlayButtonState(isPlaying);
     }
 }
 
@@ -105,7 +129,9 @@ void Listener::stopPlayback() {
         m_audioOutput->stop();
         delete m_audioOutput;
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+        delete socket;
         isPlaying = false;
+        gui->changePlayButtonState(isPlaying);
     }
 }
 
@@ -117,9 +143,50 @@ void Listener::volumeChanged() {
 }
 
 void Listener::portChanged(int port) {
+    qDebug() << "portChanged";
+    binded_port = port;
     stopPlayback();
-    delete socket;
-    socket = new QUdpSocket(this);
-    socket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress);
     playback();
+}
+
+void Listener::startRecord() {
+    if(record == NULL) {
+        Settings::CODEC codec = settings->getRecordCodec();
+        QString path = settings->getRecordPath();
+        switch(codec) {
+        case Settings::WAV: {
+            record = new RecordWav(path, format, gui, this);
+            if(record->getState() == RecordAudio::STOPPED) {
+                if(!record->start()) {
+                    QMessageBox msgBox;
+                    msgBox.setText("Temporary record file can not be created. Please change record file path in the Settings!");
+                    msgBox.exec();
+                }
+                gui->changeRecordButtonState(record->getState());
+            }
+            break;
+        }
+        }
+    }
+    else {
+        if(record->getState() == RecordAudio::RECORDING || record->getState() == RecordAudio::PAUSED) {
+            record->stop();
+            gui->changeRecordButtonState(record->getState());
+            delete record;
+            record = NULL;
+        }
+    }
+}
+
+void Listener::storeChunk(QByteArray data) {
+    if(record != NULL) {
+        record->write(data);
+    }
+}
+
+void Listener::pauseRecord() {
+    if(record != NULL) {
+        record->pause();
+        gui->changePauseButtonState(record->getState());
+    }
 }

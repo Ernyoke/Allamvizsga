@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include "settings.h"
+#include "recordaudio.h"
 
 namespace Ui {
 class GUI;
@@ -23,9 +24,15 @@ public:
 
     //listenner
     void setDataReceived(int);
+    void setRecordAudioDev(RecordAudio *record);
     void receiverTimerStart();
     void receiverTimerStop();
     int getVolume();
+    int getPort();
+    void changeRecordButtonState(RecordAudio::STATE);
+    void changePauseButtonState(RecordAudio::STATE);
+    void changePlayButtonState(bool isPlaying);
+
 
     //both
     void updateSpeed();
@@ -41,19 +48,25 @@ private:
     QList<QListWidgetItem*> *channels;
 
     //both
-    bool receiving;  //client status
     Settings *settings;
+    QStatusBar *sBar;
+
+    void initialize();
 
 signals:
     //signals for listenner
-    void startPlayback();
-    void stopPlayback();
     void volumeChanged();
+    void startRecord();
+    void stopRecord();
+    void pauseRecord();
+    void changePlayBackState();
     void portChanged(int);
 
 public slots:
     //slots for listenner
     void playbackButtonPushed();
+    void startRecordPushed();
+    void pauseRecordPushed();
     void updateTime();
     void volumeChangedSlot();
     void getItemData(QListWidgetItem*);

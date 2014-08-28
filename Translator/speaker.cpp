@@ -20,8 +20,16 @@ Speaker::~Speaker() {
 }
 
 void Speaker::run() {
-    connect(gui, SIGNAL(startButtonPressed()), this, SLOT(startRecording()));
-    connect(gui, SIGNAL(stopButtonPressed()), this, SLOT(stopRecording()));
+     connect(gui, SIGNAL(broadcastStateChanged()), this, SLOT(changeRecordState()));
+}
+
+void Speaker::changeRecordState() {
+    if(!isRecording) {
+        startRecording();
+    }
+    else {
+        stopRecording();
+    }
 }
 
 void Speaker::startRecording() {
@@ -42,8 +50,8 @@ void Speaker::startRecording() {
 
        buffLen = audioInput->periodSize();
        isRecording = true;
+       gui->changeBroadcastButtonState(isRecording);
     }
-
 }
 
 void Speaker::transferData(){
@@ -78,5 +86,6 @@ void Speaker::stopRecording()
         audioInput->stop();
         delete audioInput;
         isRecording = false;
+        gui->changeBroadcastButtonState(isRecording);
     }
 }

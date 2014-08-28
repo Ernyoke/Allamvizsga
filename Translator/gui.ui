@@ -41,7 +41,7 @@
          <item>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="2" column="2" colspan="2">
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="pauseRec">
              <property name="text">
               <string>Pause Rec</string>
              </property>

@@ -31,13 +31,13 @@
    <item row="0" column="0" colspan="2">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Record</string>
       </attribute>
-      <widget class="QLineEdit" name="path">
+      <widget class="QLineEdit" name="displayPath">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -93,7 +93,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Browser</string>
+        <string>Browse...</string>
        </property>
       </widget>
      </widget>

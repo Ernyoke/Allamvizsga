@@ -24,6 +24,7 @@ public:
     int getBroadcastingPort();
 
     void setDataSent(int);
+    void changeBroadcastButtonState(bool);
 
 
 private:
@@ -37,8 +38,7 @@ private:
     QTimer broadcastTimer;
 
 signals:
-    void startButtonPressed();
-    void stopButtonPressed();
+    void broadcastStateChanged();
 
 public slots:
     void btn();

@@ -8,8 +8,7 @@ ManageVoice::ManageVoice(QUdpSocket *socket, QObject *parent) :
 
     settings = gui->getSettings();
 
-    connect(gui, SIGNAL(startButtonPressed()), this, SLOT(startRecording()));
-    connect(gui, SIGNAL(stopButtonPressed()), this, SLOT(stopRecording()));
+    connect(gui, SIGNAL(broadcastStateChanged()), this, SLOT(changeRecordState()));
 
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
@@ -21,6 +20,15 @@ ManageVoice::ManageVoice(QUdpSocket *socket, QObject *parent) :
 
 void ManageVoice::showGUI() {
     gui->show();
+}
+
+void ManageVoice::changeRecordState() {
+    if(!isRecording) {
+        startRecording();
+    }
+    else {
+        stopRecording();
+    }
 }
 
 void ManageVoice::startRecording() {
@@ -41,6 +49,7 @@ void ManageVoice::startRecording() {
 
        buffLen = audioInput->periodSize();
        isRecording = true;
+       gui->changeBroadcastButtonState(isRecording);
     }
 }
 
@@ -76,6 +85,7 @@ void ManageVoice::stopRecording()
         audioInput->stop();
         delete audioInput;
         isRecording = false;
+        gui->changeBroadcastButtonState(isRecording);
     }
 }
 

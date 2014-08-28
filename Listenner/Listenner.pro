@@ -18,12 +18,16 @@ SOURCES += main.cpp\
         gui.cpp \
     settings.cpp \
     g711.cpp \
-    listener.cpp
+    listener.cpp \
+    recordwav.cpp \
+    recordaudio.cpp
 
 HEADERS  += gui.h \
     settings.h \
     g711.h \
-    listener.h
+    listener.h \
+    recordwav.h \
+    recordaudio.h
 
 FORMS    += gui.ui \
     settings.ui

@@ -5,6 +5,9 @@
 #include <QAudioDeviceInfo>
 #include <QComboBox>
 #include <QDebug>
+#include <QFile>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 namespace Ui {
 class Settings;
@@ -30,6 +33,10 @@ private:
     QVariant boxValue(const QComboBox *box);
 
     void displayDeviceProperties(QAudioDeviceInfo);
+    void readSettingsFromXML();
+    int getBoxIndex(QComboBox*, QString*);
+    int getBoxIndex(QComboBox*, int);
+    void setBoxIndex(QComboBox*, int);
 
 private slots:
     void applySettings();

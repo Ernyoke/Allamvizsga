@@ -18,6 +18,9 @@ GUI::GUI(QWidget *parent) :
 
     broadcastTimer.setInterval(1000);
     connect(&broadcastTimer, SIGNAL(timeout()), this, SLOT(updateBroadcastTime()));
+
+    ui->statusBar->showMessage("Data transfer stopped!");
+//    ui->menuBar->statusTip(
 }
 
 GUI::~GUI()
@@ -40,16 +43,21 @@ void GUI::btn() {
         msg.exec();
         return;
     }
-    QString btnText = ui->startButton->text();
-    if(btnText.compare("Start Broadcast") == 0) {
-        ui->startButton->setText("Stop Broadcast");
+   emit broadcastStateChanged();
+}
+
+void GUI::changeBroadcastButtonState(bool isRecording) {
+    if(isRecording) {
+        ui->startButton->setText("Stop Recording");
+        ui->statusBar->showMessage("Transfering data on port: " + QString::number(broadcasting_port));
+        broadcastDataSize = 0;
         broadcastTimerStart();
-        emit startButtonPressed();
     }
     else {
-        ui->startButton->setText("Start Broadcast");
+        ui->startButton->setText("Start Recording");
+        ui->statusBar->showMessage("Data transfer stopped!");
+        broadcastDataSize = 0;
         broadcastTimerStop();
-        emit stopButtonPressed();
     }
 }
 

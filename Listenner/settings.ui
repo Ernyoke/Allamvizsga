@@ -23,13 +23,13 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>Tab 1</string>
     </attribute>
-    <widget class="QLineEdit" name="lineEdit">
+    <widget class="QLineEdit" name="displayPath">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -75,7 +75,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>PushButton</string>
+      <string>Browse...</string>
      </property>
     </widget>
     <widget class="QComboBox" name="codecBox">

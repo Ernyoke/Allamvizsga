@@ -17,6 +17,8 @@
 
 #include "g711.h"
 #include "settings.h"
+#include "recordaudio.h"
+#include "recordwav.h"
 
 class Listener : public QThread
 {
@@ -40,11 +42,15 @@ private:
     qint64 timestamp;
     int binded_port;
 
-    bool isPlaying;
-
     Settings *settings;
 
+    bool isPlaying;
+
     short Snack_Alaw2Lin(unsigned char);
+
+    RecordAudio *record;
+
+    void storeChunk(QByteArray);
 
 protected:
     void run();
@@ -57,6 +63,9 @@ public slots:
     void stopPlayback();
     void volumeChanged();
     void portChanged(int);
+    void startRecord();
+    void pauseRecord();
+    void changePlaybackState();
 
 };
 

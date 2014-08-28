@@ -6,8 +6,12 @@ GUI::GUI(QWidget *parent) :
     ui(new Ui::GUI)
 {
     ui->setupUi(this);
+    initialize();
 
-    receiving = false;
+}
+
+
+void GUI::initialize() {
 
     dataSize = 0;
     dataPerSec = 0;
@@ -24,11 +28,16 @@ GUI::GUI(QWidget *parent) :
     ui->volumeSlider->setMaximum(100);
     ui->volumeSlider->setValue(50);
 
+    //initialize statusbar
+    ui->statusBar->showMessage("Player stopped!");
+
     connect(ui->volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(volumeChangedSlot()));
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playbackButtonPushed()));
     connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(getItemData(QListWidgetItem*)));
     connect(ui->menuSettings, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->newChannelButton, SIGNAL(pressed()), this, SLOT(addNewChannel()));
+    connect(ui->recordButton, SIGNAL(clicked()), this, SLOT(startRecordPushed()));
+    connect(ui->pauseRec, SIGNAL(clicked()), this, SLOT(pauseRecordPushed()));
 
 }
 
@@ -43,31 +52,36 @@ void GUI::setDataReceived(int size) {
     dataPerSec += size;
 }
 
-
+//this SLOT is called when the Start button is pushed
 void GUI::playbackButtonPushed() {
-    if(!receiving) {
         QListWidgetItem *item = ui->listWidget->currentItem();
         if(item != NULL) {
-            ui->playButton->setText("Stop");
-            receiving = true;
-            receiverTimerStart();
-            QVariant data = item->data(Qt::UserRole);
-            int port = data.toInt();
-            emit portChanged(port);
+            emit changePlayBackState();
         }
         else {
             QMessageBox msg;
             msg.setText("No channel was selected!");
             msg.setStandardButtons(QMessageBox::Ok);
             msg.exec();
-            receiving = false;
         }
+}
+
+void GUI::changePlayButtonState(bool isPlaying) {
+    if(isPlaying) {
+        ui->playButton->setText("Stop");
+        ui->statusBar->clearMessage();
+        QListWidgetItem *item = ui->listWidget->currentItem();
+        QVariant data = item->data(Qt::UserRole);
+        int port = data.toInt();
+        ui->statusBar->showMessage("Ongoing playback! Recieving data from port: " + QString::number(port));
+        receiverTimerStart();
     }
     else {
         ui->playButton->setText("Play");
+        ui->statusBar->clearMessage();
+        ui->statusBar->showMessage("Playback stopped!");
         receiverTimerStop();
-        emit stopPlayback();
-        receiving = false;
+
     }
 }
 
@@ -92,13 +106,21 @@ int GUI::getVolume() {
     return ui->volumeSlider->value();
 }
 
+int GUI::getPort() {
+    QListWidgetItem *item = ui->listWidget->currentItem();
+    QVariant data = item->data(Qt::UserRole);
+    int port = data.toInt();
+    return port;
+}
+
 void GUI::volumeChangedSlot() {
     emit volumeChanged();
 }
 
 void GUI::getItemData(QListWidgetItem *item) {
-    receiving = false;
-    this->playbackButtonPushed();
+    QVariant data = item->data(Qt::UserRole);
+    int port = data.toInt();
+    emit portChanged(port);
 }
 
 
@@ -125,4 +147,38 @@ void GUI::menuTriggered(QAction* action) {
 Settings* GUI::getSettings() {
     return settings;
 }
+
+void GUI::startRecordPushed() {
+    emit startRecord();
+}
+
+void GUI::pauseRecordPushed() {
+    emit pauseRecord();
+}
+
+void GUI::changeRecordButtonState(RecordAudio::STATE state) {
+    switch(state) {
+    case RecordAudio::STOPPED : {
+        ui->recordButton->setText("Record");
+        ui->pauseRec->setText("Pause");
+        break;
+    }
+    case RecordAudio::RECORDING : {
+        ui->recordButton->setText("Stop Record");
+    }
+    }
+}
+
+void GUI::changePauseButtonState(RecordAudio::STATE state) {
+    switch(state) {
+    case RecordAudio::PAUSED : {
+        ui->pauseRec->setText("Unpause");
+        break;
+    }
+    case RecordAudio::RECORDING : {
+        ui->pauseRec->setText("Pause");
+    }
+    }
+}
+
 
