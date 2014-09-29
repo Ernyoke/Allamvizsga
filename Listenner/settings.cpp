@@ -9,7 +9,6 @@ Settings::Settings(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    selectedDevice = QAudioDeviceInfo::defaultOutputDevice();
     displayDeviceProperties(selectedDevice);
 
     output_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
@@ -17,12 +16,35 @@ Settings::Settings(QWidget *parent) :
             ui->deviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
 
+    //read settings from XML file into structs
+    readSettingsFromXML();
+
+    selectedDevice = QAudioDeviceInfo::defaultOutputDevice();
+    for(QList<QAudioDeviceInfo>::iterator it = output_devices.begin(); it != output_devices.end(); ++it) {
+        if(it->deviceName().compare(xml_outdev.dev_name) == 0) {
+            selectedDevice = *it;
+            break;
+        }
+    }
+
+    displayDeviceProperties(selectedDevice);
+
+    //initialize selected properties for devices
+    initSettingsValues();
+
+    //initialize QAudioFormats for devices
+    setFormatProperties();
+
+    //initialize recording codec
     ui->codecBox->addItem("wav");
     recordCodec = WAV;
 
+    //initialize recording path
+    recordPath = QDir::currentPath();
+    ui->displayPath->setText(recordPath);
+
     fileBrowser = new QFileDialog(this);
 
-    applySettings();
     connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(applySettings()));
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
     connect(ui->deviceBox, SIGNAL(activated(int)), this, SLOT(changeDevice(int)));
@@ -35,6 +57,16 @@ Settings::~Settings()
     qDebug() << "Settings deleted!";
     delete ui;
 }
+
+void Settings::initSettingsValues() {
+    //outdev
+    setBoxIndex(ui->deviceBox, getBoxIndex(ui->deviceBox, &xml_outdev.dev_name));
+    setBoxIndex(ui->sampleRateBox, getBoxIndex(ui->sampleRateBox, xml_outdev.sample_rate));
+    setBoxIndex(ui->codecBox_2, getBoxIndex(ui->codecBox_2, &xml_outdev.codec));
+    setBoxIndex(ui->channelBox, getBoxIndex(ui->channelBox, xml_outdev.channels));
+    setBoxIndex(ui->sampleSizeBox, getBoxIndex(ui->sampleSizeBox, xml_outdev.sample_size));
+}
+
 
 void Settings::changeDevice(int index) {
     QAudioDeviceInfo selectedDevice = output_devices.at(index);
@@ -62,8 +94,25 @@ void Settings::displayDeviceProperties(QAudioDeviceInfo device) {
             ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
     }
     ui->sampleSizeBox->setEditable(false);
-    readSettingsFromXML();
 }
+
+//update format with given settings
+void Settings::setFormatProperties() {
+    formatListenner.setByteOrder(QAudioFormat::LittleEndian);
+    formatListenner.setSampleType(QAudioFormat::UnSignedInt);
+
+    xml_outdev.dev_name = selectedDevice.deviceName();
+    xml_outdev.codec = boxValue(ui->codecBox_2).toString();
+    xml_outdev.channels = boxValue(ui->channelBox).toInt();
+    xml_outdev.sample_rate = boxValue(ui->sampleRateBox).toInt();
+    xml_outdev.sample_size = boxValue(ui->sampleSizeBox).toInt();
+
+    formatListenner.setCodec(xml_outdev.codec);
+    formatListenner.setSampleRate(xml_outdev.sample_rate);
+    formatListenner.setChannelCount(xml_outdev.channels);
+    formatListenner.setSampleSize(xml_outdev.sample_size);
+}
+
 
 //read the settings from XML and parse them
 //update the comboboxes
@@ -80,24 +129,19 @@ void Settings::readSettingsFromXML() {
                     if(atr.value("direction").toString().compare("output") == 0) {
                         while(XMLReader.readNextStartElement()) {
                             if(XMLReader.name() == "devicename") {
-                                QString content = XMLReader.readElementText();
-                                setBoxIndex(ui->deviceBox, getBoxIndex(ui->deviceBox, &content));
+                                xml_outdev.dev_name = XMLReader.readElementText();
                             }
                             if(XMLReader.name() == "samplerate") {
-                                QString content = XMLReader.readElementText();
-                                setBoxIndex(ui->sampleRateBox, getBoxIndex(ui->sampleRateBox, content.toInt()));
+                                xml_outdev.sample_rate = XMLReader.readElementText().toInt();
                             }
                             if(XMLReader.name() == "codec") {
-                                QString content = XMLReader.readElementText();
-                                setBoxIndex(ui->codecBox_2, getBoxIndex(ui->codecBox_2, &content));
+                                xml_outdev.codec = XMLReader.readElementText();
                             }
                             if(XMLReader.name() == "channelcount") {
-                                QString content = XMLReader.readElementText();
-                                setBoxIndex(ui->channelBox, getBoxIndex(ui->channelBox, content.toInt()));
+                                xml_outdev.channels = XMLReader.readElementText().toInt();
                             }
                             if(XMLReader.name() == "samplesize") {
-                                QString content = XMLReader.readElementText();
-                                setBoxIndex(ui->sampleSizeBox, getBoxIndex(ui->sampleSizeBox, content.toInt()));
+                                xml_outdev.sample_size = XMLReader.readElementText().toInt();
                             }
                         }
                     }
@@ -158,6 +202,10 @@ QVariant Settings::boxValue(const QComboBox *box)
 }
 
 void Settings::applySettings() {
+
+    //update formats first
+    setFormatProperties();
+
     formatListenner.setByteOrder(QAudioFormat::LittleEndian);
     formatListenner.setSampleType(QAudioFormat::UnSignedInt);
 

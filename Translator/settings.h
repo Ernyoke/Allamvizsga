@@ -34,6 +34,18 @@ public:
     QString getRecordPath();
 
 private:
+
+    struct devinfo {
+        QString dev_name;
+        QString codec;
+        int sample_rate;
+        int channels;
+        int sample_size;
+    };
+
+    devinfo xml_indev;
+    devinfo xml_outdev;
+
     Ui::Settings *ui;
     QAudioFormat formatSpeaker;
     QAudioFormat formatListenner;
@@ -52,6 +64,10 @@ private:
     int getBoxIndex(QComboBox*, QString*);
     int getBoxIndex(QComboBox*, int);
     void setBoxIndex(QComboBox*, int);
+    void initSettingsValues();
+    void setFormatProperties();
+
+    void showEvent(QShowEvent * event);
 
 private slots:
     void applySettings();
@@ -59,6 +75,9 @@ private slots:
     void changeInputDevice(int);
     void changeOutputDevice(int);
     void selectRecordPath();
+
+    //overrided
+
 };
 
 #endif // SETTINGS_H

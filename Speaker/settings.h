@@ -26,6 +26,17 @@ public:
 
 private:
     Ui::Settings *ui;
+
+    struct devinfo {
+        QString dev_name;
+        QString codec;
+        int sample_rate;
+        int channels;
+        int sample_size;
+    };
+
+    devinfo xml_indev;
+
     QAudioFormat formatSpeaker;
     QList<QAudioDeviceInfo> input_devices;
     QAudioDeviceInfo selectedDevice;
@@ -37,6 +48,8 @@ private:
     int getBoxIndex(QComboBox*, QString*);
     int getBoxIndex(QComboBox*, int);
     void setBoxIndex(QComboBox*, int);
+    void initSettingsValues();
+    void setFormatProperties();
 
 private slots:
     void applySettings();

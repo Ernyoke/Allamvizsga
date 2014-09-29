@@ -6,9 +6,6 @@
 #include <QAudioFormat>
 #include <QDebug>
 
-//dealing with circular depnedencie
-class GUI;
-
 class RecordAudio : public QObject
 {
     Q_OBJECT
@@ -16,7 +13,7 @@ public:
 
     enum STATE {RECORDING, STOPPED, PAUSED};
 
-    explicit RecordAudio(QString, QAudioFormat, GUI*, QObject *parent = 0);
+    explicit RecordAudio(QString, QAudioFormat, QObject *parent = 0);
     ~RecordAudio();
     virtual bool start() = 0;
     virtual bool stop() = 0;
@@ -27,13 +24,16 @@ public:
 protected:
     QFile *outputfile;
     QAudioFormat format;
-    GUI* gui;
     STATE currentState;
     QString path;
 
+    bool finalized;
+
 signals:
 
+
 public slots:
+    virtual void save(QString) = 0;
 
 };
 

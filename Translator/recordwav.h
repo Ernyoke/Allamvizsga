@@ -11,13 +11,12 @@
 #include <QDir>
 #include <QAbstractButton>
 #include "recordaudio.h"
-#include "gui.h"
 
 class RecordWav : public RecordAudio
 {
     Q_OBJECT
 public:
-    explicit RecordWav(QString, QAudioFormat, GUI* gui, QObject *parent = 0);
+    explicit RecordWav(QString, QAudioFormat, QObject *parent = 0);
 
     bool start();
     bool stop();
@@ -31,6 +30,7 @@ private:
 signals:
 
 public slots:
+    virtual void save(QString) = 0;
 
 };
 

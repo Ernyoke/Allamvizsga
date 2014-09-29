@@ -1,8 +1,10 @@
 #include "listener.h"
 
+const int BufferSize = 14096;
+
 Listener::Listener(QObject *parent) :
     m_audioOutput(0),
-    m_buffer(8192, 0),
+    m_buffer(BufferSize, 0),
     QThread(parent)
 {
     socket = new QUdpSocket(this);
@@ -109,7 +111,7 @@ void Listener::playback() {
         }
 
         m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
-        m_audioOutput->setBufferSize(8192);
+        m_audioOutput->setBufferSize(BufferSize);
 
         qreal volume = gui->getVolume();
         m_audioOutput->setVolume(volume);

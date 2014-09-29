@@ -8,6 +8,33 @@ GUI::GUI(QWidget *parent) :
     ui->setupUi(this);
     initialize();
 
+    //speaker
+    speaker = new Speaker(settings);
+    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
+    connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
+    connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
+    connect(this, SIGNAL(stopSpeaker()), speaker, SLOT(stopRunning()));
+    threadSpeaker = new QThread;
+    connect(speaker, SIGNAL(finished()), threadSpeaker, SLOT(quit()));
+    connect(speaker, SIGNAL(finished()), speaker, SLOT(deleteLater()));
+    speaker->moveToThread(threadSpeaker);
+    threadSpeaker->start();
+
+    //listener
+    listener = new Listener(settings);
+    QThread *threadListener = new QThread;
+    connect(this, SIGNAL(changePlayBackState(int)), listener, SLOT(changePlaybackState(int)));
+    connect(listener, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
+    connect(this, SIGNAL(stopListener()), listener, SLOT(stopRunning()));
+    connect(listener, SIGNAL(finished()), threadListener, SLOT(quit()));
+    connect(listener, SIGNAL(finished()), listener, SLOT(deleteLater()));
+    connect(listener, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
+    connect(this, SIGNAL(volumeChanged(int)), listener, SLOT(volumeChanged(int)));
+    connect(this, SIGNAL(portChanged(int)), listener, SLOT(portChanged(int)));
+//    connect(this, SIGNAL(startRecord()), listener, SLOT(startRecord()));
+//    connect(this, SIGNAL(pauseRecord()), listener, SLOT(pauseRecord()));
+    listener->moveToThread(threadListener);
+    threadListener->start();
 }
 
 void GUI::initialize() {
@@ -18,6 +45,8 @@ void GUI::initialize() {
 
     broadcastDataSize = 0;
     broadcastDataPerSec = 0;
+
+    broadcasting_port = -1;
 
     //get settings
     settings = new Settings(this);
@@ -51,6 +80,8 @@ void GUI::initialize() {
 
 GUI::~GUI()
 {
+    emit stopSpeaker();
+    emit stopListener();
     delete ui;
     qDebug() << "GUI destructor!";
 }
@@ -71,7 +102,7 @@ void GUI::setDataSent(int size) {
 void GUI::playbackButtonPushed() {
         QListWidgetItem *item = ui->listWidget->currentItem();
         if(item != NULL) {
-            emit changePlayBackState();
+            emit changePlayBackState(getPort());
         }
         else {
             QMessageBox msg;
@@ -160,7 +191,7 @@ int GUI::getPort() {
 }
 
 void GUI::volumeChangedSlot() {
-    emit volumeChanged();
+    emit volumeChanged(ui->volumeSlider->value());
 }
 
 void GUI::getItemData(QListWidgetItem *item) {
@@ -186,7 +217,7 @@ void GUI::btn() {
         msg.exec();
         return;
     }
-   emit broadcastStateChanged();
+   emit broadcastStateChanged(broadcasting_port);
 }
 
 void GUI::addNewChannel() {

@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include "settings.h"
 #include "recordaudio.h"
+#include "listener.h"
+#include "speaker.h"
 
 namespace Ui {
 class GUI;
@@ -23,7 +25,6 @@ public:
     ~GUI();
 
     //listenner
-    void setDataReceived(int);
     void setRecordAudioDev(RecordAudio *record);
     void receiverTimerStart();
     void receiverTimerStop();
@@ -31,14 +32,11 @@ public:
     int getPort();
     void changeRecordButtonState(RecordAudio::STATE);
     void changePauseButtonState(RecordAudio::STATE);
-    void changePlayButtonState(bool isPlaying);
 
     //speaker
-    void setDataSent(int);
     int getBroadcastingPort();
     void broadcastTimerStart();
     void broadcastTimerStop();
-    void changeBroadcastButtonState(bool);
 
     //both
     void updateSpeed();
@@ -46,7 +44,12 @@ public:
 
 private:
     Ui::GUI *ui;
+
+    QThread *threadListener;
+    QThread *threadSpeaker;
+
     //listenner
+    Listener *listener;
     QTimer timer;
     long dataSize;
     long dataPerSec;
@@ -54,6 +57,7 @@ private:
     QList<QListWidgetItem*> *channels;
 
     //speaker
+    Speaker *speaker;
     QTimer broadcastTimer;
     long broadcastDataSize;
     long broadcastDataPerSec;
@@ -68,18 +72,20 @@ private:
 
 signals:
     //signals for listenner
-    void volumeChanged();
+    void volumeChanged(int);
     void startRecord();
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState();
+    void changePlayBackState(int);
     void portChanged(int);
+    void stopListener();
 
     //signals for broadcast
-    void broadcastStateChanged();
+    void broadcastStateChanged(int);
+    void stopSpeaker();
 
 public slots:
-    //slots for listenner
+    //slots for listener
     void playbackButtonPushed();
     void startRecordPushed();
     void pauseRecordPushed();
@@ -88,10 +94,16 @@ public slots:
     void getItemData(QListWidgetItem*);
     void addNewChannel();
 
+    void changePlayButtonState(bool isPlaying);
+    void setDataReceived(int);
+
+
     //slots for broadcast
     void btn();
     void changeBroadcastingPort();
     void updateBroadcastTime();
+    void changeBroadcastButtonState(bool);
+    void setDataSent(int);
 
     //general
     void showSettings();

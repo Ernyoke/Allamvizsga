@@ -1,12 +1,14 @@
 #include "speaker.h"
 
-Speaker::Speaker(GUI *gui, QObject *parent) :
-    QThread(parent)
+Speaker::Speaker(QObject *parent, Settings*) :
+    QObject(parent)
 {
-    this->socket = new QUdpSocket(this);
-    this->gui = gui;
+}
 
-    settings = gui->getSettings();
+Speaker::Speaker(Settings *settings) {
+    this->socket = new QUdpSocket(this);
+
+    this->settings = settings;
 
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
@@ -19,12 +21,9 @@ Speaker::~Speaker() {
     qDebug() << "Speaker deleted!";
 }
 
-void Speaker::run() {
-     connect(gui, SIGNAL(broadcastStateChanged()), this, SLOT(changeRecordState()));
-}
-
-void Speaker::changeRecordState() {
+void Speaker::changeRecordState(int port) {
     if(!isRecording) {
+        broadcasting_port = port;
         startRecording();
     }
     else {
@@ -34,7 +33,6 @@ void Speaker::changeRecordState() {
 
 void Speaker::startRecording() {
     if(!isRecording) {
-        broadcasting_port = gui->getBroadcastingPort();
         format = settings->getSpeakerAudioFormat();
 
         QAudioDeviceInfo info = settings->getInputDevice();
@@ -50,7 +48,7 @@ void Speaker::startRecording() {
 
        buffLen = audioInput->periodSize();
        isRecording = true;
-       gui->changeBroadcastButtonState(isRecording);
+       emit recordingState(true);
     }
 }
 
@@ -74,7 +72,7 @@ void Speaker::transferData(){
             sendBuffer.append(chunk[i]);
         }*/
 
-        gui->setDataSent(sendBuffer.size());
+        emit dataSent(sendBuffer.size());
 
         socket->writeDatagram(sendBuffer, QHostAddress::LocalHost, broadcasting_port);
     }
@@ -86,6 +84,11 @@ void Speaker::stopRecording()
         audioInput->stop();
         delete audioInput;
         isRecording = false;
-        gui->changeBroadcastButtonState(isRecording);
+        emit recordingState(false);
     }
+}
+
+void Speaker::stopRunning() {
+    stopRecording();
+    emit finished();
 }

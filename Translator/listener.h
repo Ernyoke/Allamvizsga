@@ -7,7 +7,6 @@
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QAudioOutput>
-#include "gui.h"
 #include <QIODevice>
 #include <QAudioOutput>
 #include <QBuffer>
@@ -20,16 +19,16 @@
 #include "recordaudio.h"
 #include "recordwav.h"
 
-class Listener : public QThread
+class Listener : public QObject
 {
     Q_OBJECT
 public:
-    explicit Listener(GUI *gui, QObject *parent = 0);
+    explicit Listener(QObject *parent = 0);
+    Listener(Settings *settings);
     ~Listener();
 
 private:
     QUdpSocket *socket;
-    GUI *gui;
     QHostAddress groupAddress;
 
     QAudioFormat format;
@@ -46,26 +45,33 @@ private:
 
     bool isPlaying;
 
-    short Snack_Alaw2Lin(unsigned char);
+//    short Snack_Alaw2Lin(unsigned char);
 
     RecordAudio *record;
 
     void storeChunk(QByteArray);
 
-protected:
-    void run();
-
 signals:
+    //this signal is emited whenever the player starts listening
+    void changePlayButtonState(bool);
+    //is emited when a data package is received(updates the GUI speed and transfer size)
+    void dataReceived(int);
+    void finished();
 
 public slots:
     void receiveDatagramm();
     void playback();
     void stopPlayback();
-    void volumeChanged();
+    void volumeChanged(int);
     void portChanged(int);
     void startRecord();
     void pauseRecord();
-    void changePlaybackState();
+    void changePlaybackState(int);
+
+    void stopRunning();
+
+private slots:
+
 
 };
 
