@@ -8,33 +8,6 @@ GUI::GUI(QWidget *parent) :
     ui->setupUi(this);
     initialize();
 
-    //speaker
-    speaker = new Speaker(settings);
-    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
-    connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
-    connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
-    connect(this, SIGNAL(stopSpeaker()), speaker, SLOT(stopRunning()));
-    threadSpeaker = new QThread;
-    connect(speaker, SIGNAL(finished()), threadSpeaker, SLOT(quit()));
-    connect(speaker, SIGNAL(finished()), speaker, SLOT(deleteLater()));
-    speaker->moveToThread(threadSpeaker);
-    threadSpeaker->start();
-
-    //listener
-    listener = new Listener(settings);
-    QThread *threadListener = new QThread;
-    connect(this, SIGNAL(changePlayBackState(int)), listener, SLOT(changePlaybackState(int)));
-    connect(listener, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
-    connect(this, SIGNAL(stopListener()), listener, SLOT(stopRunning()));
-    connect(listener, SIGNAL(finished()), threadListener, SLOT(quit()));
-    connect(listener, SIGNAL(finished()), listener, SLOT(deleteLater()));
-    connect(listener, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
-    connect(this, SIGNAL(volumeChanged(int)), listener, SLOT(volumeChanged(int)));
-    connect(this, SIGNAL(portChanged(int)), listener, SLOT(portChanged(int)));
-//    connect(this, SIGNAL(startRecord()), listener, SLOT(startRecord()));
-//    connect(this, SIGNAL(pauseRecord()), listener, SLOT(pauseRecord()));
-    listener->moveToThread(threadListener);
-    threadListener->start();
 }
 
 void GUI::initialize() {
@@ -76,22 +49,56 @@ void GUI::initialize() {
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->portChange, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
 
+    //speaker
+    speaker = new Speaker(settings);
+    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
+    connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
+    connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
+    connect(this, SIGNAL(stopSpeaker()), speaker, SLOT(stopRunning()));
+    threadSpeaker = new QThread;
+    connect(speaker, SIGNAL(finished()), threadSpeaker, SLOT(quit()));
+    connect(speaker, SIGNAL(finished()), speaker, SLOT(deleteLater()));
+    speaker->moveToThread(threadSpeaker);
+    threadSpeaker->start();
+
+    //listener
+    listener = new Listener(settings);
+    QThread *threadListener = new QThread;
+    connect(this, SIGNAL(changePlayBackState(int)), listener, SLOT(changePlaybackState(int)));
+    connect(listener, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
+    connect(this, SIGNAL(stopListener()), listener, SLOT(stopRunning()));
+    connect(listener, SIGNAL(finished()), threadListener, SLOT(quit()));
+    connect(listener, SIGNAL(finished()), listener, SLOT(deleteLater()));
+    connect(listener, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
+    connect(this, SIGNAL(volumeChanged(int)), listener, SLOT(volumeChanged(int)));
+    connect(this, SIGNAL(portChanged(int)), listener, SLOT(portChanged(int)));
+    connect(this, SIGNAL(startRecord()), listener, SLOT(startRecord()));
+    connect(listener, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
+    connect(listener, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
+    connect(this, SIGNAL(pauseRecord()), listener, SLOT(pauseRecord()));
+    connect(listener, SIGNAL(askFileNameGUI(QString)), this, SLOT(setRecordFileName(QString)));
+    connect(listener, SIGNAL(showError(QString)), this, SLOT(showErrorMessage(QString)));
+    listener->moveToThread(threadListener);
+    threadListener->start();
 }
 
 GUI::~GUI()
 {
+    //emit finish signal for running threads
     emit stopSpeaker();
     emit stopListener();
     delete ui;
     qDebug() << "GUI destructor!";
 }
 
+//update GUI with sent data size
 void GUI::setDataReceived(int size) {
     dataSize += size;
     ui->dataReceived->setText(QString::number(dataSize / 1024) + "kByte");
     dataPerSec += size;
 }
 
+//update GUI with received data size
 void GUI::setDataSent(int size) {
     broadcastDataSize += size;
     broadcastDataPerSec +=  size;
@@ -190,9 +197,11 @@ int GUI::getPort() {
     return port;
 }
 
+//when volume is changed, emit signal to listener
 void GUI::volumeChangedSlot() {
     emit volumeChanged(ui->volumeSlider->value());
 }
+
 
 void GUI::getItemData(QListWidgetItem *item) {
     QVariant data = item->data(Qt::UserRole);
@@ -241,10 +250,10 @@ void GUI::menuTriggered(QAction* action) {
 }
 
 int GUI::getBroadcastingPort() {
-    //QVariant data = ui->listWidget->currentItem()->data();
     return this->broadcasting_port;
 }
 
+//show setting window
 void GUI::showSettings() {
     settings->exec();
 }
@@ -284,6 +293,58 @@ void GUI::changePauseButtonState(RecordAudio::STATE state) {
         ui->pauseRec->setText("Pause");
     }
     }
+}
+
+//at the end of the recording, users has the oppurunity to set the file name of the recorded file
+//in other case it will be saved as temporary(tmp) file
+void GUI::setRecordFileName(QString filename) {
+    bool renameOK = false;
+    bool ok = true;
+    QFile file(filename);
+          while(!renameOK) {
+              QString newName = QInputDialog::getText(this, tr("Save file as:"),
+                                                      tr("Filename:"), QLineEdit::Normal,
+                                                      tr(""), &ok);
+              if(ok && !newName.isEmpty()) {
+                  if(file.rename(settings->getRecordPath() + "/" + newName + ".wav")) {
+                      renameOK = true;
+                  }
+                  else {
+                       QMessageBox msgBox;
+                       msgBox.setText("File could not saved.");
+                       msgBox.setInformativeText("Would you like to enter a new filname or save it as a temporary(tmp.wav) file?");
+                       QPushButton *tryAgain = msgBox.addButton(tr("Try Again"), QMessageBox::ActionRole);
+                       QPushButton *save = msgBox.addButton(tr("Save as temporary"), QMessageBox::ActionRole);
+                       QPushButton *del = msgBox.addButton(tr("Delete"), QMessageBox::ActionRole);
+
+                       msgBox.exec();
+
+                       if((QPushButton*)msgBox.clickedButton() == tryAgain) {
+                           renameOK = false;
+                       }
+                       else {
+                           if((QPushButton*)msgBox.clickedButton() == save) {
+                               //save as temporary
+                               renameOK = true;
+                           }
+                           else {
+                               if((QPushButton*)msgBox.clickedButton() == del) {
+                                   //delete recording
+                                   renameOK = true;
+                               }
+                           }
+                       }
+                  }
+              }
+          }
+          file.close();
+}
+
+//show any error message
+void GUI::showErrorMessage(QString message) {
+    QMessageBox msgBox;
+    msgBox.setText(message);
+    msgBox.exec();
 }
 
 

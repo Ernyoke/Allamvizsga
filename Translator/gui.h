@@ -30,8 +30,6 @@ public:
     void receiverTimerStop();
     int getVolume();
     int getPort();
-    void changeRecordButtonState(RecordAudio::STATE);
-    void changePauseButtonState(RecordAudio::STATE);
 
     //speaker
     int getBroadcastingPort();
@@ -79,6 +77,7 @@ signals:
     void changePlayBackState(int);
     void portChanged(int);
     void stopListener();
+    void finalRecordName(bool, QString);
 
     //signals for broadcast
     void broadcastStateChanged(int);
@@ -93,9 +92,12 @@ public slots:
     void volumeChangedSlot();
     void getItemData(QListWidgetItem*);
     void addNewChannel();
-
-    void changePlayButtonState(bool isPlaying);
+    void changeRecordButtonState(RecordAudio::STATE);
+    void changePauseButtonState(RecordAudio::STATE);
+    void changePlayButtonState(bool);
     void setDataReceived(int);
+
+    void setRecordFileName(QString filename);
 
 
     //slots for broadcast
@@ -108,6 +110,7 @@ public slots:
     //general
     void showSettings();
     void menuTriggered(QAction*);
+    void showErrorMessage(QString);
 
 
 };

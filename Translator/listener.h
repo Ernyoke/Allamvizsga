@@ -15,15 +15,14 @@
 #include <QMap>
 
 #include "g711.h"
-#include "settings.h"
 #include "recordaudio.h"
 #include "recordwav.h"
+#include "worker.h"
 
-class Listener : public QObject
+class Listener : public Worker
 {
     Q_OBJECT
 public:
-    explicit Listener(QObject *parent = 0);
     Listener(Settings *settings);
     ~Listener();
 
@@ -56,7 +55,16 @@ signals:
     void changePlayButtonState(bool);
     //is emited when a data package is received(updates the GUI speed and transfer size)
     void dataReceived(int);
+    //emitted when recording is started or stopped
+    void changeRecordButtonState(RecordAudio::STATE);
+    //emitted when recording is paused or reloaded from pause state
+    void changePauseButtonState(RecordAudio::STATE);
+    //emitted when saving the recorded sound(renaming the file)
+    void askFileNameGUI(QString);
+    //emit when thread work is over
     void finished();
+    //error message
+    void showError(QString);
 
 public slots:
     void receiveDatagramm();
@@ -68,10 +76,9 @@ public slots:
     void pauseRecord();
     void changePlaybackState(int);
 
-    void stopRunning();
-
 private slots:
-
+    void askFileName(QString filename);
+    void stopRunning();
 
 };
 

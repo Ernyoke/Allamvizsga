@@ -1,14 +1,9 @@
 #include "speaker.h"
 
-Speaker::Speaker(QObject *parent, Settings*) :
-    QObject(parent)
+Speaker::Speaker(Settings *settings) :
+Worker(settings)
 {
-}
-
-Speaker::Speaker(Settings *settings) {
     this->socket = new QUdpSocket(this);
-
-    this->settings = settings;
 
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();

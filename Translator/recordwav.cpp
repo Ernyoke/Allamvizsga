@@ -84,48 +84,8 @@ void RecordWav::finalize() {
       out << quint32(fileSize - 44);
 
       finalized = true;
-      bool ok = false;
-      bool renameOK = false;
-//      while(!renameOK) {
-//          QString newName = QInputDialog::getText(gui, tr("Save file as:"),
-//                                                  tr("Filename:"), QLineEdit::Normal,
-//                                                  tr(""), &ok);
-//          if(ok && !newName.isEmpty()) {
-//              if(outputfile->rename(path + "/" + newName + ".wav")) {
-//                  renameOK = true;
-//              }
-//              else {
-//                   QMessageBox msgBox;
-//                   msgBox.setText("File could not saved.");
-//                   msgBox.setInformativeText("Would you like to enter a new filname or save it as a temporary(tmp.wav) file?");
-//                   QPushButton *tryAgain = msgBox.addButton(tr("Try Again"), QMessageBox::ActionRole);
-//                   QPushButton *save = msgBox.addButton(tr("Save as temporary"), QMessageBox::ActionRole);
-//                   QPushButton *del = msgBox.addButton(tr("Delete"), QMessageBox::ActionRole);
-
-//                   msgBox.exec();
-
-//                   if((QPushButton*)msgBox.clickedButton() == tryAgain) {
-//                       renameOK = false;
-//                   }
-//                   else {
-//                       if((QPushButton*)msgBox.clickedButton() == save) {
-//                           renameOK = true;
-//                       }
-//                       else {
-//                           if((QPushButton*)msgBox.clickedButton() == del) {
-//                               outputfile->remove();
-//                               renameOK = true;
-//                           }
-//                       }
-//                   }
-//              }
-//          }
-//      }
+      outputfile->close();
+      emit askFileName(path + "/tmp.wav");
 
 }
 
-void RecordWav::save(QString name) {
-    if(finalized) {
-        outputfile->rename(path + "/" + name + ".wav");
-    }
-}

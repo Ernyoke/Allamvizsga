@@ -10,13 +10,12 @@
 #include <QDateTime>
 
 #include "g711.h"
-#include "settings.h"
+#include "worker.h"
 
-class Speaker : public QObject
+class Speaker : public Worker
 {
     Q_OBJECT
 public:
-    explicit Speaker(QObject *parent = 0, Settings *settings = 0);
     Speaker(Settings*);
     ~Speaker();
 
@@ -26,8 +25,6 @@ private:
     QAudioFormat format;
     QIODevice *intermediateDevice;
     QUdpSocket *socket;
-
-    Settings *settings;
 
     int broadcasting_port;
     qint64 timestamp;

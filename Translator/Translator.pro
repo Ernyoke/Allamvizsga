@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     settings.cpp \
     listener.cpp \
     recordaudio.cpp \
-    recordwav.cpp
+    recordwav.cpp \
+    worker.cpp
 
 HEADERS  += gui.h \
     speaker.h \
@@ -29,7 +30,8 @@ HEADERS  += gui.h \
     settings.h \
     listener.h \
     recordaudio.h \
-    recordwav.h
+    recordwav.h \
+    worker.h
 
 FORMS    += gui.ui \
     settings.ui

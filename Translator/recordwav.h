@@ -25,12 +25,12 @@ public:
 
 private:
     void writeHeader();
+
     void finalize();
 
 signals:
 
 public slots:
-    virtual void save(QString) = 0;
 
 };
 

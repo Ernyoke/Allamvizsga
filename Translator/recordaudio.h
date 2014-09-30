@@ -29,11 +29,13 @@ protected:
 
     bool finalized;
 
+    virtual void finalize() = 0;
+
 signals:
+    void askFileName(QString);
 
 
 public slots:
-    virtual void save(QString) = 0;
 
 };
 

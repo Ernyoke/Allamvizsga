@@ -3,6 +3,8 @@
 RecordAudio::RecordAudio(QString path, QAudioFormat format, QObject *parent) :
     QObject(parent)
 {
+    qRegisterMetaType<STATE>("RecordAudio::STATE");
+
     this->format = format;
     this->path = path;
     outputfile = new QFile(path + "/tmp.wav");

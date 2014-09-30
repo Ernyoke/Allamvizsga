@@ -3,6 +3,7 @@
 const int BufferSize = 14096;
 
 Listener::Listener(Settings *settings) :
+    Worker(settings),
     m_audioOutput(0),
     m_buffer(BufferSize, 0)
 {
@@ -15,7 +16,6 @@ Listener::Listener(Settings *settings) :
     isPlaying = false;
     record = NULL;
 
-    this->settings = settings;
 }
 
 Listener::~Listener() {
@@ -64,8 +64,8 @@ void Listener::receiveDatagramm() {
                     decomp.append(tmp);
                     decomp.append(tmp >> 8);
                 }*/
-                m_output->write(aux.data(), aux.size());
-//                storeChunk(decomp);
+                m_output->write(decomp.data(), decomp.size());
+                storeChunk(decomp);
                 outputBuffer->clear();
             }
         }
@@ -137,15 +137,14 @@ void Listener::startRecord() {
         qDebug() << path;
         switch(codec) {
         case Settings::WAV: {
-//            record = new RecordWav(path, format, this);
-//            if(record->getState() == RecordAudio::STOPPED) {
-//                if(!record->start()) {
-//                    QMessageBox msgBox;
-//                    msgBox.setText("Temporary record file can not be created. Please change record file path in the Settings!");
-//                    msgBox.exec();
-//                }
-//                gui->changeRecordButtonState(record->getState());
-//            }
+            record = new RecordWav(path, format, this);
+            connect(record, SIGNAL(askFileName(QString)), this, SLOT(askFileName(QString)));
+            if(record->getState() == RecordAudio::STOPPED) {
+                if(!record->start()) {
+                    emit showError("Temporary recording file can not be created! Please change the recording path in the settings!");
+                }
+                emit changeRecordButtonState(record->getState());
+            }
             break;
         }
         }
@@ -153,7 +152,7 @@ void Listener::startRecord() {
     else {
         if(record->getState() == RecordAudio::RECORDING || record->getState() == RecordAudio::PAUSED) {
             record->stop();
-//            gui->changeRecordButtonState(record->getState());
+            emit changeRecordButtonState(record->getState());
             delete record;
             record = NULL;
         }
@@ -169,9 +168,14 @@ void Listener::storeChunk(QByteArray data) {
 void Listener::pauseRecord() {
     if(record != NULL) {
         record->pause();
-//        gui->changePauseButtonState(record->getState());
+        emit changePauseButtonState(record->getState());
     }
 }
+
+void Listener::askFileName(QString filename) {
+    emit askFileNameGUI(filename);
+}
+
 
 void Listener::stopRunning() {
     this->stopPlayback();
