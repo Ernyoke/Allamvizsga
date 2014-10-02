@@ -1,20 +1,20 @@
 #include "acceptdata.h"
 
 AcceptData::AcceptData(int portIn, int portOut, QObject *parent) :
-    QThread(parent)
+    QObject(parent)
 {
     this->portIn = portIn;
     this->portOut = portOut;
     socket = new QUdpSocket(this);
     socket->bind(QHostAddress::Any, portIn);
-}
 
-void AcceptData::run() {
     connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
 }
 
+AcceptData::~AcceptData() {
+}
+
 void AcceptData::readData() {
-    QByteArray data;
     data.resize(socket->pendingDatagramSize());
     QHostAddress sender;
     quint16 senderPort;

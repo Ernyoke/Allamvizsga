@@ -4,24 +4,23 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QHostAddress>
-#include <QThread>
 
-class AcceptData : public QThread
+class AcceptData : public QObject
 {
     Q_OBJECT
 public:
     explicit AcceptData(int portIn, int portOut, QObject *parent = 0);
-
+    ~AcceptData();
     int getPortIn();
     int getPortOut();
 
 private:
-    void run();
 
     int portIn;
     int portOut;
     QUdpSocket *socket;
     QHostAddress groupAddress;
+    QByteArray data;
 
 signals:
 

@@ -16,6 +16,7 @@ GUI::~GUI()
     delete ui;
 }
 
+//starts a new channel
 void GUI::startChannel() {
     channelCounter++;
     int portIn, portOut;
@@ -44,29 +45,35 @@ void GUI::startChannel() {
         QListWidgetItem *item = new QListWidgetItem("Channel (" + port1 + " => " + port2 + ")");
         item->setData(Qt::UserRole, QVariant(channelCounter));
         ui->chList->addItem(item);
-        channel->start();
     }
 }
 
+//stops and delets a channel from running
 void GUI::stopChannel() {
-    QListWidgetItem *item = ui->chList->currentItem();
-    QVariant data = item->data(Qt::UserRole);
-    int index = data.toInt();
-    int reply;
-    reply = QMessageBox::question(this, "Delete Channel", "Do you really want to delete this channel", QMessageBox::Yes, QMessageBox::Cancel);
-    if(reply == QMessageBox::Yes) {
-        ui->chList->removeItemWidget(item);
-        delete item;
-        QMap<int, AcceptData*>::iterator it = channels.find(index);
-        AcceptData *channel = it.value();
-        //channel.stop();
-        delete channel;
-    }
-    else {
-        //
+    //check if list has any item
+    if(ui->chList->count() > 0) {
+        QListWidgetItem *item = ui->chList->currentItem();
+         //check if is any item selected
+        if(item != NULL) {
+            QVariant data = item->data(Qt::UserRole);
+            int index = data.toInt();
+            int reply;
+            reply = QMessageBox::question(this, "Delete Channel", "Do you really want to delete this channel", QMessageBox::Yes, QMessageBox::Cancel);
+            if(reply == QMessageBox::Yes) {
+                ui->chList->removeItemWidget(item);
+                delete item;
+                QMap<int, AcceptData*>::iterator it = channels.find(index);
+                AcceptData *channel = it.value();
+                delete channel;
+            }
+            else {
+                //
+            }
+        }
     }
 }
 
+//checks if inserted in/out ports are available
 bool GUI::checkUsedPorts(int portIn, int portOut) {
     for(QMap<int, AcceptData*>::iterator it = channels.begin(); it != channels.end(); ++it) {
         if((*it)->getPortIn() == portIn || (*it)->getPortOut() == portIn || (*it)->getPortIn() == portOut || (*it)->getPortOut() == portOut) {
@@ -78,4 +85,19 @@ bool GUI::checkUsedPorts(int portIn, int portOut) {
         }
     }
     return true;
+}
+
+void GUI::keyPressEvent(QKeyEvent *key) {
+    switch(key->key()) {
+    //adds new channel when the Enter key is pressed
+    case Qt::Key_Enter: {
+        this->startChannel();
+        break;
+    }
+    //delets selected channel when Delete key is pressed
+    case Qt::Key_Delete: {
+        this->stopChannel();
+        break;
+    }
+    }
 }

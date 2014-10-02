@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QKeyEvent>
 #include "acceptdata.h"
 
 namespace Ui {
@@ -23,6 +24,9 @@ private:
     QMap<int, AcceptData*>channels;
 
     bool checkUsedPorts(int, int);
+
+protected:
+    void keyPressEvent(QKeyEvent*);
 
 private slots:
     void startChannel();
