@@ -130,7 +130,7 @@ QAudioFormat Settings::getSpeakerAudioFormat() {
 }
 
 QAudioFormat Settings::getListennerAudioFormat() {
-    return formatSpeaker;
+    return formatListenner;
 }
 
 QAudioDeviceInfo Settings::getInputDevice() {

@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QTimer>
 #include "settings.h"
+#include "managevoice.h"
 #include <QDebug>
 
 namespace Ui {
@@ -20,11 +21,11 @@ public:
     explicit GUI(QWidget *parent = 0);
     ~GUI();
 
+    ManageVoice *speaker;
+
     Settings* getSettings();
     int getBroadcastingPort();
 
-    void setDataSent(int);
-    void changeBroadcastButtonState(bool);
 
 
 private:
@@ -38,9 +39,12 @@ private:
     QTimer broadcastTimer;
 
 signals:
-    void broadcastStateChanged();
+    //this signal is emited when the user enters a valid port and starts the broadcast
+    void broadcastStateChanged(int);
 
-public slots:
+private slots:
+    void setDataSent(int);
+    void changeBroadcastButtonState(bool);
     void btn();
     void menuTriggered(QAction*);
     void changeBroadcastingPort();

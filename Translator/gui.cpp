@@ -84,9 +84,6 @@ void GUI::initialize() {
 
 GUI::~GUI()
 {
-    //emit finish signal for running threads
-    emit stopSpeaker();
-    emit stopListener();
     delete ui;
     qDebug() << "GUI destructor!";
 }
@@ -345,6 +342,12 @@ void GUI::showErrorMessage(QString message) {
     QMessageBox msgBox;
     msgBox.setText(message);
     msgBox.exec();
+}
+
+void GUI::closeEvent(QCloseEvent *event) {
+    //emit finish signal for running threads
+    emit stopSpeaker();
+    emit stopListener();
 }
 
 

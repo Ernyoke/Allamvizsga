@@ -40,6 +40,9 @@ public:
     void updateSpeed();
     Settings *getSettings();
 
+protected:
+    void closeEvent(QCloseEvent *event);
+
 private:
     Ui::GUI *ui;
 

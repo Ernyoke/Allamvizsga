@@ -58,14 +58,14 @@ void Speaker::transferData(){
             sendBuffer.prepend(x);
         }
 
-        sendBuffer.append(chunk);
-        /*for(int i = 0; i < len; ++i) {
-            //short pcm_value = chunk[i + 1];
-            //pcm_value = (pcm_value << 8) | chunk[i];
-            //sendBuffer.append(G711::Snack_Lin2Alaw(pcm_value));
-            //++i;
-            sendBuffer.append(chunk[i]);
-        }*/
+//        sendBuffer.append(chunk);
+        for(int i = 0; i < buffLen; ++i) {
+            short pcm_value = chunk[i + 1];
+            pcm_value = (pcm_value << 8) | chunk[i];
+            sendBuffer.append(G711::Snack_Lin2Alaw(pcm_value));
+            ++i;
+//            sendBuffer.append(chunk[i]);
+        }
 
         emit dataSent(sendBuffer.size());
 

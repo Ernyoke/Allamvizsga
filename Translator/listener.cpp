@@ -59,11 +59,11 @@ void Listener::receiveDatagramm() {
                 }
                 QByteArray decomp;
                 decomp.append(aux);
-               /* for(int i = 0; i < asd.size(); ++i) {
-                    short tmp = G711::Snack_Alaw2Lin(asd[i]);
-                    decomp.append(tmp);
-                    decomp.append(tmp >> 8);
-                }*/
+//                for(int i = 0; i < aux.size(); ++i) {
+//                    short tmp = G711::Snack_Alaw2Lin((unsigned char)aux[i]);
+//                    decomp.append(tmp);
+//                    decomp.append(tmp >> 8);
+//                }
                 m_output->write(decomp.data(), decomp.size());
                 storeChunk(decomp);
                 outputBuffer->clear();

@@ -6,11 +6,18 @@ GUI::GUI(QWidget *parent) :
     ui(new Ui::GUI)
 {
     ui->setupUi(this);
+
+    settings = new Settings(this);
+    speaker = new ManageVoice(this, settings);
+
     connect(ui->startButton, SIGNAL(pressed()), this, SLOT(btn()));
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->changeButton, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
 
-    settings = new Settings(this);
+    connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
+    connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
+    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
+
     broadcasting_port = -1;
     broadcastDataSize = 0;
     broadcastDataPerSec = 0;
@@ -43,7 +50,9 @@ void GUI::btn() {
         msg.exec();
         return;
     }
-   emit broadcastStateChanged();
+    else {
+        emit broadcastStateChanged(broadcasting_port);
+    }
 }
 
 void GUI::changeBroadcastButtonState(bool isRecording) {
@@ -70,7 +79,7 @@ void GUI::menuTriggered(QAction* action) {
         settings->exec();
     }
     else {
-        //exit
+        return;
     }
 }
 

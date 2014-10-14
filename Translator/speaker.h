@@ -37,8 +37,11 @@ private:
 
 
 signals:
+    //is emited when the recordig state(recording or stoped) is changed
     void recordingState(bool);
+    //is emited when a datachunk is sent
     void dataSent(int);
+    //is emited when the thread stops
     void finished();
 
 public slots:

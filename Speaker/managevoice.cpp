@@ -1,28 +1,25 @@
 #include "managevoice.h"
 
-ManageVoice::ManageVoice(QUdpSocket *socket, QObject *parent) :
+ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
     QObject(parent)
 {
-    this->socket = socket;
-    this->gui = new GUI();
 
-    settings = gui->getSettings();
+    this->socket = new QUdpSocket(this);
 
-    connect(gui, SIGNAL(broadcastStateChanged()), this, SLOT(changeRecordState()));
+    this->settings = settings;
 
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
     timestamp = now.currentDateTime().toMSecsSinceEpoch();
 
     isRecording = false;
+    broadcasting_port = -1;
 
 }
 
-void ManageVoice::showGUI() {
-    gui->show();
-}
 
-void ManageVoice::changeRecordState() {
+void ManageVoice::changeRecordState(int port) {
+    broadcasting_port = port;
     if(!isRecording) {
         startRecording();
     }
@@ -32,8 +29,7 @@ void ManageVoice::changeRecordState() {
 }
 
 void ManageVoice::startRecording() {
-    if(!isRecording) {
-        broadcasting_port = gui->getBroadcastingPort();
+    if(!isRecording && broadcasting_port > 0) {
         format = settings->getSpeakerAudioFormat();
 
         QAudioDeviceInfo info = settings->getInputDevice();
@@ -49,7 +45,7 @@ void ManageVoice::startRecording() {
 
        buffLen = audioInput->periodSize();
        isRecording = true;
-       gui->changeBroadcastButtonState(isRecording);
+       emit recordingState(isRecording);
     }
 }
 
@@ -73,7 +69,7 @@ void ManageVoice::transferData(){
             sendBuffer.append(chunk[i]);
         }*/
 
-        gui->setDataSent(sendBuffer.size());
+        emit dataSent(sendBuffer.size());
 
         socket->writeDatagram(sendBuffer, QHostAddress::LocalHost, broadcasting_port);
     }
@@ -85,13 +81,12 @@ void ManageVoice::stopRecording()
         audioInput->stop();
         delete audioInput;
         isRecording = false;
-        gui->changeBroadcastButtonState(isRecording);
+        emit recordingState(isRecording);
     }
 }
 
 ManageVoice::~ManageVoice() {
     stopRecording();
-    delete gui;
     qDebug() << "Managevoice destruct!";
 }
 

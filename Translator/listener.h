@@ -40,8 +40,6 @@ private:
     qint64 timestamp;
     int binded_port;
 
-    Settings *settings;
-
     bool isPlaying;
 
 //    short Snack_Alaw2Lin(unsigned char);

@@ -5,7 +5,6 @@
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
-#include "gui.h"
 #include "settings.h"
 #include <QUdpSocket>
 #include <QDateTime>
@@ -14,7 +13,7 @@ class ManageVoice : public QObject
 {
     Q_OBJECT
 public:
-    explicit ManageVoice(QUdpSocket *socket, QObject *parent = 0);
+    ManageVoice(QObject *parent = 0, Settings *settings = 0);
     ~ManageVoice();
 
     void showGUI();
@@ -23,7 +22,6 @@ private:
     QAudioInput *audioInput;
     QAudioFormat format;
     QIODevice *intermediateDevice;
-    GUI *gui;
     QUdpSocket *socket;
 
     Settings *settings;
@@ -35,12 +33,16 @@ private:
     qint64 timestamp;
 
 signals:
+    void recordingState(bool);
+    //is emited when a datachunk is sent
+    void dataSent(int);
+    //is emited when the thread stops
 
 public slots:
     void startRecording();
     void stopRecording();
     void transferData();
-    void changeRecordState();
+    void changeRecordState(int);
 };
 
 #endif // MANAGEVOICE_H
