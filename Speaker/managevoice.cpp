@@ -8,6 +8,8 @@ ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
 
     this->settings = settings;
 
+    IPAddress = NULL;
+
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
     timestamp = now.currentDateTime().toMSecsSinceEpoch();
@@ -18,13 +20,53 @@ ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
 }
 
 
-void ManageVoice::changeRecordState(int port) {
-    broadcasting_port = port;
+void ManageVoice::changeRecordState(QString IPAddress, QString port) {
+
     if(!isRecording) {
-        startRecording();
+        //check if input port is valid number
+        bool ok = false;
+        broadcasting_port = port.toInt(&ok);
+        if(!ok) {
+            emit errorMessage("Invalid port!");
+        }
+        else {
+            //check if IP is valid
+            if(checkIP(IPAddress)) {
+                if(this->IPAddress == NULL) {
+                    this->IPAddress = new QHostAddress(IPAddress);
+                }
+                else {
+                    delete this->IPAddress;
+                    this->IPAddress = new QHostAddress(IPAddress);
+                }
+                startRecording();
+            }
+            else {
+              emit errorMessage("Invalid IP!");
+            }
+        }
     }
     else {
         stopRecording();
+    }
+}
+
+bool ManageVoice::checkIP(QString ip) {
+    QHostAddress address(ip);
+    if (QAbstractSocket::IPv4Protocol == address.protocol())
+    {
+       qDebug("Valid IPv4 address.");
+       return true;
+    }
+    else if (QAbstractSocket::IPv6Protocol == address.protocol())
+    {
+       qDebug("Valid IPv6 address.");
+       return true;
+    }
+    else
+    {
+       qDebug("Unknown or invalid address.");
+       return false;
     }
 }
 
@@ -71,7 +113,7 @@ void ManageVoice::transferData(){
 
         emit dataSent(sendBuffer.size());
 
-        socket->writeDatagram(sendBuffer, QHostAddress::LocalHost, broadcasting_port);
+        socket->writeDatagram(sendBuffer, *IPAddress, broadcasting_port);
     }
 }
 
@@ -85,8 +127,10 @@ void ManageVoice::stopRecording()
     }
 }
 
+
 ManageVoice::~ManageVoice() {
     stopRecording();
+    delete this->IPAddress;
     qDebug() << "Managevoice destruct!";
 }
 

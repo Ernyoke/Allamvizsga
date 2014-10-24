@@ -7,6 +7,7 @@
 #include <QListWidgetItem>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QCloseEvent>
 #include "settings.h"
 #include "recordaudio.h"
 #include "listener.h"
@@ -83,7 +84,7 @@ signals:
     void finalRecordName(bool, QString);
 
     //signals for broadcast
-    void broadcastStateChanged(int);
+    void broadcastStateChanged(QString, QString);
     void stopSpeaker();
 
 public slots:
@@ -91,6 +92,7 @@ public slots:
     void playbackButtonPushed();
     void startRecordPushed();
     void pauseRecordPushed();
+    void deleteChannel();
     void updateTime();
     void volumeChangedSlot();
     void getItemData(QListWidgetItem*);

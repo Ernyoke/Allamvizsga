@@ -25,6 +25,7 @@ private:
     QAudioFormat format;
     QIODevice *intermediateDevice;
     QUdpSocket *socket;
+    QHostAddress *IPAddress;
 
     int broadcasting_port;
     qint64 timestamp;
@@ -35,6 +36,8 @@ private:
     unsigned char Snack_Lin2Alaw(short);
     short search(short, short*, short);
 
+    bool checkIP(QString);
+
 
 signals:
     //is emited when the recordig state(recording or stoped) is changed
@@ -43,11 +46,13 @@ signals:
     void dataSent(int);
     //is emited when the thread stops
     void finished();
+    //
+    void errorMessage(QString);
 
 public slots:
     void startRecording();
     void stopRecording();
-    void changeRecordState(int);
+    void changeRecordState(QString, QString);
     void transferData();
     void stopRunning();
 

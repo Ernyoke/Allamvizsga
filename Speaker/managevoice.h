@@ -25,6 +25,7 @@ private:
     QUdpSocket *socket;
 
     Settings *settings;
+    QHostAddress *IPAddress;
     int broadcasting_port;
     int buffLen;
 
@@ -32,17 +33,21 @@ private:
 
     qint64 timestamp;
 
+    bool checkIP(QString);
+
 signals:
     void recordingState(bool);
     //is emited when a datachunk is sent
     void dataSent(int);
     //is emited when the thread stops
+    //errormessage
+    void errorMessage(QString);
 
 public slots:
     void startRecording();
     void stopRecording();
     void transferData();
-    void changeRecordState(int);
+    void changeRecordState(QString, QString);
 };
 
 #endif // MANAGEVOICE_H

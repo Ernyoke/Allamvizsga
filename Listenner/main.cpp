@@ -1,12 +1,11 @@
 #include "gui.h"
 #include <QApplication>
-#include "listener.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Listener listen;
-    listen.showGUI();
+    GUI gui;
+    gui.show();
 
     return a.exec();
 }

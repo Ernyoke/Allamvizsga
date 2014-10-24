@@ -14,7 +14,6 @@
 #include <QThread>
 #include <QMap>
 
-#include "gui.h"
 #include "recordaudio.h"
 #include "recordwav.h"
 //#include "g711.h"
@@ -24,14 +23,13 @@ class Listener : public QThread
 {
     Q_OBJECT
 public:
-    explicit Listener(QObject *parent = 0);
+    explicit Listener(QObject *parent = 0, Settings *settings = 0);
     ~Listener();
 
-    void showGUI();
+    bool isRecRunning();
 
 private:
     QUdpSocket *socket;
-    GUI *gui;
     QHostAddress groupAddress;
 
     QAudioFormat format;
@@ -56,8 +54,22 @@ private:
 
 
 signals:
+    //this signal is emited whenever the player starts listening
+    void changePlayButtonState(bool);
+    //is emited when a data package is received(updates the GUI speed and transfer size)
+    void dataReceived(int);
+    //emitted when recording is started or stopped
+    void changeRecordButtonState(RecordAudio::STATE);
+    //emitted when recording is paused or reloaded from pause state
+    void changePauseButtonState(RecordAudio::STATE);
+    //emitted when saving the recorded sound(renaming the file)
+    void askFileNameGUI(QString);
+    //emit when thread work is over
+    void finished();
+    //error message
+    void showError(QString);
 
-public slots:
+private slots:
     void receiveDatagramm();
     void playback();
     void stopPlayback();
@@ -65,7 +77,9 @@ public slots:
     void portChanged(int);
     void startRecord();
     void pauseRecord();
-    void changePlaybackState();
+    void changePlaybackState(int);
+    void recordingStateChanged(RecordAudio::STATE);
+    void askFileName(QString);
 
 };
 

@@ -139,11 +139,11 @@ void Listener::startRecord() {
         case Settings::WAV: {
             record = new RecordWav(path, format, this);
             connect(record, SIGNAL(askFileName(QString)), this, SLOT(askFileName(QString)));
+            connect(record, SIGNAL(recordingState(RecordAudio::STATE)), this, SLOT(recordingStateChanged(RecordAudio::STATE)));
             if(record->getState() == RecordAudio::STOPPED) {
                 if(!record->start()) {
                     emit showError("Temporary recording file can not be created! Please change the recording path in the settings!");
                 }
-                emit changeRecordButtonState(record->getState());
             }
             break;
         }
@@ -152,7 +152,6 @@ void Listener::startRecord() {
     else {
         if(record->getState() == RecordAudio::RECORDING || record->getState() == RecordAudio::PAUSED) {
             record->stop();
-            emit changeRecordButtonState(record->getState());
             delete record;
             record = NULL;
         }
@@ -168,7 +167,6 @@ void Listener::storeChunk(QByteArray data) {
 void Listener::pauseRecord() {
     if(record != NULL) {
         record->pause();
-        emit changePauseButtonState(record->getState());
     }
 }
 
@@ -176,10 +174,36 @@ void Listener::askFileName(QString filename) {
     emit askFileNameGUI(filename);
 }
 
+//update GUI after recording state is changed on Recordaudio's side
+void Listener::recordingStateChanged(RecordAudio::STATE state) {
+    if(state == RecordAudio::PAUSED) {
+        emit changePauseButtonState(state);
+    }
+    else {
+        emit changePauseButtonState(state);
+        emit changeRecordButtonState(state);
+    }
+}
+
 
 void Listener::stopRunning() {
+    if(record != NULL) {
+        if(record->getState() == RecordAudio::RECORDING) {
+            record->stop();
+        }
+    }
     this->stopPlayback();
     outputBuffer->clear();
     emit finished();
 }
+
+bool Listener::isRecRunning() {
+    if(record != NULL) {
+        if(record->getState() != RecordAudio::STOPPED) {
+            return true;
+        }
+    }
+    return false;
+}
+
 

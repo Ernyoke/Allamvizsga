@@ -5,6 +5,8 @@ Worker(settings)
 {
     this->socket = new QUdpSocket(this);
 
+    IPAddress = NULL;
+
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
     timestamp = now.currentDateTime().toMSecsSinceEpoch();
@@ -13,16 +15,56 @@ Worker(settings)
 
 Speaker::~Speaker() {
     stopRecording();
+    delete this->IPAddress;
     qDebug() << "Speaker deleted!";
 }
 
-void Speaker::changeRecordState(int port) {
+void Speaker::changeRecordState(QString IPAddress, QString port) {
     if(!isRecording) {
-        broadcasting_port = port;
-        startRecording();
+        //check if input port is valid number
+        bool ok = false;
+        broadcasting_port = port.toInt(&ok);
+        if(!ok) {
+            emit errorMessage("Invalid port!");
+        }
+        else {
+            //check if IP is valid
+            if(checkIP(IPAddress)) {
+                if(this->IPAddress == NULL) {
+                    this->IPAddress = new QHostAddress(IPAddress);
+                }
+                else {
+                    delete this->IPAddress;
+                    this->IPAddress = new QHostAddress(IPAddress);
+                }
+                startRecording();
+            }
+            else {
+              emit errorMessage("Invalid IP!");
+            }
+        }
     }
     else {
         stopRecording();
+    }
+}
+
+bool Speaker::checkIP(QString ip) {
+    QHostAddress address(ip);
+    if (QAbstractSocket::IPv4Protocol == address.protocol())
+    {
+       qDebug("Valid IPv4 address.");
+       return true;
+    }
+    else if (QAbstractSocket::IPv6Protocol == address.protocol())
+    {
+       qDebug("Valid IPv6 address.");
+       return true;
+    }
+    else
+    {
+       qDebug("Unknown or invalid address.");
+       return false;
     }
 }
 
@@ -58,18 +100,18 @@ void Speaker::transferData(){
             sendBuffer.prepend(x);
         }
 
-//        sendBuffer.append(chunk);
-        for(int i = 0; i < buffLen; ++i) {
-            short pcm_value = chunk[i + 1];
-            pcm_value = (pcm_value << 8) | chunk[i];
-            sendBuffer.append(G711::Snack_Lin2Alaw(pcm_value));
-            ++i;
+        sendBuffer.append(chunk);
+//        for(int i = 0; i < buffLen; ++i) {
+//            short pcm_value = chunk[i + 1];
+//            pcm_value = (pcm_value << 8) | chunk[i];
+//            sendBuffer.append(G711::Snack_Lin2Alaw(pcm_value));
+//            ++i;
 //            sendBuffer.append(chunk[i]);
-        }
+//        }
 
         emit dataSent(sendBuffer.size());
 
-        socket->writeDatagram(sendBuffer, QHostAddress::LocalHost, broadcasting_port);
+        socket->writeDatagram(sendBuffer, *IPAddress, broadcasting_port);
     }
 }
 
@@ -87,3 +129,4 @@ void Speaker::stopRunning() {
     stopRecording();
     emit finished();
 }
+

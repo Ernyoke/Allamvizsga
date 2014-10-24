@@ -47,17 +47,17 @@ void GUI::initialize() {
 
     connect(ui->broadcastButton, SIGNAL(pressed()), this, SLOT(btn()));
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
-    connect(ui->portChange, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
 
     //speaker
     speaker = new Speaker(settings);
-    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
+    connect(this, SIGNAL(broadcastStateChanged(QString, QString)), speaker, SLOT(changeRecordState(QString, QString)));
     connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
     connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
     connect(this, SIGNAL(stopSpeaker()), speaker, SLOT(stopRunning()));
     threadSpeaker = new QThread;
     connect(speaker, SIGNAL(finished()), threadSpeaker, SLOT(quit()));
     connect(speaker, SIGNAL(finished()), speaker, SLOT(deleteLater()));
+    connect(speaker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
     speaker->moveToThread(threadSpeaker);
     threadSpeaker->start();
 
@@ -76,8 +76,9 @@ void GUI::initialize() {
     connect(listener, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
     connect(listener, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
     connect(this, SIGNAL(pauseRecord()), listener, SLOT(pauseRecord()));
-    connect(listener, SIGNAL(askFileNameGUI(QString)), this, SLOT(setRecordFileName(QString)));
+    connect(listener, SIGNAL(askFileNameGUI(QString)), this, SLOT(setRecordFileName(QString)), Qt::BlockingQueuedConnection);
     connect(listener, SIGNAL(showError(QString)), this, SLOT(showErrorMessage(QString)));
+    connect(ui->deletChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
     listener->moveToThread(threadListener);
     threadListener->start();
 }
@@ -138,8 +139,9 @@ void GUI::changePlayButtonState(bool isPlaying) {
 void GUI::changeBroadcastButtonState(bool isRecording) {
     if(isRecording) {
         ui->broadcastButton->setText("Stop Recording");
-        ui->statusBar->showMessage("Transfering data on port: " + QString::number(broadcasting_port));
         broadcastDataSize = 0;
+        ui->portLabel->setText(ui->portInput->text());
+        ui->ipaddressLabel->setText(ui->ipaddressInput->text());
         broadcastTimerStart();
     }
     else {
@@ -216,14 +218,9 @@ void GUI::changeBroadcastingPort() {
 }
 
 void GUI::btn() {
-    if(broadcasting_port == - 1) {
-        QMessageBox msg;
-        msg.setText("Invalid broadcasting port!");
-        msg.setStandardButtons(QMessageBox::Ok);
-        msg.exec();
-        return;
-    }
-   emit broadcastStateChanged(broadcasting_port);
+    QString port = ui->portInput->text();
+    QString address = ui->ipaddressInput->text();
+    emit broadcastStateChanged(address, port);
 }
 
 void GUI::addNewChannel() {
@@ -292,7 +289,7 @@ void GUI::changePauseButtonState(RecordAudio::STATE state) {
     }
 }
 
-//at the end of the recording, users has the oppurunity to set the file name of the recorded file
+//at the end of the recording, users has the oportunity to set the file name of the recorded file
 //in other case it will be saved as temporary(tmp) file
 void GUI::setRecordFileName(QString filename) {
     bool renameOK = false;
@@ -345,9 +342,40 @@ void GUI::showErrorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
-    //emit finish signal for running threads
-    emit stopSpeaker();
-    emit stopListener();
+    if(listener->isRecRunning()) {
+        QMessageBox msgBox;
+        msgBox.setText("Recording is still in progress.");
+        QPushButton *exit = msgBox.addButton(tr("Exit without saving"), QMessageBox::ActionRole);
+        QPushButton *save = msgBox.addButton(tr("Close"), QMessageBox::ActionRole);
+
+        msgBox.exec();
+
+        if((QPushButton*)msgBox.clickedButton() == exit) {
+
+            disconnect(listener, SIGNAL(askFileNameGUI(QString)), this, SLOT(setRecordFileName(QString)));
+
+            emit stopSpeaker();
+            emit stopListener();
+            event->accept();
+        }
+        else {
+            event->ignore();
+        }
+    }
+    else {
+        emit stopSpeaker();
+        emit stopListener();
+        event->accept();
+    }
+}
+
+//delete selected channel
+void GUI::deleteChannel() {
+   QListWidgetItem *item = ui->listWidget->currentItem();
+   int nr = ui->listWidget->currentRow();
+   ui->listWidget->removeItemWidget(item);
+   channels->removeAt(nr);
+   delete item;
 }
 
 

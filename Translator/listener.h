@@ -26,6 +26,8 @@ public:
     Listener(Settings *settings);
     ~Listener();
 
+    bool isRecRunning();
+
 private:
     QUdpSocket *socket;
     QHostAddress groupAddress;
@@ -73,6 +75,7 @@ public slots:
     void startRecord();
     void pauseRecord();
     void changePlaybackState(int);
+    void recordingStateChanged(RecordAudio::STATE);
 
 private slots:
     void askFileName(QString filename);

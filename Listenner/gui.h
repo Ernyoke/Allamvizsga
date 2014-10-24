@@ -7,8 +7,10 @@
 #include <QListWidgetItem>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QCloseEvent>
 #include "settings.h"
 #include "recordaudio.h"
+#include "listener.h"
 
 namespace Ui {
 class GUI;
@@ -23,15 +25,12 @@ public:
     ~GUI();
 
     //listenner
-    void setDataReceived(int);
+    Listener *listener;
     void setRecordAudioDev(RecordAudio *record);
     void receiverTimerStart();
     void receiverTimerStop();
     int getVolume();
     int getPort();
-    void changeRecordButtonState(RecordAudio::STATE);
-    void changePauseButtonState(RecordAudio::STATE);
-    void changePlayButtonState(bool isPlaying);
 
 
     //both
@@ -46,6 +45,7 @@ private:
     long dataPerSec;
     long cntTime;
     QList<QListWidgetItem*> *channels;
+    int broadcasting_port;
 
     //both
     Settings *settings;
@@ -53,13 +53,16 @@ private:
 
     void initialize();
 
+protected:
+    void closeEvent(QCloseEvent *event);
+
 signals:
     //signals for listenner
     void volumeChanged();
     void startRecord();
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState();
+    void changePlayBackState(int);
     void portChanged(int);
 
 public slots:
@@ -72,8 +75,18 @@ public slots:
     void getItemData(QListWidgetItem*);
     void addNewChannel();
 
+    void changeRecordButtonState(RecordAudio::STATE);
+    void changePauseButtonState(RecordAudio::STATE);
+    void changePlayButtonState(bool isPlaying);
+    void setDataReceived(int);
+
+    void setRecordFileName(QString filename);
+    void deleteChannel();
+
+
     //general
     void menuTriggered(QAction*);
+    void showErrorMessage(QString);
 
 
 };

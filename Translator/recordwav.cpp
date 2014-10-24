@@ -39,6 +39,7 @@ bool RecordWav::start() {
         writeHeader();
         currentState = RECORDING;
     }
+    emit recordingState(currentState);
     return true;
 }
 
@@ -54,6 +55,7 @@ bool RecordWav::stop() {
         finalize();
         outputfile->close();
         currentState = STOPPED;
+        emit recordingState(currentState);
     }
     return true;
 }
@@ -61,9 +63,11 @@ bool RecordWav::stop() {
 bool RecordWav::pause() {
     if(currentState == RECORDING) {
         currentState = PAUSED;
+        emit recordingState(currentState);
     }
     else if(currentState == PAUSED) {
         currentState = RECORDING;
+        emit recordingState(currentState);
     }
     return true;
 }

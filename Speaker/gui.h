@@ -40,7 +40,7 @@ private:
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast
-    void broadcastStateChanged(int);
+    void broadcastStateChanged(QString, QString);
 
 private slots:
     void setDataSent(int);
@@ -51,6 +51,7 @@ private slots:
     void broadcastTimerStart();
     void broadcastTimerStop();
     void updateBroadcastTime();
+    void errorMessage(QString);
 
 };
 

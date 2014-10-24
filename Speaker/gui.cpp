@@ -16,7 +16,8 @@ GUI::GUI(QWidget *parent) :
 
     connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
     connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
-    connect(this, SIGNAL(broadcastStateChanged(int)), speaker, SLOT(changeRecordState(int)));
+    connect(this, SIGNAL(broadcastStateChanged(QString, QString)), speaker, SLOT(changeRecordState(QString, QString)));
+    connect(speaker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
 
     broadcasting_port = -1;
     broadcastDataSize = 0;
@@ -43,23 +44,17 @@ void GUI::setDataSent(int size) {
 }
 
 void GUI::btn() {
-    if(broadcasting_port == - 1) {
-        QMessageBox msg;
-        msg.setText("Invalid broadcasting port!");
-        msg.setStandardButtons(QMessageBox::Ok);
-        msg.exec();
-        return;
-    }
-    else {
-        emit broadcastStateChanged(broadcasting_port);
-    }
+    QString port = ui->portInput->text();
+    QString address = ui->ipaddressInput->text();
+    emit broadcastStateChanged(address, port);
 }
 
 void GUI::changeBroadcastButtonState(bool isRecording) {
     if(isRecording) {
         ui->startButton->setText("Stop Recording");
-        ui->statusBar->showMessage("Transfering data on port: " + QString::number(broadcasting_port));
         broadcastDataSize = 0;
+        ui->portLabel->setText(ui->portInput->text());
+        ui->ipaddressLabel->setText(ui->ipaddressInput->text());
         broadcastTimerStart();
     }
     else {
@@ -112,4 +107,13 @@ void GUI::broadcastTimerStart() {
 void GUI::broadcastTimerStop() {
     broadcastTimer.stop();
 }
+
+void GUI::errorMessage(QString message) {
+    QMessageBox msg;
+    msg.setText(message);
+    msg.setStandardButtons(QMessageBox::Ok);
+    msg.exec();
+    return;
+}
+
 

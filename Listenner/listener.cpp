@@ -2,7 +2,7 @@
 
 const int BufferSize = 14096;
 
-Listener::Listener(QObject *parent) :
+Listener::Listener(QObject *parent, Settings *settings) :
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
     QThread(parent)
@@ -10,20 +10,13 @@ Listener::Listener(QObject *parent) :
     socket = new QUdpSocket(this);
     outputBuffer = new QMap<qint64, QByteArray>();
 
-    gui = new GUI();
     binded_port = -1;
     timestamp = 0;
 
     isPlaying = false;
     record = NULL;
 
-    settings = gui->getSettings();
-
-    connect(gui, SIGNAL(changePlayBackState()), this, SLOT(changePlaybackState()));
-    connect(gui, SIGNAL(volumeChanged()), this, SLOT(volumeChanged()));
-    connect(gui, SIGNAL(portChanged(int)), this, SLOT(portChanged(int)));
-    connect(gui, SIGNAL(startRecord()), this, SLOT(startRecord()));
-    connect(gui, SIGNAL(pauseRecord()), this, SLOT(pauseRecord()));
+    this->settings = settings;
 
 }
 
@@ -35,16 +28,11 @@ Listener::~Listener() {
     }
     outputBuffer->clear();
     delete outputBuffer;
-    delete gui;
     qDebug() << "Listener destruct!";
 }
 
-void Listener::showGUI() {
-    gui->show();
-}
-
 //this SLOT is called when Start/Stop button is pushed
-void Listener::changePlaybackState() {
+void Listener::changePlaybackState(int port) {
     //if the client is receiveng packets then stop
     if(isPlaying) {
         qDebug() << "stopped";
@@ -53,7 +41,7 @@ void Listener::changePlaybackState() {
     //otherswise start receiving
     else {
         qDebug() << "playing";
-        binded_port = gui->getPort();
+        binded_port = port;
         this->playback();
     }
 }
@@ -66,7 +54,7 @@ void Listener::receiveDatagramm() {
         QByteArray m_buffer;
         m_buffer.resize(length);
         socket->readDatagram(m_buffer.data(), length);
-        gui->setDataReceived(length);
+        emit dataReceived(length);
         memcpy(&temp, m_buffer.data(), sizeof(qint64));
         if(timestamp < temp) {
             m_buffer.remove(0, sizeof(qint64));
@@ -113,7 +101,8 @@ void Listener::playback() {
         m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
         m_audioOutput->setBufferSize(BufferSize);
 
-        qreal volume = gui->getVolume();
+//        qreal volume = gui->getVolume();
+        qreal volume = 0.5;
         m_audioOutput->setVolume(volume);
 
         m_output = m_audioOutput->start();
@@ -122,7 +111,7 @@ void Listener::playback() {
             receiveDatagramm();
         }
         isPlaying = true;
-        gui->changePlayButtonState(isPlaying);
+        emit changePlayButtonState(isPlaying);
     }
 }
 
@@ -133,12 +122,13 @@ void Listener::stopPlayback() {
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         delete socket;
         isPlaying = false;
-        gui->changePlayButtonState(isPlaying);
+//        gui->changePlayButtonState(isPlaying);
+        emit changePlayButtonState(isPlaying);
     }
 }
 
 void Listener::volumeChanged() {
-    qreal volume = gui->getVolume();
+    qreal volume = 0.5;
     if(isPlaying) {
         m_audioOutput->setVolume(volume/100);
     }
@@ -157,14 +147,15 @@ void Listener::startRecord() {
         QString path = settings->getRecordPath();
         switch(codec) {
         case Settings::WAV: {
-            record = new RecordWav(path, format, gui, this);
+            record = new RecordWav(path, format, this);
+            connect(record, SIGNAL(askFileName(QString)), this, SLOT(askFileName(QString)));
+            connect(record, SIGNAL(recordingState(RecordAudio::STATE)), this, SLOT(recordingStateChanged(RecordAudio::STATE)));
             if(record->getState() == RecordAudio::STOPPED) {
                 if(!record->start()) {
                     QMessageBox msgBox;
                     msgBox.setText("Temporary record file can not be created. Please change record file path in the Settings!");
                     msgBox.exec();
                 }
-                gui->changeRecordButtonState(record->getState());
             }
             break;
         }
@@ -173,7 +164,6 @@ void Listener::startRecord() {
     else {
         if(record->getState() == RecordAudio::RECORDING || record->getState() == RecordAudio::PAUSED) {
             record->stop();
-            gui->changeRecordButtonState(record->getState());
             delete record;
             record = NULL;
         }
@@ -189,6 +179,31 @@ void Listener::storeChunk(QByteArray data) {
 void Listener::pauseRecord() {
     if(record != NULL) {
         record->pause();
-        gui->changePauseButtonState(record->getState());
     }
 }
+
+
+void Listener::askFileName(QString filename) {
+    emit askFileNameGUI(filename);
+}
+
+//update GUI after recording state is changed on Recordaudio's side
+void Listener::recordingStateChanged(RecordAudio::STATE state) {
+    if(state == RecordAudio::PAUSED) {
+        emit changePauseButtonState(state);
+    }
+    else {
+        emit changePauseButtonState(state);
+        emit changeRecordButtonState(state);
+    }
+}
+
+bool Listener::isRecRunning() {
+    if(record != NULL) {
+        if(record->getState() != RecordAudio::STOPPED) {
+            return true;
+        }
+    }
+    return false;
+}
+

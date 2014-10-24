@@ -33,6 +33,7 @@ protected:
 
 signals:
     void askFileName(QString);
+    void recordingState(RecordAudio::STATE);
 
 
 public slots:
