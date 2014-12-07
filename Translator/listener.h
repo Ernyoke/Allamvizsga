@@ -18,6 +18,8 @@
 #include "recordaudio.h"
 #include "recordwav.h"
 #include "worker.h"
+#include "soundchunk.h"
+#include "datagram.h"
 
 class Listener : public Worker
 {
@@ -37,7 +39,7 @@ private:
     QAudioOutput *m_audioOutput;
     QIODevice *m_output;
     QByteArray m_buffer;
-    QMap<qint64, QByteArray> *outputBuffer;
+    QMap<qint64, SoundChunk> *outputBuffer;
 
     qint64 timestamp;
     int binded_port;

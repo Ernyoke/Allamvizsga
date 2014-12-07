@@ -8,7 +8,7 @@ Listener::Listener(Settings *settings) :
     m_buffer(BufferSize, 0)
 {
     socket = new QUdpSocket(this);
-    outputBuffer = new QMap<qint64, QByteArray>();
+    outputBuffer = new QMap<qint64, SoundChunk>();
 
     binded_port = -1;
     timestamp = 0;
@@ -44,26 +44,26 @@ void Listener::receiveDatagramm() {
     if(length > 0) {
         QByteArray m_buffer;
         m_buffer.resize(length);
-        socket->readDatagram(m_buffer.data(), length);
-        emit dataReceived(length);
-        memcpy(&temp, m_buffer.data(), sizeof(qint64));
+        int datagramSize = socket->readDatagram(m_buffer.data(), length);
+        m_buffer.resize(datagramSize);
+        emit dataReceived(datagramSize);
+        Datagram datagram(&m_buffer);
+        temp = datagram.getTimeStamp();
+        qDebug() << datagram.getTimeStamp() << " " << timestamp;
         if(timestamp < temp) {
-            m_buffer.remove(0, sizeof(qint64));
-            outputBuffer->insert(temp, m_buffer);
+            QByteArray* content = datagram.getContent();
+            SoundChunk soundChunk(content);
+            outputBuffer->insert(temp, soundChunk);
             QByteArray aux;
             if(outputBuffer->size() == 4) {
-                for(QMap<qint64, QByteArray>::iterator iter = outputBuffer->begin(); iter != outputBuffer->end(); ++iter) {
-                    QByteArray out = iter.value();
-                    aux.append(out);
+                qDebug() << "played";
+                for(QMap<qint64, SoundChunk>::iterator iter = outputBuffer->begin(); iter != outputBuffer->end(); ++iter) {
+                    SoundChunk out = iter.value();
+                    aux.append(out.getRawSound());
                     timestamp = temp;
                 }
                 QByteArray decomp;
                 decomp.append(aux);
-//                for(int i = 0; i < aux.size(); ++i) {
-//                    short tmp = G711::Snack_Alaw2Lin((unsigned char)aux[i]);
-//                    decomp.append(tmp);
-//                    decomp.append(tmp >> 8);
-//                }
                 m_output->write(decomp.data(), decomp.size());
                 storeChunk(decomp);
                 outputBuffer->clear();

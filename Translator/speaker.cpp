@@ -91,27 +91,19 @@ void Speaker::startRecording() {
 
 void Speaker::transferData(){
     if(audioInput->bytesReady() >= buffLen) {
+        //initialize byte array
         QByteArray chunk;
-        QByteArray sendBuffer;
         chunk = intermediateDevice->read(buffLen);
         timestamp++;
-        for(int i = sizeof(qint64); i > 0; --i) {
-            char x = (timestamp >> ((i - 1) * 8));
-            sendBuffer.prepend(x);
-        }
-
-        sendBuffer.append(chunk);
-//        for(int i = 0; i < buffLen; ++i) {
-//            short pcm_value = chunk[i + 1];
-//            pcm_value = (pcm_value << 8) | chunk[i];
-//            sendBuffer.append(G711::Snack_Lin2Alaw(pcm_value));
-//            ++i;
-//            sendBuffer.append(chunk[i]);
-//        }
-
-        emit dataSent(sendBuffer.size());
-
-        socket->writeDatagram(sendBuffer, *IPAddress, broadcasting_port);
+        //serialize data conform to the protocol
+        SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.channelCount(), format.codec(), &chunk);
+        //create datagram
+        Datagram dataGram(1, timestamp, soundChunk);
+        qDebug() << timestamp;
+        //send the data
+        dataGram.sendDatagram(socket, IPAddress, broadcasting_port);
+        emit dataSent(dataGram.getSize());
+        delete soundChunk;
     }
 }
 

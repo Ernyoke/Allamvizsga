@@ -187,11 +187,11 @@
         </property>
        </spacer>
       </item>
-      <item row="1" column="2" colspan="3">
-       <widget class="QLineEdit" name="portInput"/>
-      </item>
       <item row="0" column="2" colspan="3">
        <widget class="QLineEdit" name="ipaddressInput"/>
+      </item>
+      <item row="1" column="2" colspan="3">
+       <widget class="QLineEdit" name="portInput"/>
       </item>
      </layout>
     </item>

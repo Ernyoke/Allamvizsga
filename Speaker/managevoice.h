@@ -6,6 +6,8 @@
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
 #include "settings.h"
+#include "datagram.h"
+#include "soundchunk.h"
 #include <QUdpSocket>
 #include <QDateTime>
 

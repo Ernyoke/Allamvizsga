@@ -18,12 +18,18 @@ SOURCES += main.cpp\
         gui.cpp \
     g711.cpp \
     managevoice.cpp \
-    settings.cpp
+    settings.cpp \
+    datagram.cpp \
+    soundchunk.cpp
 
 HEADERS  += gui.h \
     g711.h \
     managevoice.h \
-    settings.h
+    settings.h \
+    datagram.h \
+    soundchunk.h
 
 FORMS    += gui.ui \
     settings.ui
+
+CONFIG += c++11

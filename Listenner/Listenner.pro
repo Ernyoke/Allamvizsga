@@ -20,14 +20,20 @@ SOURCES += main.cpp\
     g711.cpp \
     listener.cpp \
     recordwav.cpp \
-    recordaudio.cpp
+    recordaudio.cpp \
+    datagram.cpp \
+    soundchunk.cpp
 
 HEADERS  += gui.h \
     settings.h \
     g711.h \
     listener.h \
     recordwav.h \
-    recordaudio.h
+    recordaudio.h \
+    datagram.h \
+    soundchunk.h
 
 FORMS    += gui.ui \
     settings.ui
+
+CONFIG += c++11

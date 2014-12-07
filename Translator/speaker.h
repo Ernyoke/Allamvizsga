@@ -11,6 +11,8 @@
 
 #include "g711.h"
 #include "worker.h"
+#include "soundchunk.h"
+#include "datagram.h"
 
 class Speaker : public Worker
 {

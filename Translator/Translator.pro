@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     listener.cpp \
     recordaudio.cpp \
     recordwav.cpp \
-    worker.cpp
+    worker.cpp \
+    datagram.cpp \
+    soundchunk.cpp
 
 HEADERS  += gui.h \
     speaker.h \
@@ -31,7 +33,11 @@ HEADERS  += gui.h \
     listener.h \
     recordaudio.h \
     recordwav.h \
-    worker.h
+    worker.h \
+    datagram.h \
+    soundchunk.h
 
 FORMS    += gui.ui \
     settings.ui
+
+CONFIG += c++11

@@ -19,7 +19,8 @@ void AcceptData::readData() {
     QHostAddress sender;
     quint16 senderPort;
     socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
-    socket->writeDatagram(data.data(), data.size(), QHostAddress::Broadcast, portOut);
+    socket->writeDatagram(data.data(), data.size(), QHostAddress::Broadcast /*QHostAddress("192.168.0.255")*/, portOut);
+    qDebug() << portOut;
 }
 
 int AcceptData::getPortIn() {
