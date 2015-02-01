@@ -20,16 +20,19 @@ SOURCES += main.cpp\
     managevoice.cpp \
     settings.cpp \
     datagram.cpp \
-    soundchunk.cpp
+    soundchunk.cpp \
+    logindialog.cpp
 
 HEADERS  += gui.h \
     g711.h \
     managevoice.h \
     settings.h \
     datagram.h \
-    soundchunk.h
+    soundchunk.h \
+    logindialog.h
 
 FORMS    += gui.ui \
-    settings.ui
+    settings.ui \
+    logindialog.ui
 
 CONFIG += c++11

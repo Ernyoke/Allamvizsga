@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include "acceptdata.h"
+#include "manageclients.h"
 
 namespace Ui {
 class GUI;
@@ -22,6 +23,7 @@ private:
     Ui::GUI *ui;
     int channelCounter;
     QMap<int, AcceptData*>channels;
+    ManageClients *manageClients;
 
     bool checkUsedPorts(int, int);
 

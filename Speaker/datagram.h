@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QByteArray>
-#include <cstdint>
 
 #include "soundchunk.h"
 
@@ -13,30 +12,52 @@
 class Datagram
 {
 public:
+
+    enum PROTOCOL_ID {
+        LOGIN = 1,
+        LOGIN_ACK = 2,
+        LOGIUT = 3,
+        GET_LIST = 4,
+        SOUND = 5
+    };
+
     explicit Datagram();
-    Datagram(uint32_t id, uint64_t, SoundChunk *);
-    Datagram(uint32_t id, uint64_t, QString *);
+    Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *);
+    Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data);
+    Datagram(quint32 id, quint32 clientId, quint64 timestamp);
     Datagram(QByteArray*);
     ~Datagram();
 
     void setTimeStamp(qint64);
-    void setDatagram(QByteArray*);
+    void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
     QByteArray* getContent();
     int getSize();
     qint64 getTimeStamp();
+    int getId();
 
 private:
-    uint64_t timestamp;
-    uint32_t id;
-    uint32_t packets;
-    uint32_t packetnr;
-    uint32_t buffsize;
-    QByteArray *data;
+    quint64 timestamp;
+    quint32 id;
+    quint32 clientId;
+    quint32 packets;
+    quint32 packetnr;
+    quint32 buffsize;
+    //contains the all the data that needs to be sent
+    QVector<QByteArray *>data;
+    //cointain the data for a single packet
     QByteArray buffer;
 
-    void createDatagram();
+
+    //data size
+    int size;
+
+    void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();
+    void splitContent(QString*);
+    void splitContent(QByteArray*);
+
+
 
 };
 

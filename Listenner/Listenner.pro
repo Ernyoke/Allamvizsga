@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     recordwav.cpp \
     recordaudio.cpp \
     datagram.cpp \
-    soundchunk.cpp
+    soundchunk.cpp \
+    logindialog.cpp
 
 HEADERS  += gui.h \
     settings.h \
@@ -31,9 +32,11 @@ HEADERS  += gui.h \
     recordwav.h \
     recordaudio.h \
     datagram.h \
-    soundchunk.h
+    soundchunk.h \
+    logindialog.h
 
 FORMS    += gui.ui \
-    settings.ui
+    settings.ui \
+    logindialog.ui
 
 CONFIG += c++11

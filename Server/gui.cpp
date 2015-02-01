@@ -9,6 +9,8 @@ GUI::GUI(QWidget *parent) :
     this->channelCounter = 0;
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(startChannel()));
     connect(ui->deletButton, SIGNAL(clicked()), this, SLOT(stopChannel()));
+
+    manageClients = new ManageClients();
 }
 
 GUI::~GUI()

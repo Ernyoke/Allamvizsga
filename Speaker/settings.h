@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
+#include <QHostAddress>
 
 namespace Ui {
 class Settings;
@@ -23,6 +24,13 @@ public:
 
     QAudioFormat getSpeakerAudioFormat();
     QAudioDeviceInfo getInputDevice();
+    QHostAddress *getServerAddress();
+    quint16 getServerPort();
+    quint16 getClientPort();
+    quint16 getClientType();
+    quint32 getClientId();
+    void setClientId(quint32);
+
 
 private:
     Ui::Settings *ui;
@@ -30,12 +38,18 @@ private:
     struct devinfo {
         QString dev_name;
         QString codec;
-        int sample_rate;
-        int channels;
-        int sample_size;
+        quint32 sample_rate;
+        quint32 channels;
+        quint32 sample_size;
     };
 
     devinfo xml_indev;
+
+    QHostAddress *address;
+    quint16 serverPort;
+    quint16 clientType;
+    quint16 clientPort;
+    quint32 clientId;
 
     QAudioFormat formatSpeaker;
     QList<QAudioDeviceInfo> input_devices;

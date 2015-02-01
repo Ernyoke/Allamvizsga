@@ -2,7 +2,7 @@
 
 const int SoundChunk::CODEC_LENGTH = 20;
 
-SoundChunk::SoundChunk(uint32_t frekv, uint32_t channels, QString codec, QByteArray *soundPacket) {
+SoundChunk::SoundChunk(quint32 frekv, quint32 channels, QString codec, QByteArray *soundPacket) {
     this->frekv = frekv;
     this->channels = channels;
     strcpy(this->codec, codec.toUtf8().data());
@@ -33,7 +33,7 @@ QByteArray* SoundChunk::serialize() {
     stream << frekv;
     stream << channels;
     stream.writeRawData(codec, 20);
-    uint32_t size = soundPacket.size();
+    quint32 size = soundPacket.size();
     stream << size;
     serializedPacket->append(soundPacket);
     return serializedPacket;

@@ -6,21 +6,21 @@ Datagram::Datagram()
 {
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *data){
-    this->timestamp = timestamp;
-    this->id = id;
-    this->clientId = clientId;
-    //this->data = new QVector<QByteArray*>();
-
+//Datagram::Datagram(uint32_t id, uint32_t clientId, uint64_t timestamp, SoundChunk *data){
+//    this->timestamp = timestamp;
+//    this->id = id;
+//    this->clientId = clientId;
+//    this->data = new QVector<QByteArray*>();
+//    this->data = data->serialize();
 //    this->size = data->g
-}
+//}
 
 Datagram::Datagram(QByteArray *data) {
     this->buffer.append(*data);
     splitDatagram();
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data) {
+Datagram::Datagram(quint32 id, quint32 clientId, quint32 timestamp, QString *data) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
@@ -75,8 +75,6 @@ void Datagram::splitContent(QByteArray *data) {
         packets++;
     }
 }
-
-
 
 
 Datagram::~Datagram() {

@@ -7,6 +7,7 @@
 #include <QTimer>
 #include "settings.h"
 #include "managevoice.h"
+#include "logindialog.h"
 #include <QDebug>
 
 namespace Ui {
@@ -37,6 +38,8 @@ private:
     long cntBroadcastTime;
 
     QTimer broadcastTimer;
+
+    void login();
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast

@@ -56,6 +56,17 @@ void GUI::initialize() {
     connect(listener, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
     connect(listener, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
     connect(ui->deleteChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
+
+    login();
+}
+
+void GUI::login() {
+    LoginDialog login(this->settings);
+    login.login();
+    login.exec();
+    if(!login.loginSucces()) {
+        QTimer::singleShot(0, this, SLOT(close()));
+    }
 }
 
 GUI::~GUI()

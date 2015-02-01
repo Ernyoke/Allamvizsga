@@ -4,8 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QByteArray>
-
-#include "soundchunk.h"
+#include <cstdint>
 
 //this class defines the protocol which is needed for UDP data transfer
 
@@ -16,14 +15,14 @@ public:
     enum PROTOCOL_ID {
         LOGIN = 1,
         LOGIN_ACK = 2,
-        LOGIUT = 3,
+        LOGOUT = 3,
         GET_LIST = 4,
         SOUND = 5
     };
 
     explicit Datagram();
-    Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *);
-    Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data);
+//    Datagram(uint32_t id, uint32_t clientId, uint64_t, SoundChunk *);
+    Datagram(quint32 id, quint32 clientId, quint32 timestamp, QString *);
     Datagram(quint32 id, quint32 clientId, quint64 timestamp);
     Datagram(QByteArray*);
     ~Datagram();
@@ -47,7 +46,6 @@ private:
     QVector<QByteArray *>data;
     //cointain the data for a single packet
     QByteArray buffer;
-
 
     //data size
     int size;

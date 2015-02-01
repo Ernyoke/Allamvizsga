@@ -11,6 +11,7 @@
 #include "settings.h"
 #include "recordaudio.h"
 #include "listener.h"
+#include "logindialog.h"
 
 namespace Ui {
 class GUI;
@@ -52,6 +53,8 @@ private:
     QStatusBar *sBar;
 
     void initialize();
+
+    void login();
 
 protected:
     void closeEvent(QCloseEvent *event);

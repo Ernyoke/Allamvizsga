@@ -15,9 +15,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         gui.cpp \
-    acceptdata.cpp
+    acceptdata.cpp \
+    manageclients.cpp \
+    clientinfo.cpp \
+    datagram.cpp
 
 HEADERS  += gui.h \
-    acceptdata.h
+    acceptdata.h \
+    manageclients.h \
+    clientinfo.h \
+    datagram.h
 
 FORMS    += gui.ui

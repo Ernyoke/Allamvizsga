@@ -29,6 +29,16 @@ GUI::GUI(QWidget *parent) :
 
     ui->statusBar->showMessage("Data transfer stopped!");
 //    ui->menuBar->statusTip(
+    login();
+}
+
+void GUI::login() {
+    LoginDialog login(this->settings);
+    login.login();
+    login.exec();
+    if(!login.loginSucces()) {
+        QTimer::singleShot(0, this, SLOT(close()));
+    }
 }
 
 GUI::~GUI()

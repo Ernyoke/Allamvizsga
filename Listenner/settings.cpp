@@ -50,6 +50,12 @@ Settings::Settings(QWidget *parent) :
     connect(ui->deviceBox, SIGNAL(activated(int)), this, SLOT(changeDevice(int)));
     connect(ui->browserButton, SIGNAL(clicked()), this, SLOT(selectRecordPath()));
 
+    address = new QHostAddress("127.0.0.1");
+    serverPort = 10000;
+    clientPort = 40000;
+    clientType = 2; //client type set to speaker
+    clientId = 0; //set initial client id to 0
+
 }
 
 Settings::~Settings()
@@ -190,6 +196,30 @@ QString Settings::getRecordPath() {
 
 QAudioDeviceInfo Settings::getOutputDevice() {
     return selectedDevice;
+}
+
+QHostAddress* Settings::getServerAddress() {
+    return address;
+}
+
+quint16 Settings::getServerPort() {
+    return serverPort;
+}
+
+quint16 Settings::getClientPort() {
+    return clientPort;
+}
+
+quint16 Settings::getClientType() {
+    return clientType;
+}
+
+void Settings::setClientId(quint32 id) {
+    this->clientId = id;
+}
+
+quint32 Settings::getClientId() {
+    return clientId;
 }
 
 QVariant Settings::boxValue(const QComboBox *box)
