@@ -1,32 +1,41 @@
 #ifndef MANAGECLIENTS_H
 #define MANAGECLIENTS_H
 
-#include <QObject>
+#include <QMainWindow>
 #include <QUdpSocket>
 #include <QMap>
 
 #include "clientinfo.h"
 #include "datagram.h"
+#include "tablemodel.h"
 
-class ManageClients : public QObject
+namespace Ui {
+class ManageClients;
+}
+
+class ManageClients : public QMainWindow
 {
     Q_OBJECT
+
 public:
-    ManageClients();
+    explicit ManageClients(QWidget *parent = 0);
     ~ManageClients();
 
 private:
+    Ui::ManageClients *ui;
+
     QUdpSocket *socket;
-    QMap<int, ClientInfo*> clientList;
 
     qint32 clientID;
 
+    TableModel *model;
+
     void processDatagram(Datagram, QHostAddress address, quint16 port);
     bool nextClientId();
+    bool isAvNextClient();
 
 private slots:
     void readPendingDatagrams();
-
 };
 
 #endif // MANAGECLIENTS_H

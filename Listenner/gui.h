@@ -37,6 +37,7 @@ public:
     //both
     void updateSpeed();
     Settings *getSettings();
+    LoginDialog *loginDialog;
 
 private:
     Ui::GUI *ui;
@@ -67,6 +68,7 @@ signals:
     void pauseRecord();
     void changePlayBackState(int);
     void portChanged(int);
+    void logout();
 
 public slots:
     //slots for listenner

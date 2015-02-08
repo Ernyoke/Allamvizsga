@@ -10,6 +10,8 @@ GUI::GUI(QWidget *parent) :
     settings = new Settings(this);
     speaker = new ManageVoice(this, settings);
 
+    loginDialog = new LoginDialog(settings, this);
+
     connect(ui->startButton, SIGNAL(pressed()), this, SLOT(btn()));
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->changeButton, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
@@ -18,6 +20,8 @@ GUI::GUI(QWidget *parent) :
     connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
     connect(this, SIGNAL(broadcastStateChanged(QString, QString)), speaker, SLOT(changeRecordState(QString, QString)));
     connect(speaker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
+
+    connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
 
     broadcasting_port = -1;
     broadcastDataSize = 0;
@@ -33,10 +37,9 @@ GUI::GUI(QWidget *parent) :
 }
 
 void GUI::login() {
-    LoginDialog login(this->settings);
-    login.login();
-    login.exec();
-    if(!login.loginSucces()) {
+//    login.login();
+    loginDialog->exec();
+    if(!loginDialog->loginSucces()) {
         QTimer::singleShot(0, this, SLOT(close()));
     }
 }
@@ -104,7 +107,7 @@ int GUI::getBroadcastingPort() {
 
 void GUI::updateBroadcastTime() {
     cntBroadcastTime++;
-    ui->timePassed->setText(QString::number(cntBroadcastTime) + " secs");
+    ui->timePassed->setText(QString::number(cntBroadcastTime) + " seconds");
     ui->speed->setText(QString::number(broadcastDataPerSec / 1024) + " KB/s");
     broadcastDataPerSec = 0;
 }
@@ -124,6 +127,10 @@ void GUI::errorMessage(QString message) {
     msg.setStandardButtons(QMessageBox::Ok);
     msg.exec();
     return;
+}
+
+void GUI::closeEvent(QCloseEvent *event) {
+   emit logout();
 }
 
 

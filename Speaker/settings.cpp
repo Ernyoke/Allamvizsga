@@ -42,7 +42,7 @@ Settings::Settings(QWidget *parent) :
     connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelSetting()));
     connect(ui->deviceBox, SIGNAL(activated(int)), this, SLOT(changeDevice(int)));
 
-    address = new QHostAddress("127.0.0.1");
+    address = NULL;
     serverPort = 10000;
     clientPort = 40000;
     clientType = 1; //client type set to speaker
@@ -76,7 +76,7 @@ quint16 Settings::getClientPort() {
     return clientPort;
 }
 
-quint16 Settings::getClientType() {
+quint32 Settings::getClientType() {
     return clientType;
 }
 
@@ -244,6 +244,33 @@ void Settings::setBoxIndex(QComboBox *box, int index) {
     }
     else {
         box->setCurrentIndex(0);
+    }
+}
+
+bool Settings::setServerAddress(QString address) {
+    if(checkIpAddress(address)) {
+        this->address = new QHostAddress(address);
+        return true;
+    }
+    return false;
+}
+
+bool Settings::checkIpAddress(QString ip) {
+    QHostAddress address(ip);
+    if (QAbstractSocket::IPv4Protocol == address.protocol())
+    {
+       qDebug("Valid IPv4 address.");
+       return true;
+    }
+    else if (QAbstractSocket::IPv6Protocol == address.protocol())
+    {
+       qDebug("Valid IPv6 address.");
+       return true;
+    }
+    else
+    {
+       qDebug("Unknown or invalid address.");
+       return false;
     }
 }
 

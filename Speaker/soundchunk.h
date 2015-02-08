@@ -19,6 +19,8 @@ public:
 
     static const int CODEC_LENGTH;
 
+    quint32 getSize();
+
 private:
     QByteArray soundPacket;
     quint32 frekv;
@@ -26,9 +28,9 @@ private:
     char codec[20];
     quint32 chunkSize;
 
-    int headersize;
-
     QByteArray *serializedPacket;
+
+    quint32 headerSize();
 
 
 };

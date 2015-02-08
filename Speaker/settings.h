@@ -27,9 +27,11 @@ public:
     QHostAddress *getServerAddress();
     quint16 getServerPort();
     quint16 getClientPort();
-    quint16 getClientType();
+    quint32 getClientType();
     quint32 getClientId();
     void setClientId(quint32);
+
+    bool setServerAddress(QString);
 
 
 private:
@@ -47,7 +49,7 @@ private:
 
     QHostAddress *address;
     quint16 serverPort;
-    quint16 clientType;
+    quint32 clientType;
     quint16 clientPort;
     quint32 clientId;
 
@@ -64,6 +66,8 @@ private:
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
     void setFormatProperties();
+
+    bool checkIpAddress(QString);
 
 private slots:
     void applySettings();

@@ -33,6 +33,7 @@ protected:
 private slots:
     void startChannel();
     void stopChannel();
+    void showClients();
 
 };
 

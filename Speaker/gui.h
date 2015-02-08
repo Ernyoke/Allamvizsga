@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QTimer>
+#include <QCloseEvent>
 #include "settings.h"
 #include "managevoice.h"
 #include "logindialog.h"
@@ -39,11 +40,17 @@ private:
 
     QTimer broadcastTimer;
 
+    LoginDialog *loginDialog;
+
     void login();
+
+protected:
+    void closeEvent(QCloseEvent *event);
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast
     void broadcastStateChanged(QString, QString);
+    void logout();
 
 private slots:
     void setDataSent(int);

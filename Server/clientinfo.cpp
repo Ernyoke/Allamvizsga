@@ -1,6 +1,6 @@
 #include "clientinfo.h"
 
-ClientInfo::ClientInfo(QHostAddress address, quint16 port, uint32_t clientType, QString OSName, double version)
+ClientInfo::ClientInfo(QHostAddress address, quint16 port, quint32 clientType, QString OSName, double version)
 {
     this->address = address;
     this->port = port;
@@ -15,3 +15,30 @@ ClientInfo::~ClientInfo()
 
 }
 
+void ClientInfo::setId(quint32 id) {
+    this->id = id;
+}
+
+quint32 ClientInfo::getId() {
+    return this->id;
+}
+
+quint32 ClientInfo::getClientType() {
+    return this->clientType;
+}
+
+QString ClientInfo::getAddressStr() {
+    return this->address.toString();
+}
+
+QString ClientInfo::getOSName() {
+    return this->OSName;
+}
+
+bool ClientInfo::active() {
+    return this->isActive;
+}
+
+void ClientInfo::setAck() {
+    this->isActive = true;
+}

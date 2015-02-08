@@ -10,7 +10,10 @@ GUI::GUI(QWidget *parent) :
     connect(ui->addButton, SIGNAL(clicked()), this, SLOT(startChannel()));
     connect(ui->deletButton, SIGNAL(clicked()), this, SLOT(stopChannel()));
 
-    manageClients = new ManageClients();
+    manageClients = new ManageClients(this);
+
+    //menu handlers
+    connect(ui->actionConnected_Clients, SIGNAL(triggered()), this, SLOT(showClients()));
 }
 
 GUI::~GUI()
@@ -102,4 +105,8 @@ void GUI::keyPressEvent(QKeyEvent *key) {
         break;
     }
     }
+}
+
+void GUI::showClients() {
+    manageClients->show();
 }

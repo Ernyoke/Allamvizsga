@@ -2,16 +2,24 @@
 #define CLIENTINFO_H
 
 #include <QHostAddress>
-#include <cstdint>
 
 class ClientInfo
 {
 public:
-    ClientInfo(QHostAddress address, quint16 port, uint32_t clientType, QString OSName, double version);
+    ClientInfo(QHostAddress address, quint16 port, quint32 clientType, QString OSName, double version);
     ~ClientInfo();
 
+    void setId(quint32 id);
+    quint32 getId();
+    quint32 getClientType();
+    QString getAddressStr();
+    QString getOSName();
+    bool active();
+    void setAck();
+
 private:
-    uint32_t clientType;
+    quint32 id;
+    quint32 clientType;
     QHostAddress address;
     QString OSName;
     double version;

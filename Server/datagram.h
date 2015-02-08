@@ -4,7 +4,9 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QByteArray>
-#include <cstdint>
+#include <QDebug>
+
+//#include "soundchunk.h"
 
 //this class defines the protocol which is needed for UDP data transfer
 
@@ -21,8 +23,8 @@ public:
     };
 
     explicit Datagram();
-//    Datagram(uint32_t id, uint32_t clientId, uint64_t, SoundChunk *);
-    Datagram(quint32 id, quint32 clientId, quint32 timestamp, QString *);
+//    Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *);
+    Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data);
     Datagram(quint32 id, quint32 clientId, quint64 timestamp);
     Datagram(QByteArray*);
     ~Datagram();
@@ -31,9 +33,10 @@ public:
     void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
     QByteArray* getContent();
-    int getSize();
+    quint32 getSize();
     qint64 getTimeStamp();
-    int getId();
+    quint32 getId();
+    quint32 getClientId();
 
 private:
     quint64 timestamp;
@@ -47,13 +50,16 @@ private:
     //cointain the data for a single packet
     QByteArray buffer;
 
+
     //data size
-    int size;
+    quint32 size;
 
     void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();
     void splitContent(QString*);
     void splitContent(QByteArray*);
+
+    quint32 headerSize();
 
 
 

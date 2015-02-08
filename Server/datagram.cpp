@@ -6,21 +6,12 @@ Datagram::Datagram()
 {
 }
 
-//Datagram::Datagram(uint32_t id, uint32_t clientId, uint64_t timestamp, SoundChunk *data){
-//    this->timestamp = timestamp;
-//    this->id = id;
-//    this->clientId = clientId;
-//    this->data = new QVector<QByteArray*>();
-//    this->data = data->serialize();
-//    this->size = data->g
-//}
-
 Datagram::Datagram(QByteArray *data) {
     this->buffer.append(*data);
     splitDatagram();
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint32 timestamp, QString *data) {
+Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
@@ -31,6 +22,7 @@ Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
+    this->size = headerSize();
 }
 
 void Datagram::splitContent(QString *data) {
@@ -42,7 +34,7 @@ void Datagram::splitContent(QString *data) {
         QByteArray *dataChunk = new QByteArray;
         dataChunk->insert(0, piece);
         this->data.append(dataChunk);
-        size += dataChunk->size();
+        size += dataChunk->size() + headerSize();
         tempData.remove(0, CONTENTSIZE);
         packets++;
     }
@@ -51,7 +43,7 @@ void Datagram::splitContent(QString *data) {
         QByteArray *dataChunk = new QByteArray;
         dataChunk->insert(0, piece);
         this->data.append(dataChunk);
-        size += dataChunk->size();
+        size += dataChunk->size() + headerSize();
         tempData.remove(0, CONTENTSIZE);
         //
         packets++;
@@ -67,11 +59,11 @@ void Datagram::splitContent(QByteArray *data) {
         this->data.append(piece);
         tempData->remove(0, CONTENTSIZE);
         packets++;
-        size += piece->size();
+        size += piece->size() + headerSize();
     }
     if(tempData->size() > 0) {
         this->data.append(tempData);
-        size += tempData->size();
+        size += tempData->size() + headerSize();
         packets++;
     }
 }
@@ -125,7 +117,8 @@ void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
     out << *dataToSend;
 }
 
-int Datagram::getSize() {
+quint32 Datagram::getSize() {
+    qDebug() << this->size;
     return this->size;
 }
 
@@ -142,6 +135,15 @@ qint64 Datagram::getTimeStamp() {
     return timestamp;
 }
 
-int Datagram::getId() {
+quint32 Datagram::getId() {
     return this->id;
+}
+
+quint32 Datagram::headerSize() {
+    quint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
+    return hsize;
+}
+
+quint32 Datagram::getClientId() {
+    return this->clientId;
 }

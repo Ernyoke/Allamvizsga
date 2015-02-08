@@ -23,7 +23,6 @@ public:
     LoginDialog(Settings*, QWidget *parent = 0);
     ~LoginDialog();
 
-    void login();
     bool loginSucces();
 
 private:
@@ -39,11 +38,13 @@ private:
     QTimer *timer;
 
     void processDatagram(Datagram);
+    qint64 generateTimestamp();
 
 private slots:
-    void ackLogin();
+    void authentificate();
+    void readDatagram();
     void loginTimedOut();
-    void retryLogin();
+    void logout();
 };
 
 #endif // LOGINDIALOG_H

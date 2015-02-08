@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QByteArray>
+#include <QDebug>
 
 #include "soundchunk.h"
 
@@ -16,7 +17,7 @@ public:
     enum PROTOCOL_ID {
         LOGIN = 1,
         LOGIN_ACK = 2,
-        LOGIUT = 3,
+        LOGOUT = 3,
         GET_LIST = 4,
         SOUND = 5
     };
@@ -32,9 +33,10 @@ public:
     void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
     QByteArray* getContent();
-    int getSize();
+    quint32 getSize();
     qint64 getTimeStamp();
-    int getId();
+    quint32 getId();
+    quint32 getClientId();
 
 private:
     quint64 timestamp;
@@ -50,12 +52,14 @@ private:
 
 
     //data size
-    int size;
+    quint32 size;
 
     void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();
     void splitContent(QString*);
     void splitContent(QByteArray*);
+
+    quint32 headerSize();
 
 
 

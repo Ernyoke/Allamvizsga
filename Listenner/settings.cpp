@@ -210,7 +210,7 @@ quint16 Settings::getClientPort() {
     return clientPort;
 }
 
-quint16 Settings::getClientType() {
+quint32 Settings::getClientType() {
     return clientType;
 }
 
@@ -279,5 +279,32 @@ Settings::CODEC Settings::getRecordCodec() {
 void Settings::selectRecordPath() {
         recordPath = fileBrowser->getExistingDirectory();
         ui->displayPath->setText(recordPath);
+}
+
+bool Settings::setServerAddress(QString address) {
+    if(checkIpAddress(address)) {
+        this->address = new QHostAddress(address);
+        return true;
+    }
+    return false;
+}
+
+bool Settings::checkIpAddress(QString ip) {
+    QHostAddress address(ip);
+    if (QAbstractSocket::IPv4Protocol == address.protocol())
+    {
+       qDebug("Valid IPv4 address.");
+       return true;
+    }
+    else if (QAbstractSocket::IPv6Protocol == address.protocol())
+    {
+       qDebug("Valid IPv6 address.");
+       return true;
+    }
+    else
+    {
+       qDebug("Unknown or invalid address.");
+       return false;
+    }
 }
 

@@ -150,6 +150,15 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionConnected_Clients"/>
+    <addaction name="separator"/>
+    <addaction name="actionStop_server_and_Exit"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -160,6 +169,16 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionConnected_Clients">
+   <property name="text">
+    <string>Connected Clients</string>
+   </property>
+  </action>
+  <action name="actionStop_server_and_Exit">
+   <property name="text">
+    <string>Stop server and Exit</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

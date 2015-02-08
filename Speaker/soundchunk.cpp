@@ -9,7 +9,6 @@ SoundChunk::SoundChunk(quint32 frekv, quint32 channels, QString codec, QByteArra
     qDebug() << this->codec;
     this->soundPacket.append(*soundPacket);
     this->chunkSize = soundPacket->size();
-    this->headersize = sizeof(frekv) + sizeof(channels) + CODEC_LENGTH + sizeof(chunkSize);
 }
 
 SoundChunk::SoundChunk(QByteArray *data) {
@@ -18,8 +17,7 @@ SoundChunk::SoundChunk(QByteArray *data) {
     stream >> channels;
     int x = stream.readRawData(codec, CODEC_LENGTH);
     stream >> chunkSize;
-    this->headersize = sizeof(frekv) + sizeof(channels) + CODEC_LENGTH + sizeof(chunkSize);
-    QByteArray temp(data->mid(headersize, chunkSize + headersize));
+    QByteArray temp(data->mid(this->headerSize(), this->getSize()));
     soundPacket.append(temp);
 }
 
@@ -33,12 +31,20 @@ QByteArray* SoundChunk::serialize() {
     stream << frekv;
     stream << channels;
     stream.writeRawData(codec, 20);
-    quint32 size = soundPacket.size();
-    stream << size;
+    stream << chunkSize;
     serializedPacket->append(soundPacket);
     return serializedPacket;
 }
 
 QByteArray SoundChunk::getRawSound() {
     return soundPacket;
+}
+
+quint32 SoundChunk::headerSize() {
+    quint32 size = sizeof(frekv) + sizeof(channels) + sizeof(chunkSize) + CODEC_LENGTH;
+    return size;
+}
+
+quint32 SoundChunk::getSize() {
+    return chunkSize + headerSize();
 }
