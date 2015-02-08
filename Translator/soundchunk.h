@@ -3,14 +3,13 @@
 
 #include <QObject>
 #include <QDebug>
-#include <cstdint>
 #include <QIODevice>
 #include <QDataStream>
 
 class SoundChunk
 {
 public:
-    SoundChunk(uint32_t, uint32_t, QString, QByteArray*);
+    SoundChunk(quint32, quint32, QString, QByteArray*);
     SoundChunk(QByteArray*);
 
     ~SoundChunk();
@@ -20,16 +19,18 @@ public:
 
     static const int CODEC_LENGTH;
 
+    quint32 getSize();
+
 private:
     QByteArray soundPacket;
-    uint32_t frekv;
-    uint32_t channels;
+    quint32 frekv;
+    quint32 channels;
     char codec[20];
-    uint32_t chunkSize;
-
-    int headersize;
+    quint32 chunkSize;
 
     QByteArray *serializedPacket;
+
+    quint32 headerSize();
 
 
 };

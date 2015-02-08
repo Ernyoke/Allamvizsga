@@ -41,7 +41,27 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
              return client->getAddressStr();
              break;
          case 2:
-             return client->getClientType();
+             switch(client->getClientType()) {
+             case ClientInfo::SERVER : {
+                 return "Server";
+                 break;
+             }
+             case ClientInfo::LISTENER :
+                 return "Listener";
+                 break;
+             case ClientInfo::SPEAKER : {
+                 return "Speaker";
+                 break;
+             }
+             case ClientInfo::TRANSLATOR : {
+                 return "Translator";
+                 break;
+             }
+             default:
+                 return "Unknown";
+                 break;
+             }
+
              break;
          case 3:
              return client->getOSName();
@@ -59,6 +79,31 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
      }
      return QVariant();
  }
+
+QVariant TableModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if (role != Qt::DisplayRole)
+             return QVariant();
+    if (orientation == Qt::Horizontal) {
+             switch (section) {
+             case 0:
+                 return tr("ClientID");
+                 break;
+             case 1:
+                 return tr("Address");
+                 break;
+             case 2:
+                 return tr("Type");
+                 break;
+             case 3:
+                 return tr("OS");
+                 break;
+             case 4:
+                 return tr("Status");
+                 break;
+             }
+         }
+    return QVariant();
+}
 
 void TableModel::addClient(ClientInfo *client) {
     int position = this->rowCount(QModelIndex());

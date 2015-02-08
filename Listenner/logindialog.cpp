@@ -118,7 +118,9 @@ qint64 LoginDialog::generateTimestamp() {
 }
 
 void LoginDialog::logout() {
-    QString respContent = " ";
-    Datagram response(Datagram::LOGOUT, settings->getClientId(), generateTimestamp(), &respContent);
-    response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
+    if(ack) {
+        QString respContent = " ";
+        Datagram response(Datagram::LOGOUT, settings->getClientId(), generateTimestamp(), &respContent);
+        response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
+    }
 }

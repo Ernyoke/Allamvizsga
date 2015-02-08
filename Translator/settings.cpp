@@ -65,6 +65,12 @@ Settings::Settings(QWidget *parent) :
     connect(ui->inputDeviceBox, SIGNAL(activated(int)), this, SLOT(changeInputDevice(int)));
     connect(ui->outputDeviceBox, SIGNAL(activated(int)), this, SLOT(changeOutputDevice(int)));
 
+    address = NULL;
+    serverPort = 10000;
+    clientPort = 40000;
+    clientType = 3; //client type set to translator
+    clientId = 0; //set initial client id to 0
+
 }
 
 Settings::~Settings()
@@ -143,6 +149,30 @@ QAudioDeviceInfo Settings::getOutputDevice() {
 
 QString Settings::getRecordPath() {
     return recordPath;
+}
+
+QHostAddress* Settings::getServerAddress() {
+    return address;
+}
+
+quint16 Settings::getServerPort() {
+    return serverPort;
+}
+
+quint16 Settings::getClientPort() {
+    return clientPort;
+}
+
+quint32 Settings::getClientType() {
+    return clientType;
+}
+
+void Settings::setClientId(quint32 id) {
+    this->clientId = id;
+}
+
+quint32 Settings::getClientId() {
+    return clientId;
 }
 
 //return the value held in combobox selectables
@@ -354,5 +384,32 @@ void Settings::showEvent(QShowEvent *event) {
     qDebug() << "show";
 
     initSettingsValues();
+}
+
+bool Settings::setServerAddress(QString address) {
+    if(checkIpAddress(address)) {
+        this->address = new QHostAddress(address);
+        return true;
+    }
+    return false;
+}
+
+bool Settings::checkIpAddress(QString ip) {
+    QHostAddress address(ip);
+    if (QAbstractSocket::IPv4Protocol == address.protocol())
+    {
+       qDebug("Valid IPv4 address.");
+       return true;
+    }
+    else if (QAbstractSocket::IPv6Protocol == address.protocol())
+    {
+       qDebug("Valid IPv6 address.");
+       return true;
+    }
+    else
+    {
+       qDebug("Unknown or invalid address.");
+       return false;
+    }
 }
 

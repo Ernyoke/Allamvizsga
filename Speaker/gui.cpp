@@ -37,7 +37,6 @@ GUI::GUI(QWidget *parent) :
 }
 
 void GUI::login() {
-//    login.login();
     loginDialog->exec();
     if(!loginDialog->loginSucces()) {
         QTimer::singleShot(0, this, SLOT(close()));

@@ -59,7 +59,6 @@ void GUI::initialize() {
     connect(speaker, SIGNAL(finished()), speaker, SLOT(deleteLater()));
     connect(speaker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
     speaker->moveToThread(threadSpeaker);
-    threadSpeaker->start();
 
     //listener
     listener = new Listener(settings);
@@ -80,7 +79,19 @@ void GUI::initialize() {
     connect(listener, SIGNAL(showError(QString)), this, SLOT(showErrorMessage(QString)));
     connect(ui->deletChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
     listener->moveToThread(threadListener);
-    threadListener->start();
+
+    loginDialog = new LoginDialog(settings, this);
+    connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
+    login();
+}
+
+void GUI::login() {
+    loginDialog->exec();
+    if(!loginDialog->loginSucces()) {
+        QTimer::singleShot(0, this, SLOT(close()));
+        threadListener->start();
+        threadSpeaker->start();
+    }
 }
 
 GUI::~GUI()
@@ -342,6 +353,7 @@ void GUI::showErrorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
+    emit logout();
     if(listener->isRecRunning()) {
         QMessageBox msgBox;
         msgBox.setText("Recording is still in progress.");

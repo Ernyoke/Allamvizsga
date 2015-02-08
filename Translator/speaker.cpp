@@ -98,7 +98,7 @@ void Speaker::transferData(){
         //serialize data conform to the protocol
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.channelCount(), format.codec(), &chunk);
         //create datagram
-        Datagram dataGram(1, timestamp, soundChunk);
+        Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
         qDebug() << timestamp;
         //send the data
         dataGram.sendDatagram(socket, IPAddress, broadcasting_port);

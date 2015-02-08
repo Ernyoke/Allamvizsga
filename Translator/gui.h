@@ -12,6 +12,7 @@
 #include "recordaudio.h"
 #include "listener.h"
 #include "speaker.h"
+#include "logindialog.h"
 
 namespace Ui {
 class GUI;
@@ -69,8 +70,11 @@ private:
     //both
     Settings *settings;
     QStatusBar *sBar;
+    LoginDialog *loginDialog;
+
 
     void initialize();
+    void login();
 
 signals:
     //signals for listenner
@@ -86,6 +90,9 @@ signals:
     //signals for broadcast
     void broadcastStateChanged(QString, QString);
     void stopSpeaker();
+
+    //signals for both
+    void logout();
 
 public slots:
     //slots for listener

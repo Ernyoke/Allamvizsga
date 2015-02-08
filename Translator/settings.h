@@ -10,6 +10,7 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QXmlStreamAttribute>
+#include <QHostAddress>
 
 namespace Ui {
 class Settings;
@@ -32,6 +33,14 @@ public:
     QAudioDeviceInfo getOutputDevice();
     CODEC getRecordCodec();
     QString getRecordPath();
+    QHostAddress *getServerAddress();
+    quint16 getServerPort();
+    quint16 getClientPort();
+    quint32 getClientType();
+    quint32 getClientId();
+    void setClientId(quint32);
+
+    bool setServerAddress(QString);
 
 private:
 
@@ -45,6 +54,12 @@ private:
 
     devinfo xml_indev;
     devinfo xml_outdev;
+
+    QHostAddress *address;
+    quint16 serverPort;
+    quint32 clientType;
+    quint16 clientPort;
+    quint32 clientId;
 
     Ui::Settings *ui;
     QAudioFormat formatSpeaker;
@@ -68,6 +83,8 @@ private:
     void setFormatProperties();
 
     void showEvent(QShowEvent * event);
+
+    bool checkIpAddress(QString);
 
 private slots:
     void applySettings();

@@ -6,6 +6,14 @@
 class ClientInfo
 {
 public:
+
+    enum CLIENT_TYPE {
+        SERVER = 0,
+        SPEAKER = 1,
+        LISTENER = 2,
+        TRANSLATOR = 3
+    };
+
     ClientInfo(QHostAddress address, quint16 port, quint32 clientType, QString OSName, double version);
     ~ClientInfo();
 
