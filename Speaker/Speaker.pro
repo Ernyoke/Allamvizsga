@@ -20,8 +20,11 @@ SOURCES += main.cpp\
     managevoice.cpp \
     settings.cpp \
     datagram.cpp \
-    soundchunk.cpp \
-    logindialog.cpp
+    logindialog.cpp \
+    newchanneldialog.cpp \
+    channelinfo.cpp \
+    servercommunicator.cpp \
+    soundchunk.cpp
 
 HEADERS  += gui.h \
     g711.h \
@@ -29,10 +32,14 @@ HEADERS  += gui.h \
     settings.h \
     datagram.h \
     soundchunk.h \
-    logindialog.h
+    logindialog.h \
+    newchanneldialog.h \
+    channelinfo.h \
+    servercommunicator.h
 
 FORMS    += gui.ui \
     settings.ui \
-    logindialog.ui
+    logindialog.ui \
+    newchanneldialog.ui
 
 CONFIG += c++11

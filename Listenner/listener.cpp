@@ -32,7 +32,7 @@ Listener::~Listener() {
 }
 
 //this SLOT is called when Start/Stop button is pushed
-void Listener::changePlaybackState(int port) {
+void Listener::changePlaybackState(QSharedPointer<ChannelInfo> channel) {
     //if the client is receiveng packets then stop
     if(isPlaying) {
         qDebug() << "stopped";
@@ -41,7 +41,14 @@ void Listener::changePlaybackState(int port) {
     //otherswise start receiving
     else {
         qDebug() << "playing";
-        binded_port = port;
+        binded_port = channel->getOutPort();
+        format.setSampleRate(channel->getSampleRate());
+        format.setSampleSize(channel->getSampleSize());
+        format.setChannelCount(channel->getChannels());
+        format.setCodec(channel->getCodec());
+
+        format.setByteOrder(QAudioFormat::LittleEndian);
+        format.setSampleType(QAudioFormat::UnSignedInt);
         this->playback();
     }
 }
@@ -60,8 +67,8 @@ void Listener::receiveDatagramm() {
         temp = datagram.getTimeStamp();
         qDebug() << datagram.getTimeStamp() << " " << timestamp;
         if(timestamp < temp) {
-            QByteArray* content = datagram.getContent();
-            SoundChunk soundChunk(content);
+            QByteArray content = datagram.getContent();
+            SoundChunk soundChunk(&content);
             outputBuffer->insert(temp, soundChunk);
             QByteArray aux;
             if(outputBuffer->size() == 4) {
@@ -90,7 +97,6 @@ void Listener::playback() {
         socket = new QUdpSocket(this);
         socket->bind(QHostAddress::AnyIPv4, binded_port, QUdpSocket::ShareAddress);
 
-        format = settings->getListennerAudioFormat();
         m_Outputdevice = settings->getOutputDevice();
 
         if(!m_Outputdevice.isFormatSupported(format)) {

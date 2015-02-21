@@ -19,15 +19,28 @@ SOURCES += main.cpp\
     clientinfo.cpp \
     datagram.cpp \
     manageclients.cpp \
-    tablemodel.cpp
+    channelmodel.cpp \
+    channelinfo.cpp \
+    showclients.cpp \
+    speakerclientinfo.cpp \
+    listenerclientinfo.cpp \
+    translatorclientinfo.cpp \
+    clientmodel.cpp
 
 HEADERS  += gui.h \
     acceptdata.h \
     clientinfo.h \
     datagram.h \
     manageclients.h \
-    tablemodel.h
+    channelmodel.h \
+    channelinfo.h \
+    showclients.h \
+    speakerclientinfo.h \
+    listenerclientinfo.h \
+    translatorclientinfo.h \
+    clientmodel.h
 
 FORMS    += gui.ui \
-    manageclients.ui
+    manageclients.ui \
+    showclients.ui
 

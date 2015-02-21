@@ -1,41 +1,54 @@
 #ifndef MANAGECLIENTS_H
 #define MANAGECLIENTS_H
 
-#include <QMainWindow>
+#include <QObject>
 #include <QUdpSocket>
-#include <QMap>
 
 #include "clientinfo.h"
+#include "speakerclientinfo.h"
+#include "listenerclientinfo.h"
+#include "translatorclientinfo.h"
 #include "datagram.h"
-#include "tablemodel.h"
+#include "clientmodel.h"
+#include "channelinfo.h"
+#include "channelmodel.h"
 
-namespace Ui {
-class ManageClients;
-}
-
-class ManageClients : public QMainWindow
+class ManageClients : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ManageClients(QWidget *parent = 0);
+    explicit ManageClients(ClientModel *tableModel, ChannelModel *channelModel, QWidget *parent = 0);
     ~ManageClients();
 
 private:
-    Ui::ManageClients *ui;
 
     QUdpSocket *socket;
 
     qint32 clientID;
+    qint16 outPort;
 
-    TableModel *model;
+    ClientModel *clientModel;
+    ChannelModel *channelModel;
 
     void processDatagram(Datagram, QHostAddress address, quint16 port);
     bool nextClientId();
     bool isAvNextClient();
+    bool nextPort();
+    bool isPortAv();
+    void resolveLogin(QByteArray *content, QHostAddress address, qint64 timeStamp);
+    void newChannel(Datagram, QHostAddress address, qint64 timeStamp);
 
 private slots:
     void readPendingDatagrams();
+
+signals:
+    void newChannelAdded(ChannelInfo);
+    void channelClosed(qint32);
+    void newClientConnected(ClientInfo*);
+    void clientConnectionAck(qint32);
+    void clientDisconnected(qint32);
+
 };
 
 #endif // MANAGECLIENTS_H

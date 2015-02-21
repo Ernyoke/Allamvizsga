@@ -15,7 +15,6 @@ void GUI::initialize() {
 
     dataSize = 0;
     dataPerSec = 0;
-    channels = new QList<QListWidgetItem*>();
 
     broadcasting_port = -1;
 
@@ -38,13 +37,13 @@ void GUI::initialize() {
 
     connect(ui->volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(volumeChangedSlot()));
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playbackButtonPushed()));
-    connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(getItemData(QListWidgetItem*)));
+//    connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(getItemData(QListWidgetItem*)));
     connect(ui->menuSettings, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
-    connect(ui->newChannelButton, SIGNAL(pressed()), this, SLOT(addNewChannel()));
+//    connect(ui->newChannelButton, SIGNAL(pressed()), this, SLOT(addNewChannel()));
     connect(ui->recordButton, SIGNAL(clicked()), this, SLOT(startRecordPushed()));
     connect(ui->pauseRec, SIGNAL(clicked()), this, SLOT(pauseRecordPushed()));
 
-    connect(this, SIGNAL(changePlayBackState(int)), listener, SLOT(changePlaybackState(int)));
+    connect(this, SIGNAL(changePlayBackState( QSharedPointer<ChannelInfo> )), listener, SLOT(changePlaybackState( QSharedPointer<ChannelInfo> )));
     connect(listener, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
     connect(this, SIGNAL(volumeChanged()), listener, SLOT(volumeChanged()));
     connect(this, SIGNAL(portChanged(int)), listener, SLOT(portChanged(int)));
@@ -57,15 +56,29 @@ void GUI::initialize() {
     connect(listener, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
     connect(ui->deleteChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
 
+    serverCommunicator = new ServerCommunicator(settings, this);
     loginDialog = new LoginDialog(settings, this);
+    connect(loginDialog, SIGNAL(sendLoginRequest(Datagram)), serverCommunicator, SLOT(sendLoginRequest(Datagram)));
+    connect(loginDialog, SIGNAL(sendLogoutRequest(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+    connect(loginDialog, SIGNAL(sendLoginResponse(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
     connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
-    login();
+    connect(serverCommunicator, SIGNAL(loginAckReceived(Datagram)), loginDialog, SLOT(processLogin(Datagram)));
+
+    channelModel = new ChannelModel(this);
+    ui->channelList->setModel(channelModel);
+    connect(serverCommunicator, SIGNAL(serverList(QByteArray)), channelModel, SLOT(newChannelList(QByteArray)));
+
+//    login();
 }
 
 void GUI::login() {
     loginDialog->exec();
     if(!loginDialog->loginSucces()) {
         QTimer::singleShot(0, this, SLOT(close()));
+    }
+    else {
+        this->show();
+         serverCommunicator->requestChannelList();
     }
 }
 
@@ -82,33 +95,27 @@ void GUI::setDataReceived(int size) {
 
 //this SLOT is called when the Start button is pushed
 void GUI::playbackButtonPushed() {
-        QListWidgetItem *item = ui->listWidget->currentItem();
-        broadcasting_port = this->getPort();
-        if(item != NULL) {
-            emit changePlayBackState(broadcasting_port);
-        }
-        else {
-            QMessageBox msg;
-            msg.setText("No channel was selected!");
-            msg.setStandardButtons(QMessageBox::Ok);
-            msg.exec();
-        }
+    QModelIndex selectedIndex = ui->channelList->currentIndex();
+    try {
+        QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
+        emit changePlayBackState(selectedChannel);
+    }
+    catch(ChannelListException *ex) {
+        QMessageBox msg;
+        msg.setText(ex->message());
+        msg.setStandardButtons(QMessageBox::Ok);
+        msg.exec();
+        delete ex;
+    }
 }
 
 void GUI::changePlayButtonState(bool isPlaying) {
     if(isPlaying) {
         ui->playButton->setText("Stop");
-        ui->statusBar->clearMessage();
-        QListWidgetItem *item = ui->listWidget->currentItem();
-        QVariant data = item->data(Qt::UserRole);
-        int port = data.toInt();
-        ui->statusBar->showMessage("Ongoing playback! Recieving data from port: " + QString::number(port));
         receiverTimerStart();
     }
     else {
         ui->playButton->setText("Play");
-        ui->statusBar->clearMessage();
-        ui->statusBar->showMessage("Playback stopped!");
         receiverTimerStop();
 
     }
@@ -136,10 +143,11 @@ int GUI::getVolume() {
 }
 
 int GUI::getPort() {
-    QListWidgetItem *item = ui->listWidget->currentItem();
-    QVariant data = item->data(Qt::UserRole);
-    int port = data.toInt();
-    return port;
+//    QListWidgetItem *item = ui->listWidget->currentItem();
+//    QVariant data = item->data(Qt::UserRole);
+//    int port = data.toInt();
+//    return port;
+    return 0;
 }
 
 void GUI::volumeChangedSlot() {
@@ -154,14 +162,14 @@ void GUI::getItemData(QListWidgetItem *item) {
 
 
 void GUI::addNewChannel() {
-    bool ok = true;
-    int port = QInputDialog::getInt(this, tr("Add new channel"), tr("Insert port:"), 0, 1, 50000, 1, &ok);
-    if(ok) {
-        QListWidgetItem *item1 = new QListWidgetItem("Port " + QString::number(port));
-        item1->setData(Qt::UserRole, QVariant(port));
-        channels->append(item1);
-        ui->listWidget->addItem(item1);
-    }
+//    bool ok = true;
+//    int port = QInputDialog::getInt(this, tr("Add new channel"), tr("Insert port:"), 0, 1, 50000, 1, &ok);
+//    if(ok) {
+//        QListWidgetItem *item1 = new QListWidgetItem("Port " + QString::number(port));
+//        item1->setData(Qt::UserRole, QVariant(port));
+//        channels->append(item1);
+//        ui->listWidget->addItem(item1);
+//    }
 }
 
 void GUI::menuTriggered(QAction* action) {
@@ -171,10 +179,6 @@ void GUI::menuTriggered(QAction* action) {
     else {
         //exit
     }
-}
-
-Settings* GUI::getSettings() {
-    return settings;
 }
 
 void GUI::startRecordPushed() {
@@ -263,6 +267,7 @@ void GUI::showErrorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
+    emit logout();
     if(listener->isRecRunning()) {
         QMessageBox msgBox;
         msgBox.setText("Recording is still in progress.");
@@ -282,18 +287,17 @@ void GUI::closeEvent(QCloseEvent *event) {
         }
     }
     else {
-        emit logout();
         event->accept();
     }
 }
 
 //delete selected channel
 void GUI::deleteChannel() {
-   QListWidgetItem *item = ui->listWidget->currentItem();
-   int nr = ui->listWidget->currentRow();
-   ui->listWidget->removeItemWidget(item);
-   channels->removeAt(nr);
-   delete item;
+//   QListWidgetItem *item = ui->listWidget->currentItem();
+//   int nr = ui->listWidget->currentRow();
+//   ui->listWidget->removeItemWidget(item);
+//   channels->removeAt(nr);
+//   delete item;
 }
 
 

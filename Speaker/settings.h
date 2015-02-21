@@ -27,11 +27,13 @@ public:
     QHostAddress *getServerAddress();
     quint16 getServerPort();
     quint16 getClientPort();
+    quint16 getClientPortForSound();
     quint32 getClientType();
     quint32 getClientId();
     void setClientId(quint32);
 
     bool setServerAddress(QString);
+    QAudioDeviceInfo getDeviceInfo();
 
 
 private:
@@ -51,6 +53,7 @@ private:
     quint16 serverPort;
     quint32 clientType;
     quint16 clientPort;
+    quint16 clientPortForSound;
     quint32 clientId;
 
     QAudioFormat formatSpeaker;
@@ -59,7 +62,6 @@ private:
 
     QVariant boxValue(const QComboBox *box);
 
-    void displayDeviceProperties(QAudioDeviceInfo);
     void readSettingsFromXML();
     int getBoxIndex(QComboBox*, QString*);
     int getBoxIndex(QComboBox*, int);

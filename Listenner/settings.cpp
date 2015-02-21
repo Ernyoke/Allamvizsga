@@ -9,8 +9,6 @@ Settings::Settings(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    displayDeviceProperties(selectedDevice);
-
     output_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
     foreach (const QAudioDeviceInfo it,output_devices) {
             ui->deviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
@@ -26,8 +24,6 @@ Settings::Settings(QWidget *parent) :
             break;
         }
     }
-
-    displayDeviceProperties(selectedDevice);
 
     //initialize selected properties for devices
     initSettingsValues();
@@ -67,56 +63,17 @@ Settings::~Settings()
 void Settings::initSettingsValues() {
     //outdev
     setBoxIndex(ui->deviceBox, getBoxIndex(ui->deviceBox, &xml_outdev.dev_name));
-    setBoxIndex(ui->sampleRateBox, getBoxIndex(ui->sampleRateBox, xml_outdev.sample_rate));
-    setBoxIndex(ui->codecBox_2, getBoxIndex(ui->codecBox_2, &xml_outdev.codec));
-    setBoxIndex(ui->channelBox, getBoxIndex(ui->channelBox, xml_outdev.channels));
-    setBoxIndex(ui->sampleSizeBox, getBoxIndex(ui->sampleSizeBox, xml_outdev.sample_size));
 }
 
 
 void Settings::changeDevice(int index) {
     QAudioDeviceInfo selectedDevice = output_devices.at(index);
-    ui->sampleRateBox->clear();
-    ui->channelBox->clear();
-    ui->sampleSizeBox->clear();
-    ui->codecBox_2->clear();
-    displayDeviceProperties(selectedDevice);
 }
 
-void Settings::displayDeviceProperties(QAudioDeviceInfo device) {
-    foreach (const int it, device.supportedSampleRates()) {
-            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
-    }
-    ui->sampleRateBox->setEditable(false);
-    foreach (const int it, device.supportedChannelCounts()) {
-            ui->channelBox->addItem(QString::number(it), QVariant(it));
-    }
-    ui->channelBox->setEditable(false);
-    foreach (const QString &it, device.supportedCodecs()) {
-            ui->codecBox_2->addItem(it, QVariant(it));
-    }
-    ui->codecBox_2->setEditable(false);
-    foreach (const int it, device.supportedSampleSizes()) {
-            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
-    }
-    ui->sampleSizeBox->setEditable(false);
-}
 
 //update format with given settings
 void Settings::setFormatProperties() {
-    formatListenner.setByteOrder(QAudioFormat::LittleEndian);
-    formatListenner.setSampleType(QAudioFormat::UnSignedInt);
-
     xml_outdev.dev_name = selectedDevice.deviceName();
-    xml_outdev.codec = boxValue(ui->codecBox_2).toString();
-    xml_outdev.channels = boxValue(ui->channelBox).toInt();
-    xml_outdev.sample_rate = boxValue(ui->sampleRateBox).toInt();
-    xml_outdev.sample_size = boxValue(ui->sampleSizeBox).toInt();
-
-    formatListenner.setCodec(xml_outdev.codec);
-    formatListenner.setSampleRate(xml_outdev.sample_rate);
-    formatListenner.setChannelCount(xml_outdev.channels);
-    formatListenner.setSampleSize(xml_outdev.sample_size);
 }
 
 
@@ -186,10 +143,6 @@ void Settings::setBoxIndex(QComboBox *box, int index) {
     }
 }
 
-QAudioFormat Settings::getListennerAudioFormat() {
-    return formatListenner;
-}
-
 QString Settings::getRecordPath() {
     return recordPath;
 }
@@ -236,14 +189,6 @@ void Settings::applySettings() {
     //update formats first
     setFormatProperties();
 
-    formatListenner.setByteOrder(QAudioFormat::LittleEndian);
-    formatListenner.setSampleType(QAudioFormat::UnSignedInt);
-
-    formatListenner.setCodec(boxValue(ui->codecBox_2).toString());
-    formatListenner.setSampleRate(boxValue(ui->sampleRateBox).toInt());
-    formatListenner.setChannelCount(boxValue(ui->channelBox).toInt());
-    formatListenner.setSampleSize(boxValue(ui->sampleSizeBox).toInt());
-
     recordPath = ui->displayPath->text();
 
     //store settings in output XML file
@@ -257,10 +202,6 @@ void Settings::applySettings() {
     QXmlStreamAttribute atr("direction", "output");
     xmlWriter.writeAttribute(atr);
     xmlWriter.writeTextElement("devicename", boxValue(ui->deviceBox).toString());
-    xmlWriter.writeTextElement("codec", boxValue(ui->codecBox_2).toString());
-    xmlWriter.writeTextElement("samplerate", boxValue(ui->sampleRateBox).toString());
-    xmlWriter.writeTextElement("channelcount", boxValue(ui->channelBox).toString());
-    xmlWriter.writeTextElement("samplesize", boxValue(ui->sampleSizeBox).toString());
     xmlWriter.writeEndElement();
     xmlWriter.writeEndElement();
     xmlWriter.writeEndDocument();

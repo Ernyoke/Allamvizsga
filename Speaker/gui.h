@@ -9,6 +9,8 @@
 #include "settings.h"
 #include "managevoice.h"
 #include "logindialog.h"
+#include "newchanneldialog.h"
+#include "servercommunicator.h"
 #include <QDebug>
 
 namespace Ui {
@@ -28,6 +30,10 @@ public:
     Settings* getSettings();
     int getBroadcastingPort();
 
+    bool isChannelRegistered;
+    bool isRecording;
+
+    void login();
 
 
 private:
@@ -41,27 +47,28 @@ private:
     QTimer broadcastTimer;
 
     LoginDialog *loginDialog;
-
-    void login();
+    NewChannelDialog *newChannelDialog;
+    ServerCommunicator *serverCommunicator;
 
 protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast
-    void broadcastStateChanged(QString, QString);
+    void broadcastStateChanged(QAudioFormat);
     void logout();
 
 private slots:
     void setDataSent(int);
     void changeBroadcastButtonState(bool);
-    void btn();
+    void startBroadcast();
     void menuTriggered(QAction*);
     void changeBroadcastingPort();
     void broadcastTimerStart();
     void broadcastTimerStop();
     void updateBroadcastTime();
     void errorMessage(QString);
+    void startNewChannel();
 
 };
 

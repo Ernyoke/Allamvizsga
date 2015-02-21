@@ -8,10 +8,14 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QPointer>
 #include "settings.h"
 #include "recordaudio.h"
 #include "listener.h"
 #include "logindialog.h"
+#include "servercommunicator.h"
+#include "channelmodel.h"
+#include "channellistexception.h"
 
 namespace Ui {
 class GUI;
@@ -36,8 +40,7 @@ public:
 
     //both
     void updateSpeed();
-    Settings *getSettings();
-    LoginDialog *loginDialog;
+    void login();
 
 private:
     Ui::GUI *ui;
@@ -46,16 +49,16 @@ private:
     long dataSize;
     long dataPerSec;
     long cntTime;
-    QList<QListWidgetItem*> *channels;
     int broadcasting_port;
 
     //both
-    Settings *settings;
-    QStatusBar *sBar;
+    QPointer<LoginDialog> loginDialog;
+    QPointer<Settings> settings;
+    QPointer<ServerCommunicator> serverCommunicator;
+    QPointer<ChannelModel> channelModel;
 
     void initialize();
 
-    void login();
 
 protected:
     void closeEvent(QCloseEvent *event);
@@ -66,7 +69,7 @@ signals:
     void startRecord();
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState(int);
+    void changePlayBackState(QSharedPointer<ChannelInfo>);
     void portChanged(int);
     void logout();
 

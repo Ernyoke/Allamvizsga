@@ -99,7 +99,7 @@ void Datagram::splitDatagram() {
     in >> timestamp;
     in >> packets;
     in >> packetnr;
-    in >> size;
+//    in >> size;
     QByteArray *temp = new QByteArray;
     in >> *temp;
     data.append(temp);
@@ -113,7 +113,7 @@ void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
     out << timestamp;
     out << packets;
     out << packet_nr;
-    out << dataToSend->size();
+//    out << dataToSend->size();
     out << *dataToSend;
 }
 
@@ -122,11 +122,11 @@ quint32 Datagram::getSize() {
     return this->size;
 }
 
-QByteArray* Datagram::getContent() {
-    QByteArray *content = new QByteArray;
+QByteArray Datagram::getContent() {
+    QByteArray content;
     QVectorIterator<QByteArray*> it(data);
     while(it.hasNext()) {
-        content->append(*it.next());
+        content.append(*it.next());
     }
     return content;
 }
@@ -146,4 +146,10 @@ quint32 Datagram::headerSize() {
 
 quint32 Datagram::getClientId() {
     return this->clientId;
+}
+
+qint64 Datagram::generateTimestamp() {
+    QDateTime now = QDateTime::currentDateTime();
+    qint64 timeStamp = now.currentDateTime().toMSecsSinceEpoch();
+    return timeStamp;
 }

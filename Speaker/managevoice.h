@@ -19,6 +19,7 @@ public:
     ~ManageVoice();
 
     void showGUI();
+    bool isRunning();
 
 private:
     QAudioInput *audioInput;
@@ -49,7 +50,7 @@ public slots:
     void startRecording();
     void stopRecording();
     void transferData();
-    void changeRecordState(QString, QString);
+    void changeRecordState(QAudioFormat speakerFormat);
 };
 
 #endif // MANAGEVOICE_H

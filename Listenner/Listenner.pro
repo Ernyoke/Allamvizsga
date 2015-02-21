@@ -23,7 +23,11 @@ SOURCES += main.cpp\
     recordaudio.cpp \
     datagram.cpp \
     soundchunk.cpp \
-    logindialog.cpp
+    logindialog.cpp \
+    channelmodel.cpp \
+    servercommunicator.cpp \
+    channelinfo.cpp \
+    channellistexception.cpp
 
 HEADERS  += gui.h \
     settings.h \
@@ -33,7 +37,11 @@ HEADERS  += gui.h \
     recordaudio.h \
     datagram.h \
     soundchunk.h \
-    logindialog.h
+    logindialog.h \
+    channelmodel.h \
+    servercommunicator.h \
+    channelinfo.h \
+    channellistexception.h
 
 FORMS    += gui.ui \
     settings.ui \

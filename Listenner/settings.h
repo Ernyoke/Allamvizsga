@@ -11,6 +11,7 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamAttribute>
 #include <QHostAddress>
+#include <QMutex>
 
 namespace Ui {
 class Settings;
@@ -26,7 +27,6 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioFormat getListennerAudioFormat();
     QAudioDeviceInfo getOutputDevice();
     QHostAddress *getServerAddress();
     quint16 getServerPort();
@@ -40,7 +40,7 @@ public:
     bool setServerAddress(QString);
 
 private:
-
+    Ui::Settings *ui;
     struct devinfo {
         QString dev_name;
         QString codec;
@@ -57,8 +57,6 @@ private:
     quint16 clientPort;
     quint32 clientId;
 
-    Ui::Settings *ui;
-    QAudioFormat formatListenner;
     QList<QAudioDeviceInfo> output_devices;
     QAudioDeviceInfo selectedDevice;
     CODEC recordCodec;
@@ -66,7 +64,6 @@ private:
     QString recordPath;
 
     QVariant boxValue(const QComboBox *box);
-    void displayDeviceProperties(QAudioDeviceInfo);
     void readSettingsFromXML();
     int getBoxIndex(QComboBox*, QString*);
     int getBoxIndex(QComboBox*, int);

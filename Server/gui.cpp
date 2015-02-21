@@ -6,14 +6,42 @@ GUI::GUI(QWidget *parent) :
     ui(new Ui::GUI)
 {
     ui->setupUi(this);
-    this->channelCounter = 0;
-    connect(ui->addButton, SIGNAL(clicked()), this, SLOT(startChannel()));
-    connect(ui->deletButton, SIGNAL(clicked()), this, SLOT(stopChannel()));
 
-    manageClients = new ManageClients(this);
+    channelModel = new ChannelModel(this);
+    clientModel = new ClientModel(this);
+
+    soundWorker = new AcceptData;
+    soundThread = new QThread;
+    soundWorker->moveToThread(soundThread);
+    connect(soundWorker, SIGNAL(finished()), soundThread, SLOT(quit()));
+    connect(this, SIGNAL(stopSoundWorker()), soundWorker, SLOT(stopWorker()), Qt::DirectConnection);
+    connect(soundWorker, SIGNAL(finished()), soundThread, SLOT(deleteLater()));
+    connect(soundWorker, SIGNAL(finished()), soundWorker, SLOT(deleteLater()));
+    soundThread->start();
 
     //menu handlers
-    connect(ui->actionConnected_Clients, SIGNAL(triggered()), this, SLOT(showClients()));
+    connect(ui->actionConnected_Clients, SIGNAL(triggered()), this, SLOT(showClientList()));
+
+    ui->channelTab->setModel(channelModel);
+    manageClients = new ManageClients(clientModel, channelModel, this);
+    connect(manageClients, SIGNAL(newChannelAdded(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
+    connect(manageClients, SIGNAL(newChannelAdded(ChannelInfo)), soundWorker, SLOT(addChannel(ChannelInfo)));
+    connect(manageClients, SIGNAL(channelClosed(qint32)), channelModel, SLOT(deleteChannel(qint32)));
+    connect(manageClients, SIGNAL(channelClosed(qint32)), soundWorker, SLOT(removeChannel(qint32)));
+
+    showClients = new ShowClients(clientModel, this);
+    connect(manageClients, SIGNAL(newClientConnected(ClientInfo*)), clientModel, SLOT(addClient(ClientInfo*)));
+    connect(manageClients, SIGNAL(newClientConnected(ClientInfo*)), this, SLOT(logClientConnected(ClientInfo*)));
+
+    connect(manageClients, SIGNAL(clientConnectionAck(qint32)), clientModel, SLOT(setAck(qint32)));
+    connect(manageClients, SIGNAL(clientDisconnected(qint32)), clientModel, SLOT(removeClient(qint32)));
+    connect(manageClients, SIGNAL(clientDisconnected(qint32)), this, SLOT(logClientDisConnected(qint32)));
+
+    QNetworkInterface inter;
+//    QHostAddress myaddress = hostInfo.localHostName();
+    QList<QHostAddress>myaddress = inter.allAddresses();
+//    ui->seriptext->setText(hostInfo.localDomainName());
+
 }
 
 GUI::~GUI()
@@ -21,92 +49,34 @@ GUI::~GUI()
     delete ui;
 }
 
-//starts a new channel
-void GUI::startChannel() {
-    channelCounter++;
-    int portIn, portOut;
-    QString port1 = ui->portIn->text();
-    QString port2 = ui->portOut->text();
-    bool ok = true;
-    portIn = port1.toInt(&ok, 10);
-    if(!ok) {
-        QMessageBox msg;
-        msg.setText("Invalid input for portIN!");
-        msg.setStandardButtons(QMessageBox::Ok);
-        msg.exec();
-        return;
+
+void GUI::closeEvent(QCloseEvent *event) {
+    qDebug() << "closed";
+    if(soundThread->isRunning()) {
+        connect(soundThread, SIGNAL(destroyed()), this, SLOT(close()));
+        emit stopSoundWorker();
+        event->ignore();
     }
-    portOut = port2.toInt(&ok, 10);
-    if(!ok) {
-        QMessageBox msg;
-        msg.setText("Invalid input for portOUT!");
-        msg.setStandardButtons(QMessageBox::Ok);
-        msg.exec();
-        return;
-    }
-    if(this->checkUsedPorts(portIn, portOut)) {
-        AcceptData *channel = new AcceptData(portIn, portOut, this);
-        channels.insert(channelCounter, channel);
-        QListWidgetItem *item = new QListWidgetItem("Channel (" + port1 + " => " + port2 + ")");
-        item->setData(Qt::UserRole, QVariant(channelCounter));
-        ui->chList->addItem(item);
+    else {
+        event->accept();
     }
 }
 
-//stops and delets a channel from running
-void GUI::stopChannel() {
-    //check if list has any item
-    if(ui->chList->count() > 0) {
-        QListWidgetItem *item = ui->chList->currentItem();
-         //check if is any item selected
-        if(item != NULL) {
-            QVariant data = item->data(Qt::UserRole);
-            int index = data.toInt();
-            int reply;
-            reply = QMessageBox::question(this, "Delete Channel", "Do you really want to delete this channel", QMessageBox::Yes, QMessageBox::Cancel);
-            if(reply == QMessageBox::Yes) {
-                ui->chList->removeItemWidget(item);
-                delete item;
-                QMap<int, AcceptData*>::iterator it = channels.find(index);
-                AcceptData *channel = it.value();
-                delete channel;
-            }
-            else {
-                //
-            }
-        }
-    }
+void GUI::showClientList() {
+    showClients->show();
 }
 
-//checks if inserted in/out ports are available
-bool GUI::checkUsedPorts(int portIn, int portOut) {
-    for(QMap<int, AcceptData*>::iterator it = channels.begin(); it != channels.end(); ++it) {
-        if((*it)->getPortIn() == portIn || (*it)->getPortOut() == portIn || (*it)->getPortIn() == portOut || (*it)->getPortOut() == portOut) {
-            QMessageBox msg;
-            msg.setText("A port is already used!");
-            msg.setStandardButtons(QMessageBox::Ok);
-            msg.exec();
-            return false;
-        }
-    }
-    return true;
+void GUI::logClientConnected(ClientInfo *client) {
+    ui->logDisplay->insertPlainText(generateTimeStamp() + QString(" " + client->getClientTypeStr() + " (id= %1) connected! \n").arg(client->getId()));
 }
 
-void GUI::keyPressEvent(QKeyEvent *key) {
-    switch(key->key()) {
-    //adds new channel when the Enter key is pressed
-    case Qt::Key_Enter: {
-        this->startChannel();
-        break;
-    }
-    //delets selected channel when Delete key is pressed
-    case Qt::Key_Delete: {
-        this->stopChannel();
-        break;
-    }
-    }
+void GUI::logClientDisconnected(qint32 id) {
+    ui->logDisplay->insertPlainText(QString("Client (id= %1) disconnected! \n").arg(id));
 }
 
-void GUI::showClients() {
-    manageClients->show();
+QString GUI::generateTimeStamp() {
+    QDateTime time = QDateTime::currentDateTime();
+    return time.toString();
 }
+
+

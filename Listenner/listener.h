@@ -13,12 +13,15 @@
 #include <QTimer>
 #include <QThread>
 #include <QMap>
+#include <QPointer>
+#include <QSharedPointer>
 
 #include "recordaudio.h"
 #include "recordwav.h"
 //#include "g711.h"
 #include "settings.h"
 #include "datagram.h"
+#include "channelinfo.h"
 
 class Listener : public QThread
 {
@@ -30,13 +33,13 @@ public:
     bool isRecRunning();
 
 private:
-    QUdpSocket *socket;
+    QPointer<QUdpSocket> socket;
     QHostAddress groupAddress;
 
     QAudioFormat format;
     QAudioDeviceInfo m_Outputdevice;
-    QAudioOutput *m_audioOutput;
-    QIODevice *m_output;
+    QPointer<QAudioOutput> m_audioOutput;
+    QPointer<QIODevice> m_output;
     QByteArray m_buffer;
     QMap<qint64, SoundChunk> *outputBuffer;
 
@@ -49,7 +52,7 @@ private:
 
     short Snack_Alaw2Lin(unsigned char);
 
-    RecordAudio *record;
+    QPointer <RecordAudio > record;
 
     void storeChunk(QByteArray);
 
@@ -78,7 +81,7 @@ private slots:
     void portChanged(int);
     void startRecord();
     void pauseRecord();
-    void changePlaybackState(int);
+    void changePlaybackState(QSharedPointer<ChannelInfo> channel);
     void recordingStateChanged(RecordAudio::STATE);
     void askFileName(QString);
 

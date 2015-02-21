@@ -9,37 +9,50 @@ GUI::GUI(QWidget *parent) :
 
     settings = new Settings(this);
     speaker = new ManageVoice(this, settings);
+    serverCommunicator = new ServerCommunicator(settings, this);
 
     loginDialog = new LoginDialog(settings, this);
+    connect(loginDialog, SIGNAL(sendLoginRequest(Datagram)), serverCommunicator, SLOT(sendLoginRequest(Datagram)));
+    connect(loginDialog, SIGNAL(sendLogoutRequest(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+    connect(loginDialog, SIGNAL(sendLoginResponse(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+    connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
+    connect(serverCommunicator, SIGNAL(loginAckReceived(Datagram)), loginDialog, SLOT(processLogin(Datagram)));
 
-    connect(ui->startButton, SIGNAL(pressed()), this, SLOT(btn()));
+    connect(ui->startBroadcastBtn, SIGNAL(pressed()), this, SLOT(startBroadcast()));
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
-    connect(ui->changeButton, SIGNAL(clicked()), this, SLOT(changeBroadcastingPort()));
+
+    connect(ui->newChannelBtn, SIGNAL(clicked()), this, SLOT(startNewChannel()));
+
 
     connect(speaker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
     connect(speaker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
-    connect(this, SIGNAL(broadcastStateChanged(QString, QString)), speaker, SLOT(changeRecordState(QString, QString)));
+    connect(this, SIGNAL(broadcastStateChanged(QAudioFormat)), speaker, SLOT(changeRecordState(QAudioFormat)));
     connect(speaker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
-
-    connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
 
     broadcasting_port = -1;
     broadcastDataSize = 0;
     broadcastDataPerSec = 0;
     cntBroadcastTime = 0;
+    isRecording = false;
 
     broadcastTimer.setInterval(1000);
     connect(&broadcastTimer, SIGNAL(timeout()), this, SLOT(updateBroadcastTime()));
+    isChannelRegistered = false;
 
-    ui->statusBar->showMessage("Data transfer stopped!");
-//    ui->menuBar->statusTip(
-    login();
+//    login();
 }
 
 void GUI::login() {
     loginDialog->exec();
     if(!loginDialog->loginSucces()) {
         QTimer::singleShot(0, this, SLOT(close()));
+    }
+    else {
+        this->show();
+        newChannelDialog = new NewChannelDialog(settings->getClientId(), settings->getDeviceInfo(), this);
+        connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+        connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
+        connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
     }
 }
 
@@ -49,29 +62,54 @@ GUI::~GUI()
     qDebug() << "GUI destruct!";
 }
 
+void GUI::startNewChannel() {
+    //check if it is channel already connected
+    if(!newChannelDialog->isChannelAvailable()) {
+        newChannelDialog->exec();
+        if(newChannelDialog->isChannelAvailable()) {
+            const ChannelInfo* chInfo = newChannelDialog->getChannelInformation();
+            ui->channelLangText->setText(chInfo->getLanguage());
+            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()));
+            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()));
+            ui->channelNrText->setText(QString::number(chInfo->getChannels()));
+            ui->codecText->setText(chInfo->getCodec());
+            ui->newChannelBtn->setText("Close channel");
+        }
+    }
+    else {
+        //stop channel
+        newChannelDialog->sendCloseChannelReq();
+        ui->channelLangText->setText("-");
+        ui->sampleRateText->setText("-");
+        ui->sampleSizeText->setText("-");
+        ui->channelNrText->setText("-");
+        ui->codecText->setText("-");
+        ui->newChannelBtn->setText("New channel");
+    }
+
+}
+
 void GUI::setDataSent(int size) {
     broadcastDataSize += size;
     broadcastDataPerSec +=  size;
     ui->dataSent->setText(QString::number(broadcastDataSize / 1024) + "kByte");
 }
 
-void GUI::btn() {
-    QString port = ui->portInput->text();
-    QString address = ui->ipaddressInput->text();
-    emit broadcastStateChanged(address, port);
+void GUI::startBroadcast() {
+    if(newChannelDialog->isChannelAvailable()) {
+        QAudioFormat speakerFormat = newChannelDialog->getAudioFormat();
+        emit broadcastStateChanged(speakerFormat);
+    }
 }
 
 void GUI::changeBroadcastButtonState(bool isRecording) {
     if(isRecording) {
-        ui->startButton->setText("Stop Recording");
+        ui->startBroadcastBtn->setText("Stop Broadcast");
         broadcastDataSize = 0;
-        ui->portLabel->setText(ui->portInput->text());
-        ui->ipaddressLabel->setText(ui->ipaddressInput->text());
         broadcastTimerStart();
     }
     else {
-        ui->startButton->setText("Start Recording");
-        ui->statusBar->showMessage("Data transfer stopped!");
+        ui->startBroadcastBtn->setText("Start Broadcast");
         broadcastDataSize = 0;
         broadcastTimerStop();
     }

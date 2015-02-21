@@ -15,36 +15,19 @@ ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
     timestamp = now.currentDateTime().toMSecsSinceEpoch();
 
     isRecording = false;
+
     broadcasting_port = -1;
 
 }
 
 
-void ManageVoice::changeRecordState(QString IPAddress, QString port) {
+void ManageVoice::changeRecordState(QAudioFormat speakerFormat) {
 
     if(!isRecording) {
-        //check if input port is valid number
-        bool ok = false;
-        broadcasting_port = port.toInt(&ok);
-        if(!ok) {
-            emit errorMessage("Invalid port!");
-        }
-        else {
-            //check if IP is valid
-            if(checkIP(IPAddress)) {
-                if(this->IPAddress == NULL) {
-                    this->IPAddress = new QHostAddress(IPAddress);
-                }
-                else {
-                    delete this->IPAddress;
-                    this->IPAddress = new QHostAddress(IPAddress);
-                }
-                startRecording();
-            }
-            else {
-              emit errorMessage("Invalid IP!");
-            }
-        }
+        this->IPAddress = settings->getServerAddress();
+        this->broadcasting_port = settings->getClientPortForSound();
+        format = speakerFormat;
+        startRecording();
     }
     else {
         stopRecording();
@@ -124,5 +107,9 @@ ManageVoice::~ManageVoice() {
     stopRecording();
     delete this->IPAddress;
     qDebug() << "Managevoice destruct!";
+}
+
+bool ManageVoice::isRunning() {
+    return this->isRecording;
 }
 

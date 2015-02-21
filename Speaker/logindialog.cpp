@@ -7,34 +7,26 @@ LoginDialog::LoginDialog(Settings *settings, QWidget *parent) :
 {
     ui->setupUi(this);
     this->settings = settings;
-
-    socket = new QUdpSocket(this);
     ack = false;
-
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readDatagram()));
 
     timer = new QTimer(this);
     timer->setSingleShot(true);
     connect(timer, SIGNAL(timeout()), this, SLOT(loginTimedOut()));
     connect(ui->loginBtn, SIGNAL(clicked()), this, SLOT(authentificate()));
 
-    dgram = NULL;
-
 }
 
 LoginDialog::~LoginDialog()
 {
-    delete dgram;
+//    delete dgram;
     delete ui;
 }
 
 void LoginDialog::authentificate() {
     if(!ack) {
         if(settings->setServerAddress(ui->address->text())) {
-            //bind the socket to the server address
-            socket->bind(*settings->getServerAddress(), settings->getClientPort());
             //get the current timespamp;
-            qint64 timeStamp = generateTimestamp();
+            qint64 timeStamp = Datagram::generateTimestamp();
             //get system information
             QSysInfo sysInfo;
             QString os = sysInfo.prettyProductName();
@@ -45,10 +37,10 @@ void LoginDialog::authentificate() {
             in << settings->getClientType();
             in << os;
             //create the datagram
-            dgram = new Datagram(Datagram::LOGIN, settings->getClientId(), timeStamp);
-            dgram->setDatagramContent(&content);
+            Datagram dgram(Datagram::LOGIN, settings->getClientId(), timeStamp);
+            dgram.setDatagramContent(&content);
             //send the package to the server
-            dgram->sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+            emit sendLoginRequest(dgram);
             //set a timer for response
             timer->setInterval(1000);
             timer->start();
@@ -63,18 +55,6 @@ void LoginDialog::authentificate() {
     }
 }
 
-void LoginDialog::readDatagram() {
-    while(socket->hasPendingDatagrams()) {
-        QByteArray dataReceived;
-        dataReceived.resize(socket->pendingDatagramSize());
-        QHostAddress sender;
-        quint16 senderPort;
-        socket->readDatagram(dataReceived.data(), dataReceived.size(), &sender, &senderPort);
-        Datagram dgram(&dataReceived);
-        this->processDatagram(dgram);
-    }
-}
-
 void LoginDialog::loginTimedOut() {
     if(ack == false) {
         ui->loginBtn->setText("Retry");
@@ -83,7 +63,7 @@ void LoginDialog::loginTimedOut() {
     }
 }
 
-void LoginDialog::processDatagram(Datagram dgram) {
+void LoginDialog::processLogin(Datagram dgram) {
     if(dgram.getId() == Datagram::LOGIN_ACK) {
         QByteArray *content = dgram.getContent();
         QDataStream out(content, QIODevice::ReadOnly);
@@ -96,8 +76,9 @@ void LoginDialog::processDatagram(Datagram dgram) {
             ui->loginBtn->setText("Countinue");
             timer->stop();
             QString respContent = " ";
-            Datagram response(Datagram::LOGIN_ACK, settings->getClientId(), generateTimestamp(), &respContent);
-            response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
+            Datagram response(Datagram::LOGIN_ACK, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
+            emit sendLoginResponse(response);
+//            response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
         }
         else {
             ui->status->setText("Authentification failed!");
@@ -111,16 +92,11 @@ bool LoginDialog::loginSucces() {
     return this->ack;
 }
 
-qint64 LoginDialog::generateTimestamp() {
-    QDateTime now = QDateTime::currentDateTime();
-    qint64 timeStamp = now.currentDateTime().toMSecsSinceEpoch();
-    return timeStamp;
-}
-
 void LoginDialog::logout() {
     if(ack) {
         QString respContent = " ";
-        Datagram response(Datagram::LOGOUT, settings->getClientId(), generateTimestamp(), &respContent);
-        response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
+        Datagram response(Datagram::LOGOUT, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
+        emit sendLogoutRequest(response);
+//        response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
     }
 }
