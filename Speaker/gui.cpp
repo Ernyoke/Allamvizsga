@@ -49,7 +49,7 @@ void GUI::login() {
     }
     else {
         this->show();
-        newChannelDialog = new NewChannelDialog(settings->getClientId(), settings->getDeviceInfo(), this);
+        newChannelDialog = new NewChannelDialog(settings->getClientId(), settings->getInputDevice(), this);
         connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
         connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
         connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));

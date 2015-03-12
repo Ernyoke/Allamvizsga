@@ -55,7 +55,6 @@ bool ManageVoice::checkIP(QString ip) {
 
 void ManageVoice::startRecording() {
     if(!isRecording && broadcasting_port > 0) {
-        format = settings->getSpeakerAudioFormat();
 
         QAudioDeviceInfo info = settings->getInputDevice();
         if (!info.isFormatSupported(format)) {
@@ -81,7 +80,7 @@ void ManageVoice::transferData(){
         chunk = intermediateDevice->read(buffLen);
         timestamp++;
         //serialize data conform to the protocol
-        SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.channelCount(), format.codec(), &chunk);
+        SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &chunk);
         //create datagram
         Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
         qDebug() << timestamp;

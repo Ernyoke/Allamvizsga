@@ -25,7 +25,13 @@ SOURCES += main.cpp\
     worker.cpp \
     datagram.cpp \
     soundchunk.cpp \
-    logindialog.cpp
+    logindialog.cpp \
+    servercommunicator.cpp \
+    newchanneldialog.cpp \
+    channelinfo.cpp \
+    channelmodel.cpp \
+    channellistexception.cpp \
+    addnewchannelfromgui.cpp
 
 HEADERS  += gui.h \
     speaker.h \
@@ -37,10 +43,18 @@ HEADERS  += gui.h \
     worker.h \
     datagram.h \
     soundchunk.h \
-    logindialog.h
+    logindialog.h \
+    servercommunicator.h \
+    newchanneldialog.h \
+    channelinfo.h \
+    channelmodel.h \
+    channellistexception.h \
+    addnewchannelfromgui.h
 
 FORMS    += gui.ui \
     settings.ui \
-    logindialog.ui
+    logindialog.ui \
+    newchanneldialog.ui \
+    addnewchannelfromgui.ui
 
 CONFIG += c++11

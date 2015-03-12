@@ -41,15 +41,8 @@ public:
 
 private:
     Ui::Settings *ui;
-    struct devinfo {
-        QString dev_name;
-        QString codec;
-        quint32 sample_rate;
-        quint32 channels;
-        quint32 sample_size;
-    };
 
-    devinfo xml_outdev;
+    QString outputDeviceName;
 
     QHostAddress *address;
     quint16 serverPort;
@@ -58,7 +51,8 @@ private:
     quint32 clientId;
 
     QList<QAudioDeviceInfo> output_devices;
-    QAudioDeviceInfo selectedDevice;
+    QAudioDeviceInfo selectedOutputDevice;
+    QAudioDeviceInfo activeOutputDevice;
     CODEC recordCodec;
     QFileDialog *fileBrowser;
     QString recordPath;
@@ -69,7 +63,6 @@ private:
     int getBoxIndex(QComboBox*, int);
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
-    void setFormatProperties();
 
     bool checkIpAddress(QString);
 

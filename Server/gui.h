@@ -47,6 +47,7 @@ private slots:
     void showClientList();
     void logClientConnected(ClientInfo*);
     void logClientDisconnected(qint32 id);
+    void logClientTimedOut(qint32 id);
 //    void manageTreadFinished();
 //    void acceptThreadFinished();
 

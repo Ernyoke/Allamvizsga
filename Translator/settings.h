@@ -27,8 +27,6 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioFormat getSpeakerAudioFormat();
-    QAudioFormat getListennerAudioFormat();
     QAudioDeviceInfo getInputDevice();
     QAudioDeviceInfo getOutputDevice();
     CODEC getRecordCodec();
@@ -36,6 +34,7 @@ public:
     QHostAddress *getServerAddress();
     quint16 getServerPort();
     quint16 getClientPort();
+    quint16 getClientPortForSound();
     quint32 getClientType();
     quint32 getClientId();
     void setClientId(quint32);
@@ -44,28 +43,23 @@ public:
 
 private:
 
-    struct devinfo {
-        QString dev_name;
-        QString codec;
-        int sample_rate;
-        int channels;
-        int sample_size;
-    };
+    Ui::Settings *ui;
 
-    devinfo xml_indev;
-    devinfo xml_outdev;
+    QString inputDeviceName;
+    QString outputDeviceName;
 
     QHostAddress *address;
     quint16 serverPort;
     quint32 clientType;
     quint16 clientPort;
+    quint16 clientPortForSound;
     quint32 clientId;
 
-    Ui::Settings *ui;
-    QAudioFormat formatSpeaker;
-    QAudioFormat formatListenner;
     QAudioDeviceInfo selectedInputDevice;
+    QAudioDeviceInfo activeInputDevice;
     QAudioDeviceInfo selectedOutputDevice;
+    QAudioDeviceInfo activeOutputDevice;
+
     QList<QAudioDeviceInfo> input_devices;
     QList<QAudioDeviceInfo> output_devices;
     CODEC recordCodec;
@@ -80,7 +74,6 @@ private:
     int getBoxIndex(QComboBox*, int);
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
-    void setFormatProperties();
 
     void showEvent(QShowEvent * event);
 

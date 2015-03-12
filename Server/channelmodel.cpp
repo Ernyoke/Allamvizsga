@@ -105,6 +105,16 @@ QVariant ChannelModel::headerData(int section, Qt::Orientation orientation, int 
 void ChannelModel::addNewChannel(ChannelInfo info) {
     int position = this->rowCount(QModelIndex());
     beginInsertRows(QModelIndex(), position, position);
+    if(channelMap.contains(info.getOwner())) {
+        channelMap.remove(info.getOwner());
+        for(int i = 0; i < channelList.size(); ++i) {
+            if(channelList[i]->getOwner() == info.getOwner()) {
+                beginRemoveRows(QModelIndex(), i, i);
+                channelList.remove(i);
+                endRemoveRows();
+            }
+        }
+    }
     QSharedPointer<ChannelInfo> channelInfo = QSharedPointer<ChannelInfo>(new ChannelInfo(info));
     channelList.append(channelInfo);
     channelMap.insert(channelInfo->getOwner(), channelInfo);
@@ -153,4 +163,15 @@ QByteArray ChannelModel::serialize() {
         out << content;
     }
     return buffer;
+}
+
+QByteArray ChannelModel::serializeChannel(qint32 id) {
+    QMap<qint32, QSharedPointer<ChannelInfo> >::const_iterator item = channelMap.find(id);
+    if(item != channelMap.end()) {
+        return item.value()->serialize();
+    }
+    else {
+        QString message("Channel not found!");
+        throw new ChannelNotFoundEx(message);
+    }
 }

@@ -15,7 +15,6 @@ ClientModel::~ClientModel()
 //        delete client;
 //    }
     clientList.clear();
-    clientMap.clear();
 }
 
 int ClientModel::rowCount(const QModelIndex &parent) const
@@ -99,7 +98,6 @@ void ClientModel::addClient(ClientInfo *client) {
     beginInsertRows(QModelIndex(), position, position);
     QSharedPointer<ClientInfo> newClient = QSharedPointer<ClientInfo>(client);
     clientList.append(newClient);
-    clientMap.insert(client->getId(), newClient);
     endInsertRows();
 }
 
@@ -111,12 +109,29 @@ void ClientModel::removeClient(qint32 id) {
         if(client->getId() == id) {
             beginRemoveRows(QModelIndex(), i, i);
             clientList.remove(i);
-            clientMap.remove(id);
             endRemoveRows();
             break;
         }
         ++i;
     }
+}
+
+void ClientModel::removeOfflineClients() {
+    qDebug() << "remove offline";
+    QMutableVectorIterator< QSharedPointer<ClientInfo> > iter(clientList);
+    while(iter.hasNext()) {
+        QSharedPointer<ClientInfo> client = iter.next();
+        if(!client->isOnline()) {
+            emit clientTimedOut(client->getId());
+            iter.remove();
+        }
+        else {
+            client->incNoResponseCounter();
+        }
+    }
+    QModelIndex topLeft = this->index(0, 0);
+    QModelIndex bottomRight = this->index(rowCount(QModelIndex()) - 1, columnCount(QModelIndex()) - 1);
+    emit dataChanged(topLeft, bottomRight);
 }
 
 bool ClientModel::containsClient(qint32 id) {
@@ -131,14 +146,28 @@ bool ClientModel::containsClient(qint32 id) {
 }
 
 void ClientModel::setAck(qint32 clientId) {
-    QMap<qint32, QSharedPointer<ClientInfo> >::iterator iter = clientMap.find(clientId);
-    if(clientMap.end() != iter) {
-        QSharedPointer<ClientInfo> client = iter.value();
+    QSharedPointer<ClientInfo> client = getClientWithId(clientId);
+    if(!client.isNull()) {
         client->setAck();
         QModelIndex topLeft = this->index(0, 0);
         QModelIndex bottomRight = this->index(rowCount(QModelIndex()) - 1, columnCount(QModelIndex()) - 1);
         emit dataChanged(topLeft, bottomRight);
     }
+}
+
+QSharedPointer<ClientInfo> ClientModel::getClientWithId(qint32 id) const {
+    QVectorIterator< QSharedPointer<ClientInfo> > iter(clientList);
+    while(iter.hasNext()) {
+        QSharedPointer<ClientInfo> client = iter.next();
+        if(client->getId() == id) {
+            return client;
+        }
+    }
+    return QSharedPointer<ClientInfo>(NULL);
+}
+
+QVector< QSharedPointer<ClientInfo> > ClientModel::getClientList() const {
+    return clientList ;
 }
 
 

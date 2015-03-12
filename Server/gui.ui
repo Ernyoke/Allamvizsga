@@ -68,13 +68,16 @@
     <item row="3" column="0" colspan="3">
      <widget class="QPlainTextEdit" name="logDisplay">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>2</verstretch>
        </sizepolicy>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

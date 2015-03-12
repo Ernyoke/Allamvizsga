@@ -10,7 +10,7 @@ Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
-    this->data.append(data->serialize());
+    this->data.append(&data->serialize());
     this->size = headerSize() + data->getSize();
 }
 

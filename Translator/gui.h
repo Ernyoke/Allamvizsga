@@ -8,11 +8,16 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QPointer>
 #include "settings.h"
 #include "recordaudio.h"
 #include "listener.h"
 #include "speaker.h"
 #include "logindialog.h"
+#include "servercommunicator.h"
+#include "newchanneldialog.h"
+#include "channelmodel.h"
+#include "addnewchannelfromgui.h"
 
 namespace Ui {
 class GUI;
@@ -31,7 +36,6 @@ public:
     void receiverTimerStart();
     void receiverTimerStop();
     int getVolume();
-    int getPort();
 
     //speaker
     int getBroadcastingPort();
@@ -39,6 +43,7 @@ public:
     void broadcastTimerStop();
 
     //both
+    void login();
     void updateSpeed();
     Settings *getSettings();
 
@@ -57,7 +62,6 @@ private:
     long dataSize;
     long dataPerSec;
     long cntTime;
-    QList<QListWidgetItem*> *channels;
 
     //speaker
     Speaker *speaker;
@@ -69,12 +73,14 @@ private:
 
     //both
     Settings *settings;
-    QStatusBar *sBar;
     LoginDialog *loginDialog;
+    NewChannelDialog *newChannelDialog;
+    AddNewChannelFromGui *addNewChannelMan;
+    QPointer<ServerCommunicator> serverCommunicator;
+    QPointer<ChannelModel> channelModel;
 
 
     void initialize();
-    void login();
 
 signals:
     //signals for listenner
@@ -82,13 +88,13 @@ signals:
     void startRecord();
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState(int);
+    void changePlayBackState(QSharedPointer<ChannelInfo>);
     void portChanged(int);
     void stopListener();
     void finalRecordName(bool, QString);
 
     //signals for broadcast
-    void broadcastStateChanged(QString, QString);
+    void broadcastStateChanged(QAudioFormat);
     void stopSpeaker();
 
     //signals for both
@@ -102,7 +108,7 @@ public slots:
     void deleteChannel();
     void updateTime();
     void volumeChangedSlot();
-    void getItemData(QListWidgetItem*);
+    void changeChannelOnDoubleClick(QModelIndex);
     void addNewChannel();
     void changeRecordButtonState(RecordAudio::STATE);
     void changePauseButtonState(RecordAudio::STATE);
@@ -113,7 +119,8 @@ public slots:
 
 
     //slots for broadcast
-    void btn();
+    void startNewChannel();
+    void startBroadcast();
     void changeBroadcastingPort();
     void updateBroadcastTime();
     void changeBroadcastButtonState(bool);
@@ -126,5 +133,7 @@ public slots:
 
 
 };
+
+//Q_DECLARE_METATYPE(QSharedPointer<ChannelInfo>)
 
 #endif // GUI_H

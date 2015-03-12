@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QTimer>
 
 #include "clientinfo.h"
 #include "speakerclientinfo.h"
@@ -31,16 +32,22 @@ private:
     ClientModel *clientModel;
     ChannelModel *channelModel;
 
+    QTimer *synchTimer;
+
     void processDatagram(Datagram, QHostAddress address, quint16 port);
     bool nextClientId();
     bool isAvNextClient();
     bool nextPort();
     bool isPortAv();
     void resolveLogin(QByteArray *content, QHostAddress address, qint64 timeStamp);
-    void newChannel(Datagram, QHostAddress address, qint64 timeStamp);
+    void newChannel(Datagram &, QHostAddress &address, qint64 timeStamp);
+    void synchResponse(Datagram& dgram);
 
 private slots:
     void readPendingDatagrams();
+    void sendCollectiveMessageToSpeakers(Datagram &dgram);
+    void sendCollectiveMessage(Datagram &dgram);
+    void synchronizeClients();
 
 signals:
     void newChannelAdded(ChannelInfo);

@@ -17,7 +17,6 @@ class ClientModel : public QAbstractTableModel
 
 private:
     QVector< QSharedPointer<ClientInfo> > clientList;
-    QMap<qint32, QSharedPointer<ClientInfo> > clientMap;
 
 public:
     ClientModel(QObject *parent = 0);
@@ -30,11 +29,18 @@ public:
 
     bool containsClient(qint32 id);
 
+    QVector< QSharedPointer<ClientInfo > > getClientList() const;
+    void removeOfflineClients();
+    QSharedPointer<ClientInfo> getClientWithId(qint32) const;
+
 public slots:
     void addClient(ClientInfo *client);
 //    void clientAck(qint32 id);
     void removeClient(qint32 id);
     void setAck(qint32 clientId);
+
+signals:
+    void clientTimedOut(qint32);
 
 };
 

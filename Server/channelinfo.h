@@ -9,10 +9,11 @@
 class ChannelInfo
 {
 public:
+    ChannelInfo();
     ChannelInfo(qint32 userId, QString language, QString codec, qint32 sample_rate, qint32 sample_size, qint32 channels);
     ChannelInfo(QByteArray &content);
-    ChannelInfo(ChannelInfo *info);
-    ChannelInfo(ChannelInfo &info);
+    ChannelInfo(const ChannelInfo *info);
+    ChannelInfo(const ChannelInfo &info);
     ~ChannelInfo();
 
     QByteArray serialize();
@@ -24,8 +25,8 @@ public:
     qint32 getChannels() const;
 
     void setOutPort(qint16 port);
-    qint32 getOwner();
-    qint16 getOutPort();
+    qint32 getOwner() const;
+    qint16 getOutPort() const;
 
 private:
     QString language;

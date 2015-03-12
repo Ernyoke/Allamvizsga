@@ -68,6 +68,14 @@ void ServerCommunicator::processDatagram(Datagram dgram) {
         //invalid package, throw it
         break;
     }
+    case Datagram::SYNCH : {
+        processSynch(dgram);
+        break;
+    }
+    case Datagram::SYNCH_RESP : {
+        //invalid package, throw it
+        break;
+    }
     }
 }
 
@@ -96,6 +104,7 @@ void ServerCommunicator::processList(Datagram &dgram) {
     if(dgram.getTimeStamp() == reqListStart) {
         listContent.insert(dgram.getCurrentPackNummber(), dgram.getContent());
         //check if all packets arrived
+        qDebug() << "arrived";
         if(listContent.size() == dgram.getPacketsNumber()) {
             listReqTimer->stop();
             QByteArray listBuffer;
@@ -114,3 +123,10 @@ void ServerCommunicator::listReqTimedOut() {
     reqListStart = 0;
     //error, list can not be created
 }
+
+void ServerCommunicator::processSynch(Datagram &dgram) {
+    QString toSend("SYNCH");
+    Datagram response(Datagram::SYNCH_RESP, settings->getClientId(), Datagram::generateTimestamp(), &toSend);
+    response.sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+}
+

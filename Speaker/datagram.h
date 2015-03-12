@@ -24,7 +24,9 @@ public:
         SOUND = 6,
         NEW_CHANNEL = 7,
         NEW_CHANNEL_ACK = 8,
-        CLOSE_CHANNEL = 9
+        CLOSE_CHANNEL = 9,
+        SYNCH = 10,
+        SYNCH_RESP = 11
     };
 
     explicit Datagram();

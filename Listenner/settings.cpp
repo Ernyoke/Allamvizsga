@@ -17,10 +17,10 @@ Settings::Settings(QWidget *parent) :
     //read settings from XML file into structs
     readSettingsFromXML();
 
-    selectedDevice = QAudioDeviceInfo::defaultOutputDevice();
+    activeOutputDevice = QAudioDeviceInfo::defaultOutputDevice();
     for(QList<QAudioDeviceInfo>::iterator it = output_devices.begin(); it != output_devices.end(); ++it) {
-        if(it->deviceName().compare(xml_outdev.dev_name) == 0) {
-            selectedDevice = *it;
+        if(it->deviceName().compare(outputDeviceName) == 0) {
+            activeOutputDevice = *it;
             break;
         }
     }
@@ -28,8 +28,6 @@ Settings::Settings(QWidget *parent) :
     //initialize selected properties for devices
     initSettingsValues();
 
-    //initialize QAudioFormats for devices
-    setFormatProperties();
 
     //initialize recording codec
     ui->codecBox->addItem("wav");
@@ -61,20 +59,14 @@ Settings::~Settings()
 }
 
 void Settings::initSettingsValues() {
-    //outdev
-    setBoxIndex(ui->deviceBox, getBoxIndex(ui->deviceBox, &xml_outdev.dev_name));
+    setBoxIndex(ui->deviceBox, getBoxIndex(ui->deviceBox, &outputDeviceName));
 }
 
 
 void Settings::changeDevice(int index) {
-    QAudioDeviceInfo selectedDevice = output_devices.at(index);
+    selectedOutputDevice = output_devices.at(index);
 }
 
-
-//update format with given settings
-void Settings::setFormatProperties() {
-    xml_outdev.dev_name = selectedDevice.deviceName();
-}
 
 
 //read the settings from XML and parse them
@@ -92,19 +84,7 @@ void Settings::readSettingsFromXML() {
                     if(atr.value("direction").toString().compare("output") == 0) {
                         while(XMLReader.readNextStartElement()) {
                             if(XMLReader.name() == "devicename") {
-                                xml_outdev.dev_name = XMLReader.readElementText();
-                            }
-                            if(XMLReader.name() == "samplerate") {
-                                xml_outdev.sample_rate = XMLReader.readElementText().toInt();
-                            }
-                            if(XMLReader.name() == "codec") {
-                                xml_outdev.codec = XMLReader.readElementText();
-                            }
-                            if(XMLReader.name() == "channelcount") {
-                                xml_outdev.channels = XMLReader.readElementText().toInt();
-                            }
-                            if(XMLReader.name() == "samplesize") {
-                                xml_outdev.sample_size = XMLReader.readElementText().toInt();
+                                outputDeviceName = XMLReader.readElementText();
                             }
                         }
                     }
@@ -148,7 +128,7 @@ QString Settings::getRecordPath() {
 }
 
 QAudioDeviceInfo Settings::getOutputDevice() {
-    return selectedDevice;
+    return activeOutputDevice;
 }
 
 QHostAddress* Settings::getServerAddress() {
@@ -186,9 +166,7 @@ QVariant Settings::boxValue(const QComboBox *box)
 
 void Settings::applySettings() {
 
-    //update formats first
-    setFormatProperties();
-
+    activeOutputDevice = selectedOutputDevice;
     recordPath = ui->displayPath->text();
 
     //store settings in output XML file
@@ -201,7 +179,7 @@ void Settings::applySettings() {
     xmlWriter.writeStartElement("audioformat");
     QXmlStreamAttribute atr("direction", "output");
     xmlWriter.writeAttribute(atr);
-    xmlWriter.writeTextElement("devicename", boxValue(ui->deviceBox).toString());
+    xmlWriter.writeTextElement("devicename", selectedOutputDevice.deviceName());
     xmlWriter.writeEndElement();
     xmlWriter.writeEndElement();
     xmlWriter.writeEndDocument();

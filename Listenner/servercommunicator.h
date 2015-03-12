@@ -26,6 +26,7 @@ private:
 
     void processDatagram(Datagram);
     void processList(Datagram&);
+    void processSynch(Datagram&);
 
 private slots:
     void sendLoginRequest(Datagram);

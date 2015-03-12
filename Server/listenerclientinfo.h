@@ -3,16 +3,16 @@
 
 #include "clientinfo.h"
 
-class ListenerClientInfo : public ClientInfo
+class ListenerClientInfo : public virtual ClientInfo
 {
 public:
     ListenerClientInfo(QHostAddress address, QString OSName, double version);
     ListenerClientInfo(ListenerClientInfo&);
     ListenerClientInfo(ListenerClientInfo*);
-    ~ListenerClientInfo();
+    virtual ~ListenerClientInfo();
 
-    CLIENT_TYPE getClientType() const;
-    QString getClientTypeStr() const;
+    virtual CLIENT_TYPE getClientType() const;
+    virtual QString getClientTypeStr() const;
 };
 
 #endif // LISTENERCLIENTINFO_H

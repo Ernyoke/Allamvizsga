@@ -9,6 +9,7 @@
 #include <QSharedPointer>
 
 #include "channelinfo.h"
+#include "channelnotfoundex.h"
 
 class ChannelModel : public QAbstractTableModel
 {
@@ -25,9 +26,10 @@ public:
 
     bool hasPortAssigned(qint16 port);
     QByteArray serialize();
+    QByteArray serializeChannel(qint32 id);
 
 private:
-    QMap<quint32, QSharedPointer<ChannelInfo> > channelMap;
+    QMap<qint32, QSharedPointer<ChannelInfo> > channelMap;
     QVector< QSharedPointer<ChannelInfo> > channelList;
 
 signals:

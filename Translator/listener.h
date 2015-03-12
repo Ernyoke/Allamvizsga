@@ -13,6 +13,8 @@
 #include <QTimer>
 #include <QThread>
 #include <QMap>
+#include <QPointer>
+#include <QSharedPointer>
 
 #include "g711.h"
 #include "recordaudio.h"
@@ -20,6 +22,7 @@
 #include "worker.h"
 #include "soundchunk.h"
 #include "datagram.h"
+#include "channelinfo.h"
 
 class Listener : public Worker
 {
@@ -57,13 +60,13 @@ signals:
     void changePlayButtonState(bool);
     //is emited when a data package is received(updates the GUI speed and transfer size)
     void dataReceived(int);
-    //emitted when recording is started or stopped
+    //emited when recording is started or stopped
     void changeRecordButtonState(RecordAudio::STATE);
-    //emitted when recording is paused or reloaded from pause state
+    //emited when recording is paused or reloaded from pause state
     void changePauseButtonState(RecordAudio::STATE);
-    //emitted when saving the recorded sound(renaming the file)
+    //emited when saving the recorded sound(renaming the file)
     void askFileNameGUI(QString);
-    //emit when thread work is over
+    //emited when thread work is over
     void finished();
     //error message
     void showError(QString);
@@ -76,7 +79,7 @@ public slots:
     void portChanged(int);
     void startRecord();
     void pauseRecord();
-    void changePlaybackState(int);
+    void changePlaybackState(QSharedPointer<ChannelInfo> channel);
     void recordingStateChanged(RecordAudio::STATE);
 
 private slots:

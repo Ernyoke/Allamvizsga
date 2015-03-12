@@ -3,16 +3,16 @@
 
 #include "clientinfo.h"
 
-class SpeakerClientInfo : public ClientInfo
+class SpeakerClientInfo : public virtual ClientInfo
 {
 public:
     SpeakerClientInfo(QHostAddress address, QString OSName, double version);
     SpeakerClientInfo(SpeakerClientInfo &);
     SpeakerClientInfo(SpeakerClientInfo *);
-    ~SpeakerClientInfo();
+    virtual ~SpeakerClientInfo();
 
-    CLIENT_TYPE getClientType() const;
-    QString getClientTypeStr() const;
+    virtual CLIENT_TYPE getClientType() const;
+    virtual QString getClientTypeStr() const;
 };
 
 #endif // SPEAKERCLIENTINFO_H

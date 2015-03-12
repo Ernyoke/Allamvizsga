@@ -22,7 +22,6 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioFormat getSpeakerAudioFormat();
     QAudioDeviceInfo getInputDevice();
     QHostAddress *getServerAddress();
     quint16 getServerPort();
@@ -33,21 +32,12 @@ public:
     void setClientId(quint32);
 
     bool setServerAddress(QString);
-    QAudioDeviceInfo getDeviceInfo();
 
 
 private:
     Ui::Settings *ui;
 
-    struct devinfo {
-        QString dev_name;
-        QString codec;
-        quint32 sample_rate;
-        quint32 channels;
-        quint32 sample_size;
-    };
-
-    devinfo xml_indev;
+    QString inputDeviceName;
 
     QHostAddress *address;
     quint16 serverPort;
@@ -56,9 +46,9 @@ private:
     quint16 clientPortForSound;
     quint32 clientId;
 
-    QAudioFormat formatSpeaker;
     QList<QAudioDeviceInfo> input_devices;
-    QAudioDeviceInfo selectedDevice;
+    QAudioDeviceInfo selectedInputDevice;
+    QAudioDeviceInfo activeInputDevice;
 
     QVariant boxValue(const QComboBox *box);
 

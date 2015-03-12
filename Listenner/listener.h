@@ -23,7 +23,7 @@
 #include "datagram.h"
 #include "channelinfo.h"
 
-class Listener : public QThread
+class Listener : public QObject
 {
     Q_OBJECT
 public:
@@ -78,7 +78,7 @@ private slots:
     void playback();
     void stopPlayback();
     void volumeChanged();
-    void portChanged(int);
+    void channelChanged(QSharedPointer<ChannelInfo> channel);
     void startRecord();
     void pauseRecord();
     void changePlaybackState(QSharedPointer<ChannelInfo> channel);

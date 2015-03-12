@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QUdpSocket>
 #include <QHostAddress>
+#include <QMetaType>
 #include "channelinfo.h"
 #include "datagram.h"
 

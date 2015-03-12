@@ -15,7 +15,7 @@ GUI::GUI(QWidget *parent) :
     soundWorker->moveToThread(soundThread);
     connect(soundWorker, SIGNAL(finished()), soundThread, SLOT(quit()));
     connect(this, SIGNAL(stopSoundWorker()), soundWorker, SLOT(stopWorker()), Qt::DirectConnection);
-    connect(soundWorker, SIGNAL(finished()), soundThread, SLOT(deleteLater()));
+    connect(soundThread, SIGNAL(finished()), soundThread, SLOT(deleteLater()));
     connect(soundWorker, SIGNAL(finished()), soundWorker, SLOT(deleteLater()));
     soundThread->start();
 
@@ -35,7 +35,11 @@ GUI::GUI(QWidget *parent) :
 
     connect(manageClients, SIGNAL(clientConnectionAck(qint32)), clientModel, SLOT(setAck(qint32)));
     connect(manageClients, SIGNAL(clientDisconnected(qint32)), clientModel, SLOT(removeClient(qint32)));
-    connect(manageClients, SIGNAL(clientDisconnected(qint32)), this, SLOT(logClientDisConnected(qint32)));
+    connect(manageClients, SIGNAL(clientDisconnected(qint32)), this, SLOT(logClientDisconnected(qint32)));
+
+    connect(clientModel, SIGNAL(clientTimedOut(qint32)), this, SLOT(logClientTimedOut(qint32)));
+    connect(clientModel, SIGNAL(clientTimedOut(qint32)), channelModel, SLOT(deleteChannel(qint32)));
+    connect(clientModel, SIGNAL(clientTimedOut(qint32)), soundWorker, SLOT(removeChannel(qint32)));
 
     QNetworkInterface inter;
 //    QHostAddress myaddress = hostInfo.localHostName();
@@ -52,9 +56,11 @@ GUI::~GUI()
 
 void GUI::closeEvent(QCloseEvent *event) {
     qDebug() << "closed";
+    this->hide();
     if(soundThread->isRunning()) {
         connect(soundThread, SIGNAL(destroyed()), this, SLOT(close()));
         emit stopSoundWorker();
+        soundThread->quit();
         event->ignore();
     }
     else {
@@ -72,6 +78,10 @@ void GUI::logClientConnected(ClientInfo *client) {
 
 void GUI::logClientDisconnected(qint32 id) {
     ui->logDisplay->insertPlainText(QString("Client (id= %1) disconnected! \n").arg(id));
+}
+
+void GUI::logClientTimedOut(qint32 id) {
+    ui->logDisplay->insertPlainText(QString("Client (id= %1) timed out! \n").arg(id));
 }
 
 QString GUI::generateTimeStamp() {

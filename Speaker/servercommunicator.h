@@ -19,6 +19,7 @@ private:
     Settings *settings;
 
     void processDatagram(Datagram);
+    void processSynch(Datagram&);
 
 private slots:
     void sendLoginRequest(Datagram);

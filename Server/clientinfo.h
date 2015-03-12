@@ -15,15 +15,18 @@ public:
     };
 
     ClientInfo(QHostAddress address, QString OSName, double version);
-    ~ClientInfo();
+    virtual ~ClientInfo();
 
     void setId(quint32 id);
-    quint32 getId();
-    QString getAddressStr();
-    QHostAddress getAddress();
-    QString getOSName();
-    bool active();
+    quint32 getId() const;
+    QString getAddressStr() const;
+    QHostAddress getAddress() const;
+    QString getOSName() const;
+    bool active() const;
     void setAck();
+    void incNoResponseCounter();
+    void resetNoResponseCounter();
+    bool isOnline() const;
 
     virtual CLIENT_TYPE getClientType() const = 0;
     virtual QString getClientTypeStr() const = 0;
@@ -34,6 +37,8 @@ protected:
     QString OSName;
     double version;
     bool isActive;
+
+    int noResponseCounter;
 };
 
 #endif // CLIENTINFO_H

@@ -5,6 +5,7 @@ const int SOUND_PORT = 20000;
 AcceptData::AcceptData(QObject *parent) :
     QObject(parent)
 {
+    qRegisterMetaType<ChannelInfo>("ChannelInfo");
     socket = new QUdpSocket(this);
     socket->bind(QHostAddress::Any, SOUND_PORT);
 
@@ -12,6 +13,7 @@ AcceptData::AcceptData(QObject *parent) :
 
     isDataAvailable = false;
     isRunning = true;
+
 }
 
 AcceptData::~AcceptData() {

@@ -19,58 +19,21 @@ Speaker::~Speaker() {
     qDebug() << "Speaker deleted!";
 }
 
-void Speaker::changeRecordState(QString IPAddress, QString port) {
+void Speaker::changeRecordState(QAudioFormat speakerFormat) {
+
     if(!isRecording) {
-        //check if input port is valid number
-        bool ok = false;
-        broadcasting_port = port.toInt(&ok);
-        if(!ok) {
-            emit errorMessage("Invalid port!");
-        }
-        else {
-            //check if IP is valid
-            if(checkIP(IPAddress)) {
-                if(this->IPAddress == NULL) {
-                    this->IPAddress = new QHostAddress(IPAddress);
-                }
-                else {
-                    delete this->IPAddress;
-                    this->IPAddress = new QHostAddress(IPAddress);
-                }
-                startRecording();
-            }
-            else {
-              emit errorMessage("Invalid IP!");
-            }
-        }
+        this->IPAddress = settings->getServerAddress();
+        this->broadcasting_port = settings->getClientPortForSound();
+        format = speakerFormat;
+        startRecording();
     }
     else {
         stopRecording();
     }
 }
 
-bool Speaker::checkIP(QString ip) {
-    QHostAddress address(ip);
-    if (QAbstractSocket::IPv4Protocol == address.protocol())
-    {
-       qDebug("Valid IPv4 address.");
-       return true;
-    }
-    else if (QAbstractSocket::IPv6Protocol == address.protocol())
-    {
-       qDebug("Valid IPv6 address.");
-       return true;
-    }
-    else
-    {
-       qDebug("Unknown or invalid address.");
-       return false;
-    }
-}
-
 void Speaker::startRecording() {
     if(!isRecording) {
-        format = settings->getSpeakerAudioFormat();
 
         QAudioDeviceInfo info = settings->getInputDevice();
         if (!info.isFormatSupported(format)) {
@@ -96,7 +59,7 @@ void Speaker::transferData(){
         chunk = intermediateDevice->read(buffLen);
         timestamp++;
         //serialize data conform to the protocol
-        SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.channelCount(), format.codec(), &chunk);
+        SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &chunk);
         //create datagram
         Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
         qDebug() << timestamp;

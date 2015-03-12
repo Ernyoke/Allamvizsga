@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     speakerclientinfo.cpp \
     listenerclientinfo.cpp \
     translatorclientinfo.cpp \
-    clientmodel.cpp
+    clientmodel.cpp \
+    channelnotfoundex.cpp
 
 HEADERS  += gui.h \
     acceptdata.h \
@@ -38,7 +39,8 @@ HEADERS  += gui.h \
     speakerclientinfo.h \
     listenerclientinfo.h \
     translatorclientinfo.h \
-    clientmodel.h
+    clientmodel.h \
+    channelnotfoundex.h
 
 FORMS    += gui.ui \
     manageclients.ui \

@@ -16,6 +16,7 @@
 #include "servercommunicator.h"
 #include "channelmodel.h"
 #include "channellistexception.h"
+#include "addnewchannelfromgui.h"
 
 namespace Ui {
 class GUI;
@@ -35,7 +36,6 @@ public:
     void receiverTimerStart();
     void receiverTimerStop();
     int getVolume();
-    int getPort();
 
 
     //both
@@ -52,8 +52,9 @@ private:
     int broadcasting_port;
 
     //both
-    QPointer<LoginDialog> loginDialog;
-    QPointer<Settings> settings;
+    LoginDialog* loginDialog;
+    Settings* settings;
+    AddNewChannelFromGui *addNewChannelMan;
     QPointer<ServerCommunicator> serverCommunicator;
     QPointer<ChannelModel> channelModel;
 
@@ -70,7 +71,7 @@ signals:
     void stopRecord();
     void pauseRecord();
     void changePlayBackState(QSharedPointer<ChannelInfo>);
-    void portChanged(int);
+    void channelChanged(QSharedPointer<ChannelInfo>);
     void logout();
 
 public slots:
@@ -80,7 +81,7 @@ public slots:
     void pauseRecordPushed();
     void updateTime();
     void volumeChangedSlot();
-    void getItemData(QListWidgetItem*);
+    void changeChannelOnDoubleClick(QModelIndex);
     void addNewChannel();
 
     void changeRecordButtonState(RecordAudio::STATE);

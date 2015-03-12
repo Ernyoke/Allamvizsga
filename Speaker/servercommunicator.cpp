@@ -63,6 +63,14 @@ void ServerCommunicator::processDatagram(Datagram dgram) {
         //invalid package, throw it
         break;
     }
+    case Datagram::SYNCH : {
+        processSynch(dgram);
+        break;
+    }
+    case Datagram::SYNCH_RESP : {
+        //invalid package, throw it
+        break;
+    }
     }
 }
 
@@ -75,4 +83,11 @@ void ServerCommunicator::sendLoginRequest(Datagram dgram) {
 void ServerCommunicator::sendDatagram(Datagram dgram) {
     dgram.sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
 }
+
+void ServerCommunicator::processSynch(Datagram &dgram) {
+    QString toSend("SYNCH");
+    Datagram response(Datagram::SYNCH_RESP, settings->getClientId(), Datagram::generateTimestamp(), &toSend);
+    response.sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+}
+
 

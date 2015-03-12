@@ -1,9 +1,10 @@
 #ifndef TRANSLATORCLIENTINFO_H
 #define TRANSLATORCLIENTINFO_H
 
-#include "clientinfo.h"
+#include "listenerclientinfo.h"
+#include "speakerclientinfo.h"
 
-class TranslatorClientInfo : public ClientInfo
+class TranslatorClientInfo : public ListenerClientInfo, public SpeakerClientInfo
 {
 public:
     TranslatorClientInfo(QHostAddress address, QString OSName, double version);

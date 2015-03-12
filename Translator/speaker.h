@@ -54,7 +54,7 @@ signals:
 public slots:
     void startRecording();
     void stopRecording();
-    void changeRecordState(QString, QString);
+    void changeRecordState(QAudioFormat);
     void transferData();
     void stopRunning();
 

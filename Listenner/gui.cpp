@@ -37,16 +37,15 @@ void GUI::initialize() {
 
     connect(ui->volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(volumeChangedSlot()));
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playbackButtonPushed()));
-//    connect(ui->listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(getItemData(QListWidgetItem*)));
+    connect(ui->channelList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(changeChannelOnDoubleClick(QModelIndex)));
     connect(ui->menuSettings, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
-//    connect(ui->newChannelButton, SIGNAL(pressed()), this, SLOT(addNewChannel()));
+    connect(ui->newChannelButton, SIGNAL(clicked()), this, SLOT(addNewChannel()));
     connect(ui->recordButton, SIGNAL(clicked()), this, SLOT(startRecordPushed()));
     connect(ui->pauseRec, SIGNAL(clicked()), this, SLOT(pauseRecordPushed()));
 
     connect(this, SIGNAL(changePlayBackState( QSharedPointer<ChannelInfo> )), listener, SLOT(changePlaybackState( QSharedPointer<ChannelInfo> )));
     connect(listener, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
     connect(this, SIGNAL(volumeChanged()), listener, SLOT(volumeChanged()));
-    connect(this, SIGNAL(portChanged(int)), listener, SLOT(portChanged(int)));
     connect(this, SIGNAL(startRecord()), listener, SLOT(startRecord()));
     connect(this, SIGNAL(pauseRecord()), listener, SLOT(pauseRecord()));
     connect(listener, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
@@ -69,6 +68,8 @@ void GUI::initialize() {
     connect(serverCommunicator, SIGNAL(serverList(QByteArray)), channelModel, SLOT(newChannelList(QByteArray)));
 
 //    login();
+    addNewChannelMan = new AddNewChannelFromGui(settings->getOutputDevice(), this);
+    connect(addNewChannelMan, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
 }
 
 void GUI::login() {
@@ -142,34 +143,17 @@ int GUI::getVolume() {
     return ui->volumeSlider->value();
 }
 
-int GUI::getPort() {
-//    QListWidgetItem *item = ui->listWidget->currentItem();
-//    QVariant data = item->data(Qt::UserRole);
-//    int port = data.toInt();
-//    return port;
-    return 0;
-}
-
 void GUI::volumeChangedSlot() {
     emit volumeChanged();
 }
 
-void GUI::getItemData(QListWidgetItem *item) {
-    QVariant data = item->data(Qt::UserRole);
-    int port = data.toInt();
-    emit portChanged(port);
+void GUI::changeChannelOnDoubleClick(QModelIndex index) {
+    qDebug() << index.row();
 }
 
 
 void GUI::addNewChannel() {
-//    bool ok = true;
-//    int port = QInputDialog::getInt(this, tr("Add new channel"), tr("Insert port:"), 0, 1, 50000, 1, &ok);
-//    if(ok) {
-//        QListWidgetItem *item1 = new QListWidgetItem("Port " + QString::number(port));
-//        item1->setData(Qt::UserRole, QVariant(port));
-//        channels->append(item1);
-//        ui->listWidget->addItem(item1);
-//    }
+    addNewChannelMan->show();
 }
 
 void GUI::menuTriggered(QAction* action) {

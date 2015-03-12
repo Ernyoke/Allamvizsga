@@ -5,6 +5,7 @@
 #include <QUdpSocket>
 #include <QByteArray>
 #include <QDebug>
+#include <QDateTime>
 
 #include "soundchunk.h"
 
@@ -19,7 +20,13 @@ public:
         LOGIN_ACK = 2,
         LOGOUT = 3,
         GET_LIST = 4,
-        SOUND = 5
+        LIST = 5,
+        SOUND = 6,
+        NEW_CHANNEL = 7,
+        NEW_CHANNEL_ACK = 8,
+        CLOSE_CHANNEL = 9,
+        SYNCH = 10,
+        SYNCH_RESP = 11
     };
 
     explicit Datagram();
@@ -32,11 +39,16 @@ public:
     void setTimeStamp(qint64);
     void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
-    QByteArray* getContent();
+    QByteArray getContent();
     quint32 getSize();
     qint64 getTimeStamp();
     quint32 getId();
     quint32 getClientId();
+    quint32 getPacketsNumber();
+    quint32 getCurrentPackNummber();
+
+    //static methods
+    static qint64 generateTimestamp();
 
 private:
     quint64 timestamp;

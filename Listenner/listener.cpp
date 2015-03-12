@@ -5,7 +5,7 @@ const int BufferSize = 14096;
 Listener::Listener(QObject *parent, Settings *settings) :
     m_audioOutput(0),
     m_buffer(BufferSize, 0),
-    QThread(parent)
+    QObject(parent)
 {
     socket = new QUdpSocket(this);
     outputBuffer = new QMap<qint64, SoundChunk>();
@@ -140,10 +140,17 @@ void Listener::volumeChanged() {
     }
 }
 
-void Listener::portChanged(int port) {
+void Listener::channelChanged(QSharedPointer<ChannelInfo> channel) {
     qDebug() << "portChanged";
-    binded_port = port;
     stopPlayback();
+    binded_port = channel->getOutPort();
+    format.setSampleRate(channel->getSampleRate());
+    format.setSampleSize(channel->getSampleSize());
+    format.setChannelCount(channel->getChannels());
+    format.setCodec(channel->getCodec());
+
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::UnSignedInt);
     playback();
 }
 

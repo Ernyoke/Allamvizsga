@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     channelmodel.cpp \
     servercommunicator.cpp \
     channelinfo.cpp \
-    channellistexception.cpp
+    channellistexception.cpp \
+    addnewchannelfromgui.cpp
 
 HEADERS  += gui.h \
     settings.h \
@@ -41,10 +42,12 @@ HEADERS  += gui.h \
     channelmodel.h \
     servercommunicator.h \
     channelinfo.h \
-    channellistexception.h
+    channellistexception.h \
+    addnewchannelfromgui.h
 
 FORMS    += gui.ui \
     settings.ui \
-    logindialog.ui
+    logindialog.ui \
+    addnewchannelfromgui.ui
 
 CONFIG += c++11

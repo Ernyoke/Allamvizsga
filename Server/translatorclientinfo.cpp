@@ -1,7 +1,7 @@
 #include "translatorclientinfo.h"
 
 TranslatorClientInfo::TranslatorClientInfo(QHostAddress address, QString OSName, double version) :
-    ClientInfo(address, OSName, version)
+    ClientInfo(address, OSName, version), SpeakerClientInfo(address, OSName, version), ListenerClientInfo(address, OSName, version)
 {
 
 }
