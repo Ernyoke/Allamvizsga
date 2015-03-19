@@ -1,20 +1,13 @@
 #include "channellistexception.h"
 
-ChannelListException::ChannelListException(QObject *parent) : QObject(parent)
+ChannelListException::ChannelListException(QObject *parent) : BaseException(parent)
 {
-    qDebug() << "Exception created!";
+    qDebug() << "ChannelListException created!";
 }
 
 ChannelListException::~ChannelListException()
 {
-    qDebug() << "Exception distroyed!";
+    qDebug() << "ChannelListException distroyed!";
 }
 
-QString ChannelListException::message() {
-    return this->msg;
-}
-
-void ChannelListException::setMessage(QString msg) {
-    this->msg = msg;
-}
 

@@ -88,18 +88,29 @@ void ChannelModel::addNewUserCreatedChannel(ChannelInfo info) {
 }
 
 
-void ChannelModel::deleteUserCreatedChannel(qint32 id) {
-    QVectorIterator< QSharedPointer<ChannelInfo> > iter(userCreatedChannelList);
-    int i = 0;
-    while(iter.hasNext()) {
-        QSharedPointer<ChannelInfo> tempInfo = iter.next();
-        if(tempInfo->getOwner() == id) {
-            beginRemoveRows(QModelIndex(), i, i);
-            userCreatedChannelList.remove(i);
+void ChannelModel::deleteUserCreatedChannel(QModelIndex index) {
+//    QVectorIterator< QSharedPointer<ChannelInfo> > iter(userCreatedChannelList);
+//    int i = 0;
+//    while(iter.hasNext()) {
+//        QSharedPointer<ChannelInfo> tempInfo = iter.next();
+//        if(tempInfo->getOwner() == id) {
+//            beginRemoveRows(QModelIndex(), i, i);
+//            userCreatedChannelList.remove(i);
+//            endRemoveRows();
+//            break;
+//        }
+//        ++i;
+//    }
+    if(index.isValid()) {
+        int row = index.row() - channelList.size();
+        if(row >= 0) {
+            beginRemoveRows(index, index.row(), index.row());
+            userCreatedChannelList.remove(row);
             endRemoveRows();
-            break;
         }
-        ++i;
+        else {
+            emit error("Channel can not be removed!");
+        }
     }
 }
 

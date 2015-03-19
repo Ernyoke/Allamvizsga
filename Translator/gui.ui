@@ -289,6 +289,13 @@
          </property>
         </spacer>
        </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="refreshButton">
+         <property name="text">
+          <string>Refresh List</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>

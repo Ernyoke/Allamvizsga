@@ -7,13 +7,13 @@ LoginDialog::LoginDialog(Settings *settings, QWidget *parent) :
 {
     ui->setupUi(this);
     this->settings = settings;
-    ack = false;
-
-    timer = new QTimer(this);
-    timer->setSingleShot(true);
-    connect(timer, SIGNAL(timeout()), this, SLOT(loginTimedOut()));
     connect(ui->loginBtn, SIGNAL(clicked()), this, SLOT(authentificate()));
+}
 
+void LoginDialog::init() {
+    ack = false;
+    ui->loginBtn->setText("Retry");
+    ui->status->setText("-");
 }
 
 LoginDialog::~LoginDialog()
@@ -25,25 +25,7 @@ LoginDialog::~LoginDialog()
 void LoginDialog::authentificate() {
     if(!ack) {
         if(settings->setServerAddress(ui->address->text())) {
-            //get the current timespamp;
-            qint64 timeStamp = Datagram::generateTimestamp();
-            //get system information
-            QSysInfo sysInfo;
-            QString os = sysInfo.prettyProductName();
-            //create buffer which needs to be sent
-            //4 byte SPEAKER_ID, remaining bytes os info
-            QByteArray content;
-            QDataStream in(&content, QIODevice::WriteOnly);
-            in << settings->getClientType();
-            in << os;
-            //create the datagram
-            Datagram dgram(Datagram::LOGIN, settings->getClientId(), timeStamp);
-            dgram.setDatagramContent(&content);
-            //send the package to the server
-            emit sendLoginRequest(dgram);
-            //set a timer for response
-            timer->setInterval(1000);
-            timer->start();
+            emit sendLoginRequest();
             //set status text
             ui->status->setText("Waiting for server response!");
         }
@@ -55,7 +37,26 @@ void LoginDialog::authentificate() {
     }
 }
 
-void LoginDialog::loginTimedOut() {
+void LoginDialog::authentificationSucces(qint32 id) {
+    if(id > 0) {
+        ui->status->setText("Authentification succes!");
+        ui->loginBtn->setText("Countinue");
+        ack = true;
+        settings->setClientId(id);
+    }
+    else {
+        authentificationFailed();
+    }
+}
+
+void LoginDialog::authentificationFailed() {
+    ack = false;
+    ui->loginBtn->setText("Retry");
+    ui->loginBtn->setEnabled(true);
+    ui->status->setText("Authentification failed!");
+}
+
+void LoginDialog::authentificationTimedOut() {
     if(ack == false) {
         ui->loginBtn->setText("Retry");
         ui->loginBtn->setEnabled(true);
@@ -63,40 +64,14 @@ void LoginDialog::loginTimedOut() {
     }
 }
 
-void LoginDialog::processLogin(Datagram dgram) {
-    if(dgram.getId() == Datagram::LOGIN_ACK) {
-        QByteArray content(dgram.getContent());
-        QDataStream out(&content, QIODevice::ReadOnly);
-        qint32 id;
-        out >> id;
-        settings->setClientId(id);
-        ack = true;
-        if(id > 0) {
-            ui->status->setText("Authentification succes!");
-            ui->loginBtn->setText("Countinue");
-            timer->stop();
-            QString respContent = " ";
-            Datagram response(Datagram::LOGIN_ACK, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
-            emit sendLoginResponse(response);
-//            response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
-        }
-        else {
-            ui->status->setText("Authentification failed!");
-            ui->loginBtn->setText("Retry");
-        }
-        qDebug() << id;
-    }
-}
 
-bool LoginDialog::loginSucces() {
+
+bool LoginDialog::authentificationStatus() {
     return this->ack;
 }
 
 void LoginDialog::logout() {
     if(ack) {
-        QString respContent = " ";
-        Datagram response(Datagram::LOGOUT, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
-        emit sendLogoutRequest(response);
-//        response.sendDatagram(this->socket, settings->getServerAddress(), settings->getServerPort());
+        emit sendLogoutRequest();
     }
 }

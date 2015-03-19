@@ -69,7 +69,7 @@ void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint1
         break;
     }
     case Datagram::CLOSE_CHANNEL : {
-        emit channelClosed(dgram.getClientId());
+        closeChannel(dgram);
         break;
     }
     case Datagram::GET_LIST : {
@@ -179,7 +179,7 @@ void ManageClients::newChannel(Datagram &dgram, QHostAddress &address, qint64 ti
         Datagram notify(Datagram::NEW_CHANNEL, 0, dgram.generateTimestamp());
         QByteArray serializedChannel = chInfo.serialize();
         notify.setDatagramContent(&serializedChannel);
-        sendCollectiveMessage(notify);
+        sendCollectiveMessageToListeners(notify);
     }
 }
 
@@ -211,12 +211,29 @@ bool ManageClients::isPortAv() {
     return false;
 }
 
+void ManageClients::serverDown() {
+    QString toSend("SERVER_DOWN");
+    Datagram dgram(Datagram::SERVER_DOWN, 0, Datagram::generateTimestamp(), &toSend);
+    sendCollectiveMessage(dgram);
+}
+
 void ManageClients::sendCollectiveMessageToSpeakers(Datagram &dgram) {
     QVector< QSharedPointer<ClientInfo> > clients = clientModel->getClientList();
     QVectorIterator< QSharedPointer<ClientInfo> > iter(clients);
     while(iter.hasNext()) {
         QSharedPointer<ClientInfo> client = iter.next();
-        if(dynamic_cast<SpeakerClientInfo*>(client.data()) == NULL) {
+        if(client.dynamicCast<TranslatorClientInfo>() != NULL) {
+            dgram.sendDatagram(socket, &client->getAddress(), SERVER_PORT);
+        }
+    }
+}
+
+void ManageClients::sendCollectiveMessageToListeners(Datagram &dgram) {
+    QVector< QSharedPointer<ClientInfo> > clients = clientModel->getClientList();
+    QVectorIterator< QSharedPointer<ClientInfo> > iter(clients);
+    while(iter.hasNext()) {
+        QSharedPointer<ClientInfo> client = iter.next();
+        if(client.dynamicCast<TranslatorClientInfo>() != NULL) {
             dgram.sendDatagram(socket, &client->getAddress(), SERVER_PORT);
         }
     }
@@ -242,6 +259,19 @@ void ManageClients::synchResponse(Datagram &dgram) {
     qDebug() << "synch response";
     QSharedPointer<ClientInfo> client = clientModel->getClientWithId(dgram.getClientId());
     client->resetNoResponseCounter();
+}
+
+void ManageClients::closeChannel(Datagram &dgram) {
+    QPair<bool, int> contains = channelModel->containsChannel(dgram.getClientId());
+    if(contains.first) {
+        emit channelClosed(dgram.getClientId());
+        QByteArray toSend;
+        QDataStream in(&toSend, QIODevice::WriteOnly);
+        in << dgram.getClientId();
+        Datagram dgram(Datagram::REMOVE_CHANNEL, 0, Datagram::generateTimestamp());
+        dgram.setDatagramContent(&toSend);
+        sendCollectiveMessageToListeners(dgram);
+    }
 }
 
 

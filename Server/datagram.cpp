@@ -11,14 +11,14 @@ Datagram::Datagram(QByteArray *data) {
     splitDatagram();
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data) {
+Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp, QString *data) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
     this->splitContent(data);
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp) {
+Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
@@ -135,7 +135,7 @@ qint64 Datagram::getTimeStamp() {
     return timestamp;
 }
 
-quint32 Datagram::getId() {
+qint32 Datagram::getId() {
     return this->id;
 }
 
@@ -144,7 +144,7 @@ quint32 Datagram::headerSize() {
     return hsize;
 }
 
-quint32 Datagram::getClientId() {
+qint32 Datagram::getClientId() {
     return this->clientId;
 }
 

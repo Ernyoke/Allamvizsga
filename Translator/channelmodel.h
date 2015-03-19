@@ -28,13 +28,14 @@ private:
     QVector< QSharedPointer<ChannelInfo> > userCreatedChannelList;
 
 signals:
+    void error(QString);
 
 public slots:
     void addNewChannel(ChannelInfo);
     void deleteChannel(qint32 id);
     void newChannelList(QByteArray listBuffer);
     void addNewUserCreatedChannel(ChannelInfo info);
-    void deleteUserCreatedChannel(qint32 id);
+    void deleteUserCreatedChannel(QModelIndex);
 
 };
 

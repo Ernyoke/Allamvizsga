@@ -5,11 +5,11 @@
 #include <QUdpSocket>
 #include <QSysInfo>
 #include <QDebug>
-#include <QTimer>
 #include <QDateTime>
 
 #include "datagram.h"
 #include "settings.h"
+#include "invalididexception.h"
 
 namespace Ui {
 class LoginDialog;
@@ -23,7 +23,8 @@ public:
     LoginDialog(Settings *settings, QWidget *parent = 0);
     ~LoginDialog();
 
-    bool loginSucces();
+    bool authentificationStatus();
+    void init();
 
 private:
     Ui::LoginDialog *ui;
@@ -32,18 +33,16 @@ private:
 
     bool ack;
 
-    QTimer *timer;
-
 private slots:
     void authentificate();
-    void processLogin(Datagram dgram);
-    void loginTimedOut();
+    void authentificationSucces(qint32);
+    void authentificationFailed();
+    void authentificationTimedOut();
     void logout();
 
 signals:
-    void sendLoginRequest(Datagram dgram);
-    void sendLogoutRequest(Datagram dgram);
-    void sendLoginResponse(Datagram dgram);
+    void sendLoginRequest();
+    void sendLogoutRequest();
 };
 
 #endif // LOGINDIALOG_H

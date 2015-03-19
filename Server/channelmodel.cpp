@@ -104,22 +104,30 @@ QVariant ChannelModel::headerData(int section, Qt::Orientation orientation, int 
 
 void ChannelModel::addNewChannel(ChannelInfo info) {
     int position = this->rowCount(QModelIndex());
-    beginInsertRows(QModelIndex(), position, position);
-    if(channelMap.contains(info.getOwner())) {
-        channelMap.remove(info.getOwner());
-        for(int i = 0; i < channelList.size(); ++i) {
-            if(channelList[i]->getOwner() == info.getOwner()) {
-                beginRemoveRows(QModelIndex(), i, i);
-                channelList.remove(i);
-                endRemoveRows();
-            }
-        }
+    QPair<bool, int> contains = containsChannel(info.getOwner());
+    if(contains.first) {
+        beginRemoveRows(QModelIndex(), contains.second, contains.second);
+        channelList.remove(contains.second);
+        endRemoveRows();
     }
     QSharedPointer<ChannelInfo> channelInfo = QSharedPointer<ChannelInfo>(new ChannelInfo(info));
+    beginInsertRows(QModelIndex(), position, position);
     channelList.append(channelInfo);
-    channelMap.insert(channelInfo->getOwner(), channelInfo);
     endInsertRows();
     qDebug() << info.getLanguage();
+}
+
+QPair<bool, int> ChannelModel::containsChannel(qint32 id) const {
+    QVectorIterator< QSharedPointer<ChannelInfo> > iter(channelList);
+    int i = 0;
+    while(iter.hasNext()) {
+        QSharedPointer<ChannelInfo> tempInfo = iter.next();
+        if(tempInfo->getOwner() == id) {
+            return qMakePair<bool, int>(true, i);
+        }
+        ++i;
+    }
+    return qMakePair<bool, int>(false, i);;
 }
 
 void ChannelModel::deleteChannel(qint32 id) {
@@ -130,7 +138,6 @@ void ChannelModel::deleteChannel(qint32 id) {
         if(tempInfo->getOwner() == id) {
             beginRemoveRows(QModelIndex(), i, i);
             channelList.remove(i);
-            channelMap.remove(id);
             endRemoveRows();
             break;
         }
@@ -138,9 +145,8 @@ void ChannelModel::deleteChannel(qint32 id) {
     }
 }
 
-bool ChannelModel::hasPortAssigned(qint16 port) {
+bool ChannelModel::hasPortAssigned(qint16 port) const {
     QVectorIterator< QSharedPointer<ChannelInfo> > iter(channelList);
-    int i = 0;
     while(iter.hasNext()) {
         QSharedPointer<ChannelInfo> tempInfo = iter.next();
         if(tempInfo->getOutPort() == port) {
@@ -166,9 +172,9 @@ QByteArray ChannelModel::serialize() {
 }
 
 QByteArray ChannelModel::serializeChannel(qint32 id) {
-    QMap<qint32, QSharedPointer<ChannelInfo> >::const_iterator item = channelMap.find(id);
-    if(item != channelMap.end()) {
-        return item.value()->serialize();
+    QPair<bool, int> contains = containsChannel(id);
+    if(contains.first) {
+        return channelList.at(contains.second)->serialize();
     }
     else {
         QString message("Channel not found!");

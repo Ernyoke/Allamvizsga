@@ -64,6 +64,7 @@ void GUI::closeEvent(QCloseEvent *event) {
         event->ignore();
     }
     else {
+        manageClients->serverDown();
         event->accept();
     }
 }
@@ -77,11 +78,11 @@ void GUI::logClientConnected(ClientInfo *client) {
 }
 
 void GUI::logClientDisconnected(qint32 id) {
-    ui->logDisplay->insertPlainText(QString("Client (id= %1) disconnected! \n").arg(id));
+    ui->logDisplay->insertPlainText(generateTimeStamp() + QString(" Client (id= %1) disconnected! \n").arg(id));
 }
 
 void GUI::logClientTimedOut(qint32 id) {
-    ui->logDisplay->insertPlainText(QString("Client (id= %1) timed out! \n").arg(id));
+    ui->logDisplay->insertPlainText(generateTimeStamp() + QString(" Client (id= %1) timed out! \n").arg(id));
 }
 
 QString GUI::generateTimeStamp() {

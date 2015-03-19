@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QDebug>
 #include <QSharedPointer>
+#include <QPair>
 
 #include "channelinfo.h"
 #include "channelnotfoundex.h"
@@ -24,12 +25,12 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-    bool hasPortAssigned(qint16 port);
+    bool hasPortAssigned(qint16 port) const;
     QByteArray serialize();
     QByteArray serializeChannel(qint32 id);
+    QPair<bool, int> containsChannel(qint32 id) const;
 
 private:
-    QMap<qint32, QSharedPointer<ChannelInfo> > channelMap;
     QVector< QSharedPointer<ChannelInfo> > channelList;
 
 signals:

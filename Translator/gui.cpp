@@ -31,15 +31,15 @@ void GUI::initialize() {
     //set up logindialog
     loginDialog = new LoginDialog(settings, this);
     //login request passed from logindialog to servercommunicator
-    connect(loginDialog, SIGNAL(sendLoginRequest(Datagram)), serverCommunicator, SLOT(sendLoginRequest(Datagram)));
+    connect(loginDialog, SIGNAL(sendLoginRequest()), serverCommunicator, SLOT(sendLoginRequest()));
     //logout request passed from logindialog to servercommunicator
-    connect(loginDialog, SIGNAL(sendLogoutRequest(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-    //login acknoledged signal passed from logindialog to servercommunicator
-    connect(loginDialog, SIGNAL(sendLoginResponse(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-    //logout signal from gui, this is emited when the user quits the program
-    connect(this, SIGNAL(logout()), loginDialog, SLOT(logout()));
-    //server login response passed to logindialog
-    connect(serverCommunicator, SIGNAL(loginAckReceived(Datagram)), loginDialog, SLOT(processLogin(Datagram)));
+    connect(loginDialog, SIGNAL(sendLogoutRequest()), serverCommunicator, SLOT(logout()));
+    //signal emitted when authentification was successfull
+    connect(serverCommunicator, SIGNAL(authentificationSucces(qint32)), loginDialog, SLOT(authentificationSucces(qint32)));
+    //signal emitted when authentification failed
+    connect(serverCommunicator, SIGNAL(authentificationFailed()), loginDialog, SLOT(authentificationFailed()));
+    //signal emitted when authentification timed out
+    connect(serverCommunicator, SIGNAL(authentificationTimedOut()), loginDialog, SLOT(authentificationTimedOut()));
 
 
     //initialize volume slider
@@ -56,6 +56,8 @@ void GUI::initialize() {
     connect(ui->menuPreferences, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
     connect(ui->newChannelBtn, SIGNAL(clicked()), this, SLOT(startNewChannel()));
     connect(ui->deleteChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
+    connect(ui->refreshButton, SIGNAL(clicked()), serverCommunicator, SLOT(requestChannelList()));
+    connect(this, SIGNAL(sendLogoutRequest()), serverCommunicator, SLOT(logout()));
     //******
 
     //initialize speaker class
@@ -104,11 +106,13 @@ void GUI::initialize() {
 
     channelModel = new ChannelModel(this);
     ui->channelList->setModel(channelModel);
+    connect(channelModel, SIGNAL(error(QString)), this, SLOT(showErrorMessage(QString)));
     connect(serverCommunicator, SIGNAL(serverList(QByteArray)), channelModel, SLOT(newChannelList(QByteArray)));
     connect(serverCommunicator, SIGNAL(channelConnected(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
 
     addNewChannelMan = new AddNewChannelFromGui(settings->getOutputDevice(), this);
     connect(addNewChannelMan, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
+    connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
 
     //start threads
     threadSpeaker->start();
@@ -121,22 +125,48 @@ void GUI::initialize() {
     broadcastTimer.setInterval(1000);
     connect(&broadcastTimer, SIGNAL(timeout()), this, SLOT(updateBroadcastTime()));
 
+    newChannelDialog = new NewChannelDialog(this);
+    connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+    connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
+    connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+    connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
+
+    //signals emitted when server is down
+    connect(this, SIGNAL(stopPlaybackSD()), listener, SLOT(stopPlayback()));
+    connect(this, SIGNAL(stopSpeakingSD()), speaker, SLOT(stopRecording()));
+
 }
 
 void GUI::login() {
+    loginDialog->init();
     loginDialog->exec();
-    if(!loginDialog->loginSucces()) {
+    if(!loginDialog->authentificationStatus()) {
         QTimer::singleShot(0, this, SLOT(close()));
     }
     else {
-        this->show();
-        newChannelDialog = new NewChannelDialog(settings->getClientId(), settings->getOutputDevice(), this);
-        connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-        connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
-        connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+        if(!this->isVisible()) {
+            this->show();
+        }
+        try {
+            newChannelDialog->setClientId(settings->getClientId());
+            newChannelDialog->setAudioDeviceInfo(settings->getOutputDevice());
+            serverCommunicator->requestChannelList();
+        }
+        catch(InvalidIdException *ex) {
+            qDebug() << ex->message();
 
-        serverCommunicator->requestChannelList();
+            delete ex;
+            this->close();
+        }
     }
+}
+
+void GUI::serverDownHandle() {
+    emit stopPlaybackSD();
+    emit stopSpeakingSD();
+    stopChannel();
+    login();
+    qDebug() << "serverDown login";
 }
 
 GUI::~GUI()
@@ -161,15 +191,19 @@ void GUI::startNewChannel() {
     }
     else {
         //stop channel
-        newChannelDialog->sendCloseChannelReq();
-        ui->channelLangText->setText("-");
-        ui->sampleRateText->setText("-");
-        ui->sampleSizeText->setText("-");
-        ui->channelNrText->setText("-");
-        ui->codecText->setText("-");
-        ui->newChannelBtn->setText("New channel");
+        stopChannel();
     }
 
+}
+
+void GUI::stopChannel() {
+    newChannelDialog->sendCloseChannelReq();
+    ui->channelLangText->setText("-");
+    ui->sampleRateText->setText("-");
+    ui->sampleSizeText->setText("-");
+    ui->channelNrText->setText("-");
+    ui->codecText->setText("-");
+    ui->newChannelBtn->setText("New channel");
 }
 
 //update GUI with sent data size
@@ -402,7 +436,7 @@ void GUI::showErrorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
-    emit logout();
+    emit sendLogoutRequest();
     if(listener->isRecRunning()) {
         QMessageBox msgBox;
         msgBox.setText("Recording is still in progress.");
@@ -432,11 +466,8 @@ void GUI::closeEvent(QCloseEvent *event) {
 
 //delete selected channel
 void GUI::deleteChannel() {
-//   QListWidgetItem *item = ui->listWidget->currentItem();
-//   int nr = ui->listWidget->currentRow();
-//   ui->listWidget->removeItemWidget(item);
-//   channels->removeAt(nr);
-//   delete item;
+    QModelIndex selectedIndex = ui->channelList->currentIndex();
+    channelModel->deleteUserCreatedChannel(selectedIndex);
 }
 
 

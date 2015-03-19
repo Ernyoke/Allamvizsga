@@ -25,14 +25,16 @@ public:
         NEW_CHANNEL = 7,
         NEW_CHANNEL_ACK = 8,
         CLOSE_CHANNEL = 9,
-        SYNCH = 10,
-        SYNCH_RESP = 11
+        REMOVE_CHANNEL = 10,
+        SYNCH = 11,
+        SYNCH_RESP = 12,
+        SERVER_DOWN = 13
     };
 
     explicit Datagram();
-    Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *);
-    Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data);
-    Datagram(quint32 id, quint32 clientId, quint64 timestamp);
+    Datagram(qint32 id, qint32 clientId, qint64 timestamp, SoundChunk *);
+    Datagram(qint32 id, qint32 clientId, qint64 timestamp, QString *data);
+    Datagram(qint32 id, qint32 clientId, qint64 timestamp);
     Datagram(QByteArray*);
     ~Datagram();
 
@@ -40,23 +42,23 @@ public:
     void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
     QByteArray getContent();
-    quint32 getSize();
+    qint32 getSize();
     qint64 getTimeStamp();
-    quint32 getId();
-    quint32 getClientId();
-    quint32 getPacketsNumber();
-    quint32 getCurrentPackNummber();
+    qint32 getId();
+    qint32 getClientId();
+    qint32 getPacketsNumber();
+    qint32 getCurrentPackNummber();
 
     //static methods
     static qint64 generateTimestamp();
 
 private:
-    quint64 timestamp;
-    quint32 id;
-    quint32 clientId;
-    quint32 packets;
-    quint32 packetnr;
-    quint32 buffsize;
+    qint64 timestamp;
+    qint32 id;
+    qint32 clientId;
+    qint32 packets;
+    qint32 packetnr;
+    qint32 buffsize;
     //contains the all the data that needs to be sent
     QVector<QByteArray *>data;
     //cointain the data for a single packet
@@ -64,14 +66,14 @@ private:
 
 
     //data size
-    quint32 size;
+    qint32 size;
 
     void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();
     void splitContent(QString*);
     void splitContent(QByteArray*);
 
-    quint32 headerSize();
+    qint32 headerSize();
 
 
 

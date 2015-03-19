@@ -6,11 +6,12 @@ Datagram::Datagram()
 {
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, SoundChunk *data){
+Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp, SoundChunk *data){
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
-    this->data.append(&data->serialize());
+    QByteArray *serialized = new QByteArray(data->serialize());
+    this->data.append(serialized);
     this->size = headerSize() + data->getSize();
 }
 
@@ -19,14 +20,14 @@ Datagram::Datagram(QByteArray *data) {
     splitDatagram();
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp, QString *data) {
+Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp, QString *data) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
     this->splitContent(data);
 }
 
-Datagram::Datagram(quint32 id, quint32 clientId, quint64 timestamp) {
+Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp) {
     this->timestamp = timestamp;
     this->id = id;
     this->clientId = clientId;
@@ -125,7 +126,7 @@ void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
     out << *dataToSend;
 }
 
-quint32 Datagram::getSize() {
+qint32 Datagram::getSize() {
     qDebug() << this->size;
     return this->size;
 }
@@ -143,24 +144,24 @@ qint64 Datagram::getTimeStamp() {
     return timestamp;
 }
 
-quint32 Datagram::getId() {
+qint32 Datagram::getId() {
     return this->id;
 }
 
-quint32 Datagram::headerSize() {
-    quint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
+qint32 Datagram::headerSize() {
+    qint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
     return hsize;
 }
 
-quint32 Datagram::getClientId() {
+qint32 Datagram::getClientId() {
     return this->clientId;
 }
 
-quint32 Datagram::getPacketsNumber() {
+qint32 Datagram::getPacketsNumber() {
     return this->packets;
 }
 
-quint32 Datagram::getCurrentPackNummber() {
+qint32 Datagram::getCurrentPackNummber() {
     return this->packetnr;
 }
 

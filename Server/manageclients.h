@@ -41,13 +41,18 @@ private:
     bool isPortAv();
     void resolveLogin(QByteArray *content, QHostAddress address, qint64 timeStamp);
     void newChannel(Datagram &, QHostAddress &address, qint64 timeStamp);
+    void closeChannel(Datagram&);
     void synchResponse(Datagram& dgram);
 
 private slots:
     void readPendingDatagrams();
     void sendCollectiveMessageToSpeakers(Datagram &dgram);
+    void sendCollectiveMessageToListeners(Datagram &dgram);
     void sendCollectiveMessage(Datagram &dgram);
     void synchronizeClients();
+
+public slots:
+    void serverDown();
 
 signals:
     void newChannelAdded(ChannelInfo);

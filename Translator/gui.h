@@ -81,6 +81,7 @@ private:
 
 
     void initialize();
+    void stopChannel();
 
 signals:
     //signals for listenner
@@ -98,7 +99,11 @@ signals:
     void stopSpeaker();
 
     //signals for both
-    void logout();
+    void sendLogoutRequest();
+
+    //signals emited when server is down
+    void stopPlaybackSD();
+    void stopSpeakingSD();
 
 public slots:
     //slots for listener
@@ -130,6 +135,7 @@ public slots:
     void showSettings();
     void menuTriggered(QAction*);
     void showErrorMessage(QString);
+    void serverDownHandle();
 
 
 };
