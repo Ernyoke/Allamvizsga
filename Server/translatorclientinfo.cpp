@@ -12,7 +12,7 @@ TranslatorClientInfo::~TranslatorClientInfo()
 }
 
 ClientInfo::CLIENT_TYPE TranslatorClientInfo::getClientType() const {
-    return CLIENT_TYPE::TRANSLATOR;
+    return TRANSLATOR;
 }
 
 QString TranslatorClientInfo::getClientTypeStr() const {

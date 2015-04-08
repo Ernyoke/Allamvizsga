@@ -38,14 +38,12 @@ public:
     int getVolume();
 
     //speaker
-    int getBroadcastingPort();
     void broadcastTimerStart();
     void broadcastTimerStop();
 
     //both
     void login();
     void updateSpeed();
-    Settings *getSettings();
 
 protected:
     void closeEvent(QCloseEvent *event);
@@ -53,18 +51,18 @@ protected:
 private:
     Ui::GUI *ui;
 
-    QThread *threadListener;
-    QThread *threadSpeaker;
+    QThread *listenerThread;
+    QThread *speakerThread;
 
     //listenner
-    Listener *listener;
+    Listener *listenerWorker;
     QTimer timer;
     long dataSize;
     long dataPerSec;
     long cntTime;
 
     //speaker
-    Speaker *speaker;
+    Speaker *speakerWorker;
     QTimer broadcastTimer;
     long broadcastDataSize;
     long broadcastDataPerSec;
@@ -90,7 +88,6 @@ signals:
     void stopRecord();
     void pauseRecord();
     void changePlayBackState(QSharedPointer<ChannelInfo>);
-    void portChanged(int);
     void stopListener();
     void finalRecordName(bool, QString);
 
@@ -115,6 +112,7 @@ public slots:
     void volumeChangedSlot();
     void changeChannelOnDoubleClick(QModelIndex);
     void addNewChannel();
+
     void changeRecordButtonState(RecordAudio::STATE);
     void changePauseButtonState(RecordAudio::STATE);
     void changePlayButtonState(bool);
@@ -126,13 +124,11 @@ public slots:
     //slots for broadcast
     void startNewChannel();
     void startBroadcast();
-    void changeBroadcastingPort();
     void updateBroadcastTime();
     void changeBroadcastButtonState(bool);
     void setDataSent(int);
 
     //general
-    void showSettings();
     void menuTriggered(QAction*);
     void showErrorMessage(QString);
     void serverDownHandle();

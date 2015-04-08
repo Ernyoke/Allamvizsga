@@ -34,17 +34,19 @@ GUI::GUI(QWidget *parent) :
     connect(manageClients, SIGNAL(newClientConnected(ClientInfo*)), this, SLOT(logClientConnected(ClientInfo*)));
 
     connect(manageClients, SIGNAL(clientConnectionAck(qint32)), clientModel, SLOT(setAck(qint32)));
-    connect(manageClients, SIGNAL(clientDisconnected(qint32)), clientModel, SLOT(removeClient(qint32)));
-    connect(manageClients, SIGNAL(clientDisconnected(qint32)), this, SLOT(logClientDisconnected(qint32)));
+    connect(manageClients, SIGNAL(clientDisconnectedSignal(qint32)), clientModel, SLOT(removeClient(qint32)));
+    connect(manageClients, SIGNAL(clientDisconnectedSignal(qint32)), this, SLOT(logClientDisconnected(qint32)));
 
     connect(clientModel, SIGNAL(clientTimedOut(qint32)), this, SLOT(logClientTimedOut(qint32)));
     connect(clientModel, SIGNAL(clientTimedOut(qint32)), channelModel, SLOT(deleteChannel(qint32)));
     connect(clientModel, SIGNAL(clientTimedOut(qint32)), soundWorker, SLOT(removeChannel(qint32)));
 
-    QNetworkInterface inter;
-//    QHostAddress myaddress = hostInfo.localHostName();
-    QList<QHostAddress>myaddress = inter.allAddresses();
-//    ui->seriptext->setText(hostInfo.localDomainName());
+    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
+             if(address.toString().startsWith("192")) {
+                 ui->seriptext->setText(address.toString());
+             }
+    }
 
 }
 

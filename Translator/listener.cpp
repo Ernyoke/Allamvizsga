@@ -48,7 +48,7 @@ void Listener::changePlaybackState(QSharedPointer<ChannelInfo> channel) {
 void Listener::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
     qint64 temp;
-    if(length > 0) {
+    while(length > 0) {
         QByteArray m_buffer;
         m_buffer.resize(length);
         int datagramSize = socket->readDatagram(m_buffer.data(), length);
@@ -79,6 +79,7 @@ void Listener::receiveDatagramm() {
         else {
             qDebug() << temp;
         }
+        length = socket->bytesAvailable();
     }
 }
 
@@ -144,11 +145,10 @@ void Listener::startRecord() {
         switch(codec) {
         case Settings::WAV: {
             record = new RecordWav(path, format, this);
-            connect(record, SIGNAL(askFileName(QString)), this, SLOT(askFileName(QString)));
             connect(record, SIGNAL(recordingState(RecordAudio::STATE)), this, SLOT(recordingStateChanged(RecordAudio::STATE)));
             if(record->getState() == RecordAudio::STOPPED) {
                 if(!record->start()) {
-                    emit showError("Temporary recording file can not be created! Please change the recording path in the settings!");
+                    emit errorMessage("Temporary recording file can not be created! Please change the recording path in the settings!");
                 }
             }
             break;
@@ -176,9 +176,6 @@ void Listener::pauseRecord() {
     }
 }
 
-void Listener::askFileName(QString filename) {
-    emit askFileNameGUI(filename);
-}
 
 //update GUI after recording state is changed on Recordaudio's side
 void Listener::recordingStateChanged(RecordAudio::STATE state) {

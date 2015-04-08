@@ -5,17 +5,18 @@
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
+#include <QUdpSocket>
+#include <QDateTime>
+
 #include "settings.h"
 #include "datagram.h"
 #include "soundchunk.h"
-#include <QUdpSocket>
-#include <QDateTime>
 
 class ManageVoice : public QObject
 {
     Q_OBJECT
 public:
-    ManageVoice(QObject *parent = 0, Settings *settings = 0);
+    ManageVoice(Settings *settings, QObject *parent = 0);
     ~ManageVoice();
 
     void showGUI();
@@ -28,7 +29,6 @@ private:
     QUdpSocket *socket;
 
     Settings *settings;
-    QHostAddress *IPAddress;
     int broadcasting_port;
     int buffLen;
 
@@ -45,12 +45,15 @@ signals:
     //is emited when the thread stops
     //errormessage
     void errorMessage(QString);
+    //emiter when worker finished his job
+    void finished();
 
 public slots:
     void startRecording();
     void stopRecording();
     void transferData();
     void changeRecordState(QAudioFormat speakerFormat);
+    void stopWorker();
 };
 
 #endif // MANAGEVOICE_H

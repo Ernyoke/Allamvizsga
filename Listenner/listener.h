@@ -27,7 +27,7 @@ class Listener : public QObject
 {
     Q_OBJECT
 public:
-    explicit Listener(QObject *parent = 0, Settings *settings = 0);
+    explicit Listener(Settings *settings = 0);
     ~Listener();
 
     bool isRecRunning();
@@ -66,24 +66,22 @@ signals:
     void changeRecordButtonState(RecordAudio::STATE);
     //emitted when recording is paused or reloaded from pause state
     void changePauseButtonState(RecordAudio::STATE);
-    //emitted when saving the recorded sound(renaming the file)
-    void askFileNameGUI(QString);
     //emit when thread work is over
     void finished();
     //error message
-    void showError(QString);
+    void errorMessage(QString);
 
 private slots:
     void receiveDatagramm();
     void playback();
     void stopPlayback();
-    void volumeChanged();
+    void volumeChanged(qreal);
     void channelChanged(QSharedPointer<ChannelInfo> channel);
     void startRecord();
     void pauseRecord();
     void changePlaybackState(QSharedPointer<ChannelInfo> channel);
     void recordingStateChanged(RecordAudio::STATE);
-    void askFileName(QString);
+    void stopWorker();
 
 };
 

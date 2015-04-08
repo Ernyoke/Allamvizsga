@@ -1,14 +1,12 @@
 #include "managevoice.h"
 
-ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
+ManageVoice::ManageVoice(Settings *settings, QObject *parent) :
     QObject(parent)
 {
 
     this->socket = new QUdpSocket(this);
 
     this->settings = settings;
-
-    IPAddress = NULL;
 
     audioInput = NULL;
     QDateTime now = QDateTime::currentDateTime();
@@ -24,7 +22,6 @@ ManageVoice::ManageVoice(QObject *parent, Settings *settings) :
 void ManageVoice::changeRecordState(QAudioFormat speakerFormat) {
 
     if(!isRecording) {
-        this->IPAddress = settings->getServerAddress();
         this->broadcasting_port = settings->getClientPortForSound();
         format = speakerFormat;
         startRecording();
@@ -85,7 +82,7 @@ void ManageVoice::transferData(){
         Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
         qDebug() << timestamp;
         //send the data
-        dataGram.sendDatagram(socket, IPAddress, broadcasting_port);
+        dataGram.sendDatagram(socket, settings->getServerAddress(), broadcasting_port);
         emit dataSent(dataGram.getSize());
         delete soundChunk;
     }
@@ -104,11 +101,16 @@ void ManageVoice::stopRecording()
 
 ManageVoice::~ManageVoice() {
     stopRecording();
-    delete this->IPAddress;
+//    delete this->IPAddress;
     qDebug() << "Managevoice destruct!";
 }
 
 bool ManageVoice::isRunning() {
     return this->isRecording;
+}
+
+void ManageVoice::stopWorker() {
+    stopRecording();
+    emit finished();
 }
 

@@ -9,6 +9,7 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QHostAddress>
+#include <QPointer>
 
 namespace Ui {
 class Settings;
@@ -22,16 +23,16 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioDeviceInfo getInputDevice();
-    QHostAddress *getServerAddress();
-    quint16 getServerPort();
-    quint16 getClientPort();
-    quint16 getClientPortForSound();
-    quint32 getClientType();
-    quint32 getClientId();
-    void setClientId(quint32);
+    QAudioDeviceInfo getInputDevice() const;
+    QHostAddress *getServerAddress() const;
+    quint16 getServerPort() const;
+    quint16 getClientPort() const;
+    quint16 getClientPortForSound() const;
+    quint32 getClientType() const;
+    quint32 getClientId() const;
+    void setClientId(const quint32);
 
-    bool setServerAddress(QString);
+    bool setServerAddress(const QString);
 
 
 private:
@@ -59,7 +60,7 @@ private:
     void initSettingsValues();
     void setFormatProperties();
 
-    bool checkIpAddress(QString);
+    bool checkIpAddress(QString &);
 
 private slots:
     void applySettings();

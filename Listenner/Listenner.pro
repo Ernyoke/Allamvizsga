@@ -28,7 +28,9 @@ SOURCES += main.cpp\
     servercommunicator.cpp \
     channelinfo.cpp \
     channellistexception.cpp \
-    addnewchannelfromgui.cpp
+    addnewchannelfromgui.cpp \
+    baseexception.cpp \
+    invalididexception.cpp
 
 HEADERS  += gui.h \
     settings.h \
@@ -43,7 +45,9 @@ HEADERS  += gui.h \
     servercommunicator.h \
     channelinfo.h \
     channellistexception.h \
-    addnewchannelfromgui.h
+    addnewchannelfromgui.h \
+    baseexception.h \
+    invalididexception.h
 
 FORMS    += gui.ui \
     settings.ui \

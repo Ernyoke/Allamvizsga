@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include "channelinfo.h"
 #include "datagram.h"
+#include "invalididexception.h"
 
 namespace Ui {
 class NewChannelDialog;
@@ -19,7 +20,7 @@ class NewChannelDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit NewChannelDialog(qint32 clientId, QAudioDeviceInfo deviceInfo, QWidget *parent = 0);
+    explicit NewChannelDialog(QWidget *parent = 0);
     ~NewChannelDialog();
 
     ChannelInfo getChannelInfo();
@@ -27,6 +28,8 @@ public:
 
     bool isChannelAvailable();
     const ChannelInfo* getChannelInformation() const;
+    void setClientId(qint32 id);
+    void setAudioDeviceInfo(QAudioDeviceInfo deviceInfo);
 
 private:
     Ui::NewChannelDialog *ui;
@@ -45,6 +48,7 @@ private:
     ChannelInfo *chInfo;
 
     void displayDeviceProperties();
+    void clearDeviceProperties();
     int getBoxIndex(QComboBox *box, QString *content);
     QVariant boxValue(const QComboBox *box);
 
@@ -63,5 +67,6 @@ signals:
     void closeChannel(Datagram);
 
 };
+
 
 #endif // NEWCHANNELDIALOG_H

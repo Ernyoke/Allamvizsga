@@ -2,6 +2,8 @@
 
 const int CONTENTSIZE = 65000;
 
+qint64 Datagram::packetCounter = 0;
+
 Datagram::Datagram()
 {
 }
@@ -102,13 +104,13 @@ void Datagram::sendDatagram(QUdpSocket *socket, QHostAddress *IPAddress, int por
 
 void Datagram::splitDatagram() {
     QDataStream in(&buffer, QIODevice::ReadOnly);
-    int size;
+    qint64 packetCounterTmp;
+    in >> packetCounterTmp;
     in >> id;
     in >> clientId;
     in >> timestamp;
     in >> packets;
     in >> packetnr;
-//    in >> size;
     QByteArray *temp = new QByteArray;
     in >> *temp;
     data.append(temp);
@@ -117,21 +119,29 @@ void Datagram::splitDatagram() {
 
 void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
     QDataStream out(&buffer, QIODevice::WriteOnly);
+
+    QMutex mutex;
+
+    mutex.lock();
+    packetCounter++;
+    out << packetCounter;
+    qDebug() << packetCounter;
+    mutex.unlock();
+
     out << id;
     out << clientId;
     out << timestamp;
     out << packets;
     out << packet_nr;
-//    out << dataToSend->size();
     out << *dataToSend;
 }
 
-qint32 Datagram::getSize() {
+qint32 Datagram::getSize() const {
     qDebug() << this->size;
     return this->size;
 }
 
-QByteArray Datagram::getContent() {
+QByteArray Datagram::getContent() const {
     QByteArray content;
     QVectorIterator<QByteArray*> it(data);
     while(it.hasNext()) {
@@ -140,29 +150,29 @@ QByteArray Datagram::getContent() {
     return content;
 }
 
-qint64 Datagram::getTimeStamp() {
+qint64 Datagram::getTimeStamp() const {
     return timestamp;
 }
 
-qint32 Datagram::getId() {
+qint32 Datagram::getId() const {
     return this->id;
 }
 
-qint32 Datagram::headerSize() {
-    qint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
+quint32 Datagram::headerSize() const {
+    quint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
     return hsize;
 }
 
-qint32 Datagram::getClientId() {
+qint32 Datagram::getClientId() const {
     return this->clientId;
 }
 
-qint32 Datagram::getPacketsNumber() {
-    return this->packets;
+qint32 Datagram::getCurrentPackNumber() const {
+    return this->packetnr;
 }
 
-qint32 Datagram::getCurrentPackNummber() {
-    return this->packetnr;
+qint32 Datagram::getPacketsNumber() const {
+    return this->packets;
 }
 
 qint64 Datagram::generateTimestamp() {

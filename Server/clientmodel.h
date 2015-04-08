@@ -6,6 +6,7 @@
 #include <QVector>
 #include <QVectorIterator>
 #include <QSharedPointer>
+#include <QPair>
 
 #include "clientinfo.h"
 #include "listenerclientinfo.h"
@@ -28,10 +29,13 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
     bool containsClient(qint32 id);
+    QPair<bool, qint32> containsClient(QHostAddress&);
 
     QVector< QSharedPointer<ClientInfo > > getClientList() const;
     void removeOfflineClients();
     QSharedPointer<ClientInfo> getClientWithId(qint32) const;
+
+private:
 
 public slots:
     void addClient(ClientInfo *client);
@@ -41,6 +45,7 @@ public slots:
 
 signals:
     void clientTimedOut(qint32);
+
 
 };
 

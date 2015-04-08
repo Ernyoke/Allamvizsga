@@ -64,12 +64,8 @@ signals:
     void changeRecordButtonState(RecordAudio::STATE);
     //emited when recording is paused or reloaded from pause state
     void changePauseButtonState(RecordAudio::STATE);
-    //emited when saving the recorded sound(renaming the file)
-    void askFileNameGUI(QString);
     //emited when thread work is over
     void finished();
-    //error message
-    void showError(QString);
 
 public slots:
     void receiveDatagramm();
@@ -83,7 +79,6 @@ public slots:
     void recordingStateChanged(RecordAudio::STATE);
 
 private slots:
-    void askFileName(QString filename);
     void stopRunning();
 
 };

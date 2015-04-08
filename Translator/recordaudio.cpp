@@ -7,7 +7,6 @@ RecordAudio::RecordAudio(QString path, QAudioFormat format, QObject *parent) :
 
     this->format = format;
     this->path = path;
-    outputfile = new QFile(path + "/tmp.wav");
     currentState = STOPPED;
     this->finalized = false;
 }

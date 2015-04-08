@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QThread>
 #include "settings.h"
 #include "managevoice.h"
 #include "logindialog.h"
@@ -25,7 +26,8 @@ public:
     explicit GUI(QWidget *parent = 0);
     ~GUI();
 
-    ManageVoice *speaker;
+    ManageVoice *speakerWorker;
+    QThread *speakerThread;
 
     Settings* getSettings();
     int getBroadcastingPort();
@@ -39,7 +41,6 @@ public:
 private:
     Ui::GUI *ui;
     Settings *settings;
-    int broadcasting_port;
     long broadcastDataSize;
     long broadcastDataPerSec;
     long cntBroadcastTime;
@@ -50,25 +51,37 @@ private:
     NewChannelDialog *newChannelDialog;
     ServerCommunicator *serverCommunicator;
 
+    void stopChannel();
+
 protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast
     void broadcastStateChanged(QAudioFormat);
-    void logout();
+    void stopSpeaker();
+
+    //signals for both
+    void sendLogoutRequest();
+
+    //signals emited when server is down
+    void stopSpeakingSD();
+
+    //
+    void stopSpeakerWorker();
 
 private slots:
     void setDataSent(int);
     void changeBroadcastButtonState(bool);
     void startBroadcast();
     void menuTriggered(QAction*);
-    void changeBroadcastingPort();
     void broadcastTimerStart();
     void broadcastTimerStop();
     void updateBroadcastTime();
     void errorMessage(QString);
     void startNewChannel();
+
+    void serverDownHandle();
 
 };
 

@@ -94,6 +94,11 @@ QVariant ClientModel::headerData(int section, Qt::Orientation orientation, int r
 }
 
 void ClientModel::addClient(ClientInfo *client) {
+    QHostAddress address = client->getAddress();
+    QPair<bool, qint32>contains = containsClient(address);
+    if(contains.first) {
+        removeClient(contains.second);
+    }
     int position = this->rowCount(QModelIndex());
     beginInsertRows(QModelIndex(), position, position);
     QSharedPointer<ClientInfo> newClient = QSharedPointer<ClientInfo>(client);
@@ -168,6 +173,19 @@ QSharedPointer<ClientInfo> ClientModel::getClientWithId(qint32 id) const {
 
 QVector< QSharedPointer<ClientInfo> > ClientModel::getClientList() const {
     return clientList ;
+}
+
+ QPair<bool, qint32> ClientModel::containsClient(QHostAddress &address) {
+     QPair<bool, qint32> response = qMakePair<bool, qint32>(false, 0);
+     QVectorIterator< QSharedPointer<ClientInfo> > iter(clientList);
+     while(iter.hasNext()) {
+         QSharedPointer<ClientInfo> client = iter.next();
+         if(client->getAddress() == address) {
+             response.first = true;
+             response.second = client->getId();
+         }
+     }
+     return response;
 }
 
 

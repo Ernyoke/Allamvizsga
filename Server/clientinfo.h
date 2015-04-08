@@ -39,6 +39,7 @@ protected:
     bool isActive;
 
     int noResponseCounter;
+
 };
 
 #endif // CLIENTINFO_H

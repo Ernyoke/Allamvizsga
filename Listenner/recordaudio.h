@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QAudioFormat>
 #include <QDebug>
+#include <QDateTime>
 
 class RecordAudio : public QObject
 {
@@ -30,9 +31,10 @@ protected:
     bool finalized;
 
     virtual void finalize() = 0;
+    virtual void file() = 0;
+    virtual QString extension() = 0;
 
 signals:
-    void askFileName(QString);
     void recordingState(RecordAudio::STATE);
 
 

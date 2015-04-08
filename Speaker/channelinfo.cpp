@@ -1,5 +1,9 @@
 #include "channelinfo.h"
 
+ChannelInfo::ChannelInfo() {
+
+}
+
 ChannelInfo::ChannelInfo(qint32 userid, QString language, QString codec, qint32 sample_rate, qint32 sample_size, qint32 channels)
 {
     this->language = language;
@@ -8,13 +12,15 @@ ChannelInfo::ChannelInfo(qint32 userid, QString language, QString codec, qint32 
     this->sample_size = sample_size;
     this->channels = channels;
     this->ownerId = userid;
+
+
 }
 
-ChannelInfo::ChannelInfo(QByteArray *content) {
+ChannelInfo::ChannelInfo(QByteArray &content) {
     deserialize(content);
 }
 
-ChannelInfo::ChannelInfo(ChannelInfo *info) {
+ChannelInfo::ChannelInfo(const ChannelInfo *info) {
     this->language = info->getLanguage();
     this->codec = info->getCodec();
     this->sample_rate = info->getSampleRate();
@@ -24,7 +30,7 @@ ChannelInfo::ChannelInfo(ChannelInfo *info) {
     this->port = info->getOutPort();
 }
 
-ChannelInfo::ChannelInfo(ChannelInfo &info) {
+ChannelInfo::ChannelInfo(const ChannelInfo &info) {
     this->language = info.getLanguage();
     this->codec = info.getCodec();
     this->sample_rate = info.getSampleRate();
@@ -43,6 +49,7 @@ QByteArray ChannelInfo::serialize() {
     QByteArray content;
     QDataStream out(&content, QIODevice::WriteOnly);
     out << ownerId;
+    out << port;
     out << sample_rate;
     out << sample_size;
     out << channels;
@@ -51,9 +58,10 @@ QByteArray ChannelInfo::serialize() {
     return content;
 }
 
-void ChannelInfo::deserialize(QByteArray *content) {
-     QDataStream in(content, QIODevice::ReadOnly);
+void ChannelInfo::deserialize(QByteArray &content) {
+     QDataStream in(&content, QIODevice::ReadOnly);
      in >> ownerId;
+     in >> port;
      in >> sample_rate;
      in >> sample_size;
      in >> channels;
@@ -81,7 +89,7 @@ QString ChannelInfo::getLanguage() const {
     return this->language;
 }
 
-qint32 ChannelInfo::getOwner() {
+qint32 ChannelInfo::getOwner() const {
     return this->ownerId;
 }
 
@@ -89,7 +97,7 @@ void ChannelInfo::setOutPort(qint16 port) {
     this->port = port;
 }
 
-qint16 ChannelInfo::getOutPort() {
+qint16 ChannelInfo::getOutPort() const {
     return this->port;
 }
 

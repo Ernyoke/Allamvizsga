@@ -24,7 +24,7 @@ SpeakerClientInfo::~SpeakerClientInfo()
 }
 
 ClientInfo::CLIENT_TYPE SpeakerClientInfo::getClientType() const {
-    return CLIENT_TYPE::SPEAKER;
+    return SPEAKER;
 }
 
 QString SpeakerClientInfo::getClientTypeStr() const {

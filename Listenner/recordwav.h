@@ -27,6 +27,8 @@ private:
     void writeHeader();
 
     void finalize();
+    void file();
+    QString extension();
 
 signals:
 

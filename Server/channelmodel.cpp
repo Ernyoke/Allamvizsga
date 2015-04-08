@@ -117,17 +117,17 @@ void ChannelModel::addNewChannel(ChannelInfo info) {
     qDebug() << info.getLanguage();
 }
 
-QPair<bool, int> ChannelModel::containsChannel(qint32 id) const {
+QPair<bool, qint32> ChannelModel::containsChannel(qint32 id) const {
     QVectorIterator< QSharedPointer<ChannelInfo> > iter(channelList);
     int i = 0;
     while(iter.hasNext()) {
         QSharedPointer<ChannelInfo> tempInfo = iter.next();
         if(tempInfo->getOwner() == id) {
-            return qMakePair<bool, int>(true, i);
+            return qMakePair<bool, qint32>(true, i);
         }
         ++i;
     }
-    return qMakePair<bool, int>(false, i);;
+    return qMakePair<bool, qint32>(false, i);
 }
 
 void ChannelModel::deleteChannel(qint32 id) {

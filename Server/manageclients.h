@@ -40,9 +40,10 @@ private:
     bool nextPort();
     bool isPortAv();
     void resolveLogin(QByteArray *content, QHostAddress address, qint64 timeStamp);
-    void newChannel(Datagram &, QHostAddress &address, qint64 timeStamp);
-    void closeChannel(Datagram&);
-    void synchResponse(Datagram& dgram);
+    void newChannel(const Datagram &dgram, QHostAddress &address);
+    void closeChannel(const Datagram& dgram);
+    void synchResponse(const Datagram& dgram);
+    void clientDisconnected(const Datagram& dgram);
 
 private slots:
     void readPendingDatagrams();
@@ -50,6 +51,7 @@ private slots:
     void sendCollectiveMessageToListeners(Datagram &dgram);
     void sendCollectiveMessage(Datagram &dgram);
     void synchronizeClients();
+    void sendDatagram(QHostAddress &, Datagram &);
 
 public slots:
     void serverDown();
@@ -59,7 +61,7 @@ signals:
     void channelClosed(qint32);
     void newClientConnected(ClientInfo*);
     void clientConnectionAck(qint32);
-    void clientDisconnected(qint32);
+    void clientDisconnectedSignal(qint32);
 
 };
 

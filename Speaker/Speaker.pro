@@ -24,7 +24,9 @@ SOURCES += main.cpp\
     newchanneldialog.cpp \
     channelinfo.cpp \
     servercommunicator.cpp \
-    soundchunk.cpp
+    soundchunk.cpp \
+    baseexception.cpp \
+    invalididexception.cpp
 
 HEADERS  += gui.h \
     g711.h \
@@ -35,7 +37,9 @@ HEADERS  += gui.h \
     logindialog.h \
     newchanneldialog.h \
     channelinfo.h \
-    servercommunicator.h
+    servercommunicator.h \
+    baseexception.h \
+    invalididexception.h
 
 FORMS    += gui.ui \
     settings.ui \

@@ -151,10 +151,12 @@ const ChannelInfo* NewChannelDialog::getChannelInformation() const {
 }
 
 void NewChannelDialog::sendCloseChannelReq() {
-    isChannelOnline = false;
-    creationTimeStamp = Datagram::generateTimestamp();
-    Datagram dgram(Datagram::CLOSE_CHANNEL, clientId, creationTimeStamp);
-    QByteArray content = chInfo->serialize();
-    dgram.setDatagramContent(&content);
-    emit closeChannel(dgram);
+    if(isChannelOnline) {
+        isChannelOnline = false;
+        creationTimeStamp = Datagram::generateTimestamp();
+        Datagram dgram(Datagram::CLOSE_CHANNEL, clientId, creationTimeStamp);
+        QByteArray content = chInfo->serialize();
+        dgram.setDatagramContent(&content);
+        emit closeChannel(dgram);
+    }
 }

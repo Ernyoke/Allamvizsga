@@ -1,14 +1,11 @@
 #include "newchanneldialog.h"
 #include "ui_newchanneldialog.h"
 
-NewChannelDialog::NewChannelDialog(qint32 clientId, QAudioDeviceInfo deviceInfo, QWidget *parent) :
+NewChannelDialog::NewChannelDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewChannelDialog)
 {
     ui->setupUi(this);
-    this->deviceInfo = deviceInfo;
-    this->clientId = clientId;
-    this->displayDeviceProperties();
 
     connect(ui->startBtn, SIGNAL(clicked()), this, SLOT(setFormatProperties()));
     connect(ui->cancelBtn, SIGNAL(clicked()), this, SLOT(close()));
@@ -31,6 +28,7 @@ NewChannelDialog::~NewChannelDialog()
 }
 
 void NewChannelDialog::displayDeviceProperties() {
+    clearDeviceProperties();
     foreach (const int it, deviceInfo.supportedSampleRates()) {
             ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
     }
@@ -44,6 +42,13 @@ void NewChannelDialog::displayDeviceProperties() {
     foreach (const int it, deviceInfo.supportedSampleSizes()) {
             ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
     }
+}
+
+void NewChannelDialog::clearDeviceProperties() {
+    ui->sampleRateBox->clear();
+    ui->channelBox->clear();
+    ui->codecBox_2->clear();
+    ui->sampleSizeBox->clear();
 }
 
 void NewChannelDialog::setFormatProperties() {
@@ -65,6 +70,25 @@ void NewChannelDialog::setFormatProperties() {
         sendNewChannelReq();
 
     }
+    else {
+        this->close();
+    }
+}
+
+void NewChannelDialog::setClientId(qint32 id) {
+    if(id <= 0) {
+        InvalidIdException *exception = new InvalidIdException(this);
+        exception->setMessage("Invalid id!");
+        throw exception;
+    }
+    else {
+        this->clientId = id;
+    }
+}
+
+void NewChannelDialog::setAudioDeviceInfo(QAudioDeviceInfo deviceInfo) {
+    this->deviceInfo = deviceInfo;
+    displayDeviceProperties();
 }
 
 int NewChannelDialog::getBoxIndex(QComboBox *box, QString *content) {
@@ -107,6 +131,7 @@ void NewChannelDialog::newChannelAck(Datagram dgram) {
             timer->stop();
             isChannelOnline = true;
             ui->statusText->setText("Channel created succesful!");
+            ui->startBtn->setText("Ok");
         }
     }
 }

@@ -32,6 +32,7 @@ void RecordWav::writeHeader() {
 }
 
 bool RecordWav::start() {
+    this->file();
     if(currentState == STOPPED) {
         if(!outputfile->open(QIODevice::WriteOnly)) {
             return false;
@@ -89,7 +90,20 @@ void RecordWav::finalize() {
 
       finalized = true;
       outputfile->close();
-      emit askFileName(path + "/tmp.wav");
 
+}
+
+void RecordWav::file() {
+    //generate filename
+    QString fileName("/rec_");
+    //get current timestamp for filename
+    fileName += QString::number(QDateTime::currentMSecsSinceEpoch());
+    //get extension
+    fileName += extension();
+    outputfile = new QFile(path + fileName);
+}
+
+QString RecordWav::extension() {
+    return QString(".wav");
 }
 

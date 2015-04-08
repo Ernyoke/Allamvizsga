@@ -48,8 +48,6 @@ signals:
     void dataSent(int);
     //is emited when the thread stops
     void finished();
-    //
-    void errorMessage(QString);
 
 public slots:
     void startRecording();

@@ -126,7 +126,8 @@ void ServerCommunicator::sendLoginRequest() {
         //recreate the socket
         delete socket;
         socket = new QUdpSocket(this);
-        socket->bind(*settings->getServerAddress(), settings->getClientPort());
+//        socket->bind(*settings->getServerAddress(), settings->getClientPort());
+        socket->bind(settings->getClientPort());
         connect(socket, SIGNAL(readyRead()), this, SLOT(readDatagram()));
         sendDatagram(&dgram);
         //create timer for login response
@@ -202,7 +203,7 @@ void ServerCommunicator::processLogin(Datagram& dgram) {
 void ServerCommunicator::processList(Datagram &dgram) {
     if(authentificationStatus) {
         if(dgram.getTimeStamp() == reqListStart) {
-            listContent.insert(dgram.getCurrentPackNummber(), dgram.getContent());
+            listContent.insert(dgram.getCurrentPackNumber(), dgram.getContent());
             //check if all packets arrived
             if(listContent.size() == dgram.getPacketsNumber()) {
                 qDebug() << "list refreshed";
@@ -222,7 +223,8 @@ void ServerCommunicator::processList(Datagram &dgram) {
 
 void ServerCommunicator::processNewChannel(Datagram &dgram) {
     if(authentificationStatus) {
-        ChannelInfo chInfo(dgram.getContent());
+        QByteArray content = dgram.getContent();
+        ChannelInfo chInfo(content);
         emit channelConnected(chInfo);
     }
 }

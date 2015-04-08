@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QPointer>
+#include <QThread>
+
 #include "settings.h"
 #include "recordaudio.h"
 #include "listener.h"
@@ -17,6 +19,7 @@
 #include "channelmodel.h"
 #include "channellistexception.h"
 #include "addnewchannelfromgui.h"
+#include "invalididexception.h"
 
 namespace Ui {
 class GUI;
@@ -31,7 +34,9 @@ public:
     ~GUI();
 
     //listenner
-    Listener *listener;
+    Listener *listenerWorker;
+    QThread *listenerThread;
+
     void setRecordAudioDev(RecordAudio *record);
     void receiverTimerStart();
     void receiverTimerStop();
@@ -49,7 +54,6 @@ private:
     long dataSize;
     long dataPerSec;
     long cntTime;
-    int broadcasting_port;
 
     //both
     LoginDialog* loginDialog;
@@ -66,19 +70,28 @@ protected:
 
 signals:
     //signals for listenner
-    void volumeChanged();
+    void volumeChanged(qreal);
     void startRecord();
     void stopRecord();
     void pauseRecord();
     void changePlayBackState(QSharedPointer<ChannelInfo>);
-    void channelChanged(QSharedPointer<ChannelInfo>);
-    void logout();
+//    void stopListener();
+    void finalRecordName(bool, QString);
+    void stopListenerWorker();
+
+    //signals for both
+    void sendLogoutRequest();
+
+    //signals emited when server is down
+    void stopPlaybackSD();
+    void stopSpeakingSD();
 
 public slots:
     //slots for listenner
     void playbackButtonPushed();
     void startRecordPushed();
     void pauseRecordPushed();
+    void deleteChannel();
     void updateTime();
     void volumeChangedSlot();
     void changeChannelOnDoubleClick(QModelIndex);
@@ -89,14 +102,10 @@ public slots:
     void changePlayButtonState(bool isPlaying);
     void setDataReceived(int);
 
-    void setRecordFileName(QString filename);
-    void deleteChannel();
-
-
     //general
     void menuTriggered(QAction*);
     void showErrorMessage(QString);
-
+    void serverDownHandle();
 
 };
 

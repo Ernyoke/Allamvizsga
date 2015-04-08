@@ -6,6 +6,7 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QDateTime>
+#include <QMutex>
 
 #include "soundchunk.h"
 
@@ -41,13 +42,13 @@ public:
     void setTimeStamp(qint64);
     void setDatagramContent(QByteArray*);
     void sendDatagram(QUdpSocket*, QHostAddress*, int port);
-    QByteArray getContent();
-    qint32 getSize();
-    qint64 getTimeStamp();
-    qint32 getId();
-    qint32 getClientId();
-    qint32 getPacketsNumber();
-    qint32 getCurrentPackNummber();
+    QByteArray getContent() const;
+    qint32 getSize() const;
+    qint64 getTimeStamp() const;
+    qint32 getId() const;
+    qint32 getClientId() const;
+    qint32 getCurrentPackNumber() const;
+    qint32 getPacketsNumber() const;
 
     //static methods
     static qint64 generateTimestamp();
@@ -64,16 +65,18 @@ private:
     //cointain the data for a single packet
     QByteArray buffer;
 
-
     //data size
-    qint32 size;
+    quint32 size;
+
+    static qint64 packetCounter;
 
     void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();
     void splitContent(QString*);
     void splitContent(QByteArray*);
 
-    qint32 headerSize();
+    quint32 headerSize() const;
+
 
 
 

@@ -10,6 +10,7 @@ Settings::Settings(QWidget *parent) :
     ui->setupUi(this);
 
     selectedInputDevice = QAudioDeviceInfo::defaultInputDevice();
+    activeInputDevice = selectedInputDevice;
 
     input_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
     foreach (const QAudioDeviceInfo it,input_devices) {
@@ -51,38 +52,41 @@ Settings::Settings(QWidget *parent) :
 Settings::~Settings()
 {
     delete ui;
+    delete address;
     qDebug() << "Settings destruct!";
 }
 
-QAudioDeviceInfo Settings::getInputDevice() {
+QAudioDeviceInfo Settings::getInputDevice() const {
     return activeInputDevice;
 }
 
-QHostAddress* Settings::getServerAddress() {
+
+QHostAddress *Settings::getServerAddress() const {
     return address;
 }
 
-quint16 Settings::getServerPort() {
+
+quint16 Settings::getServerPort() const{
     return serverPort;
 }
 
-quint16 Settings::getClientPort() {
+quint16 Settings::getClientPort() const {
     return clientPort;
 }
 
-quint16 Settings::getClientPortForSound() {
+quint16 Settings::getClientPortForSound() const {
     return clientPortForSound;
 }
 
-quint32 Settings::getClientType() {
+quint32 Settings::getClientType() const {
     return clientType;
 }
 
-void Settings::setClientId(quint32 id) {
+void Settings::setClientId(const quint32 id) {
     this->clientId = id;
 }
 
-quint32 Settings::getClientId() {
+quint32 Settings::getClientId() const {
     return clientId;
 }
 
@@ -193,7 +197,7 @@ bool Settings::setServerAddress(QString address) {
     return false;
 }
 
-bool Settings::checkIpAddress(QString ip) {
+bool Settings::checkIpAddress(QString& ip) {
     QHostAddress address(ip);
     if (QAbstractSocket::IPv4Protocol == address.protocol())
     {

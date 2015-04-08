@@ -24,7 +24,7 @@ ListenerClientInfo::~ListenerClientInfo()
 }
 
 ClientInfo::CLIENT_TYPE ListenerClientInfo::getClientType() const {
-    return CLIENT_TYPE::LISTENER;
+    return LISTENER;
 }
 
 QString ListenerClientInfo::getClientTypeStr() const {

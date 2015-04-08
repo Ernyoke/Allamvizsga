@@ -20,15 +20,15 @@ ChannelInfo::ChannelInfo(QByteArray &content) {
     deserialize(content);
 }
 
-ChannelInfo::ChannelInfo(const ChannelInfo *info) {
-    this->language = info->getLanguage();
-    this->codec = info->getCodec();
-    this->sample_rate = info->getSampleRate();
-    this->sample_size = info->getSampleSize();
-    this->channels = info->getChannels();
-    this->ownerId = info->getOwner();
-    this->port = info->getOutPort();
-}
+//ChannelInfo::ChannelInfo(const ChannelInfo *info) {
+//    this->language = info->getLanguage();
+//    this->codec = info->getCodec();
+//    this->sample_rate = info->getSampleRate();
+//    this->sample_size = info->getSampleSize();
+//    this->channels = info->getChannels();
+//    this->ownerId = info->getOwner();
+//    this->port = info->getOutPort();
+//}
 
 ChannelInfo::ChannelInfo(const ChannelInfo &info) {
     this->language = info.getLanguage();

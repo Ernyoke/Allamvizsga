@@ -14,6 +14,7 @@ protected:
     Settings *settings;
 
 signals:
+    void errorMessage(QString);
 
 public slots:
     virtual void stopRunning() = 0;
