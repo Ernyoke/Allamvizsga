@@ -39,7 +39,7 @@ void AcceptData::readData() {
             QMap<qint32, ChannelInfo*>::iterator iter = channels.find(receivedDatagram.getClientId());
             if(iter != channels.end()) {
                 qint16 port = iter.value()->getOutPort();
-                socket->writeDatagram(data.data(), data.size(), QHostAddress::Broadcast /*QHostAddress("192.168.0.255")*/, port);
+                socket->writeDatagram(data.data(), data.size(), /*QHostAddress::Broadcast*/ QHostAddress("192.168.0.255"), port);
             }
         }
     }

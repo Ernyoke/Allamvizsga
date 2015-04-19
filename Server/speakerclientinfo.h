@@ -6,7 +6,7 @@
 class SpeakerClientInfo : public virtual ClientInfo
 {
 public:
-    SpeakerClientInfo(QHostAddress address, QString OSName, double version);
+    SpeakerClientInfo(QHostAddress address, qint32 clientPort, QString OSName, double version);
     SpeakerClientInfo(SpeakerClientInfo &);
     SpeakerClientInfo(SpeakerClientInfo *);
     virtual ~SpeakerClientInfo();

@@ -1,7 +1,7 @@
 #include "settings.h"
 #include "ui_settings.h"
 
-const static QString settingsFile = "settings.xml";
+const static QString settingsFileName = "settings.xml";
 
 Settings::Settings(QWidget *parent) :
     QDialog(parent),
@@ -14,15 +14,25 @@ Settings::Settings(QWidget *parent) :
             ui->deviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
 
-    //read settings from XML file into structs
-    readSettingsFromXML();
+    QFile settingsFile(settingsFileName);
 
-    activeOutputDevice = QAudioDeviceInfo::defaultOutputDevice();
-    for(QList<QAudioDeviceInfo>::iterator it = output_devices.begin(); it != output_devices.end(); ++it) {
-        if(it->deviceName().compare(outputDeviceName) == 0) {
-            activeOutputDevice = *it;
-            break;
+    if(settingsFile.exists()) {
+        //read settings from XML file into structs
+        readSettingsFromXML();
+
+        activeOutputDevice = QAudioDeviceInfo::defaultOutputDevice();
+        for(QList<QAudioDeviceInfo>::iterator it = output_devices.begin(); it != output_devices.end(); ++it) {
+            if(it->deviceName().compare(outputDeviceName) == 0) {
+                activeOutputDevice = *it;
+                break;
+            }
         }
+    }
+    else {
+        if(outputDeviceName.isEmpty()) {
+            outputDeviceName = activeOutputDevice.deviceName();
+        }
+        applySettings();
     }
 
     //initialize selected properties for devices
@@ -44,7 +54,6 @@ Settings::Settings(QWidget *parent) :
     connect(ui->deviceBox, SIGNAL(activated(int)), this, SLOT(changeDevice(int)));
     connect(ui->browserButton, SIGNAL(clicked()), this, SLOT(selectRecordPath()));
 
-    address = new QHostAddress("127.0.0.1");
     serverPort = 10000;
     clientPort = 40000;
     clientType = 2; //client type set to speaker
@@ -72,7 +81,7 @@ void Settings::changeDevice(int index) {
 //read the settings from XML and parse them
 //update the comboboxes
 void Settings::readSettingsFromXML() {
-    QFile s_file(settingsFile);
+    QFile s_file(settingsFileName);
     if(s_file.open(QIODevice::ReadOnly)) {
         QXmlStreamReader XMLReader;
         XMLReader.setDevice(&s_file);
@@ -94,7 +103,7 @@ void Settings::readSettingsFromXML() {
     }
 }
 
-int Settings::getBoxIndex(QComboBox *box, QString *content) {
+int Settings::getBoxIndex(QComboBox *box, QString *content) const {
     for(int i = 0; i < box->count(); ++i) {
         QString data = box->itemData(i, Qt::UserRole).toString();
         if(data.compare(*content) == 0) {
@@ -104,7 +113,7 @@ int Settings::getBoxIndex(QComboBox *box, QString *content) {
     return -1;
 }
 
-int Settings::getBoxIndex(QComboBox *box, int content) {
+int Settings::getBoxIndex(QComboBox *box, int content) const {
     for(int i = 0; i < box->count(); ++i) {
         int data = box->itemData(i, Qt::UserRole).toInt();
         if(data == content) {
@@ -123,35 +132,46 @@ void Settings::setBoxIndex(QComboBox *box, int index) {
     }
 }
 
-QString Settings::getRecordPath() {
+QString Settings::getRecordPath() const {
     return recordPath;
 }
 
-QAudioDeviceInfo Settings::getOutputDevice() {
-    return activeOutputDevice;
+QAudioDeviceInfo Settings::getOutputDevice() const {
+    if(output_devices.size() < 1) {
+        NoAudioDeviceException *exception = new NoAudioDeviceException;
+        exception->setMessage("No output audiodevice found!");
+        throw exception;
+    }
+    else {
+        return activeOutputDevice;
+    }
 }
 
-QHostAddress* Settings::getServerAddress() {
-    return address;
+QHostAddress Settings::getServerAddress() const {
+    return *address;
 }
 
-quint16 Settings::getServerPort() {
+qint32 Settings::getServerPort() const {
     return serverPort;
 }
 
-quint16 Settings::getClientPort() {
+void Settings::setClientPort(const qint32 port) {
+    this->clientPort = port;
+}
+
+qint32 Settings::getClientPort() const {
     return clientPort;
 }
 
-quint32 Settings::getClientType() {
+qint32 Settings::getClientType() const {
     return clientType;
 }
 
-void Settings::setClientId(quint32 id) {
+void Settings::setClientId(const qint32 id) {
     this->clientId = id;
 }
 
-quint32 Settings::getClientId() {
+qint32 Settings::getClientId() const {
     return clientId;
 }
 
@@ -170,7 +190,7 @@ void Settings::applySettings() {
     recordPath = ui->displayPath->text();
 
     //store settings in output XML file
-    QFile s_file(settingsFile);
+    QFile s_file(settingsFileName);
     s_file.open(QIODevice::WriteOnly);
     QXmlStreamWriter xmlWriter(&s_file);
     xmlWriter.setAutoFormatting(true);
@@ -191,7 +211,7 @@ void Settings::cancelSetting() {
     this->close();
 }
 
-Settings::CODEC Settings::getRecordCodec() {
+Settings::CODEC Settings::getRecordCodec() const {
     return WAV;
 }
 

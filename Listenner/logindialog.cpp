@@ -12,7 +12,7 @@ LoginDialog::LoginDialog(Settings *settings, QWidget *parent) :
 
 void LoginDialog::init() {
     ack = false;
-    ui->loginBtn->setText("Retry");
+    ui->loginBtn->setText("Connect");
     ui->status->setText("-");
 }
 
@@ -28,6 +28,9 @@ void LoginDialog::authentificate() {
             emit sendLoginRequest();
             //set status text
             ui->status->setText("Waiting for server response!");
+        }
+        else {
+            ui->status->setText("Invalid IPv4 address!");
         }
     }
     else {

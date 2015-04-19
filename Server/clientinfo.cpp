@@ -1,10 +1,11 @@
 #include "clientinfo.h"
 
-ClientInfo::ClientInfo(QHostAddress address, QString OSName, double version)
+ClientInfo::ClientInfo(QHostAddress address, qint32 port, QString OSName, double version)
 {
     this->address = address;
     this->OSName = OSName;
     this->version = version;
+    this->clientPort = port;
     isActive = false;
     noResponseCounter = 0;
 }
@@ -29,6 +30,10 @@ QString ClientInfo::getAddressStr() const {
 
 QHostAddress ClientInfo::getAddress() const {
     return this->address;
+}
+
+qint32 ClientInfo::getClientPort() const {
+    return this->clientPort;
 }
 
 QString ClientInfo::getOSName() const {

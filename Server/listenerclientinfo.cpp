@@ -1,19 +1,19 @@
 #include "listenerclientinfo.h"
 
-ListenerClientInfo::ListenerClientInfo(QHostAddress address, QString OSName, double version) :
-    ClientInfo(address, OSName, version)
+ListenerClientInfo::ListenerClientInfo(QHostAddress address, qint32 port, QString OSName, double version) :
+    ClientInfo(address, port, OSName, version)
 {
     //
 }
 
 ListenerClientInfo::ListenerClientInfo(ListenerClientInfo &listener) :
-    ClientInfo(listener.getAddress(), listener.getOSName(), 0)
+    ClientInfo(listener.getAddress(), listener.getClientPort(), listener.getOSName(), 0)
 {
     //
 }
 
 ListenerClientInfo::ListenerClientInfo(ListenerClientInfo *listener) :
-    ClientInfo(listener->getAddress(), listener->getOSName(), 0)
+    ClientInfo(listener->getAddress(), listener->getClientPort(), listener->getOSName(), 0)
 {
     //
 }

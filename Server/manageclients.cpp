@@ -52,7 +52,8 @@ void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint1
     case Datagram::LOGIN : {
         if(isAvNextClient()) {
             QByteArray content = dgram.getContent();
-            resolveLogin(&content, address, dgram.getTimeStamp());
+            resolveLogin(&content, address, port, dgram.getTimeStamp());
+            qDebug() << "Port:" << port;
         }
         break;
     }
@@ -65,7 +66,7 @@ void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint1
         break;
     }
     case Datagram::NEW_CHANNEL : {
-        newChannel(dgram, address);
+        newChannel(dgram, address, port);
         break;
     }
     case Datagram::CLOSE_CHANNEL : {
@@ -118,7 +119,7 @@ bool ManageClients::isAvNextClient() {
     return false;
 }
 
-void ManageClients::resolveLogin(QByteArray *content, QHostAddress address, qint64 timeStamp) {
+void ManageClients::resolveLogin(QByteArray *content, QHostAddress address, qint32 port, qint64 timeStamp) {
     //deserialize login data
     qDebug() << address.toString();
 
@@ -130,15 +131,15 @@ void ManageClients::resolveLogin(QByteArray *content, QHostAddress address, qint
     ClientInfo *info = NULL;
     switch (clientType) {
     case ClientInfo::SPEAKER : {
-        info = new SpeakerClientInfo(address, osName, 0);
+        info = new SpeakerClientInfo(address, port, osName, 0);
         break;
     }
     case ClientInfo::LISTENER : {
-        info = new ListenerClientInfo(address, osName, 0);
+        info = new ListenerClientInfo(address, port, osName, 0);
         break;
     }
     case ClientInfo::TRANSLATOR : {
-        info = new TranslatorClientInfo(address, osName, 0);
+        info = new TranslatorClientInfo(address, port, osName, 0);
         break;
     }
     default: {
@@ -162,10 +163,10 @@ void ManageClients::resolveLogin(QByteArray *content, QHostAddress address, qint
         in << 0;
     }
     response.setDatagramContent(&toSend);
-    response.sendDatagram(socket, &address, SERVER_PORT);
+    response.sendDatagram(socket, &address, port);
 }
 
-void ManageClients::newChannel(const Datagram &dgram, QHostAddress &address) {
+void ManageClients::newChannel(const Datagram &dgram, QHostAddress &address, qint32 port) {
     QByteArray content = dgram.getContent();
     ChannelInfo chInfo(content);
     if(nextPort()) {
@@ -173,7 +174,7 @@ void ManageClients::newChannel(const Datagram &dgram, QHostAddress &address) {
         emit newChannelAdded(chInfo);
         QString toSend("ACK");
         Datagram response(Datagram::NEW_CHANNEL_ACK, 0, dgram.getTimeStamp(), &toSend);
-        sendDatagram(address, response);
+        sendDatagram(address, port, response);
 
         //send new channel settings to the other clients
         Datagram notify(Datagram::NEW_CHANNEL, 0, dgram.generateTimestamp());
@@ -224,13 +225,14 @@ void ManageClients::sendCollectiveMessageToSpeakers(Datagram &dgram) {
         QSharedPointer<ClientInfo> client = iter.next();
         if(client.dynamicCast<TranslatorClientInfo>() != NULL) {
             QHostAddress address = client->getAddress();
-            sendDatagram(address, dgram);
+            qint32 port = client->getClientPort();
+            sendDatagram(address, port, dgram);
         }
     }
 }
 
-void ManageClients::sendDatagram(QHostAddress &address, Datagram &dgram) {
-    dgram.sendDatagram(socket, &address, SERVER_PORT);
+void ManageClients::sendDatagram(QHostAddress &address, qint32 port,  Datagram &dgram) {
+    dgram.sendDatagram(socket, &address, port);
 }
 
 void ManageClients::sendCollectiveMessageToListeners(Datagram &dgram) {
@@ -240,7 +242,8 @@ void ManageClients::sendCollectiveMessageToListeners(Datagram &dgram) {
         QSharedPointer<ClientInfo> client = iter.next();
         if(client.dynamicCast<ListenerClientInfo>() != NULL) {
             QHostAddress address = client->getAddress();
-            sendDatagram(address, dgram);
+            qint32 port = client->getClientPort();
+            sendDatagram(address, port, dgram);
         }
     }
 }
@@ -251,7 +254,8 @@ void ManageClients::sendCollectiveMessage(Datagram &dgram) {
     while(iter.hasNext()) {
         QSharedPointer<ClientInfo> client = iter.next();
         QHostAddress address = client->getAddress();
-        sendDatagram(address, dgram);
+        qint32 port = client->getClientPort();
+        sendDatagram(address, port, dgram);
     }
 }
 
@@ -267,6 +271,7 @@ void ManageClients::synchronizeClients() {
     QString toSend("SYNCH");
     Datagram dgram(Datagram::SYNCH, 0, Datagram::generateTimestamp(), &toSend);
     sendCollectiveMessage(dgram);
+    qDebug() << "synch size:" << dgram.getSize();
 }
 
 void ManageClients::synchResponse(const Datagram &dgram) {

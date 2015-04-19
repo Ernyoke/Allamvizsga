@@ -13,6 +13,8 @@
 #include <QHostAddress>
 #include <QMutex>
 
+#include "noaudiodeviceexception.h"
+
 namespace Ui {
 class Settings;
 }
@@ -27,15 +29,16 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioDeviceInfo getOutputDevice();
-    QHostAddress *getServerAddress();
-    quint16 getServerPort();
-    quint16 getClientPort();
-    quint32 getClientType();
-    quint32 getClientId();
-    void setClientId(quint32);
-    CODEC getRecordCodec();
-    QString getRecordPath();
+    QAudioDeviceInfo getOutputDevice() const;
+    QHostAddress getServerAddress() const;
+    qint32 getServerPort() const;
+    qint32 getClientPort() const;
+    void setClientPort(const int);
+    qint32 getClientType() const;
+    qint32 getClientId() const;
+    void setClientId(const qint32);
+    CODEC getRecordCodec() const;
+    QString getRecordPath() const;
 
     bool setServerAddress(QString);
 
@@ -45,10 +48,10 @@ private:
     QString outputDeviceName;
 
     QHostAddress *address;
-    quint16 serverPort;
-    quint32 clientType;
-    quint16 clientPort;
-    quint32 clientId;
+    qint32 serverPort;
+    qint32 clientType;
+    qint32 clientPort;
+    qint32 clientId;
 
     QList<QAudioDeviceInfo> output_devices;
     QAudioDeviceInfo selectedOutputDevice;
@@ -59,8 +62,8 @@ private:
 
     QVariant boxValue(const QComboBox *box);
     void readSettingsFromXML();
-    int getBoxIndex(QComboBox*, QString*);
-    int getBoxIndex(QComboBox*, int);
+    int getBoxIndex(QComboBox*, QString*) const;
+    int getBoxIndex(QComboBox*, int) const;
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
 

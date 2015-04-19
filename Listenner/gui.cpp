@@ -8,7 +8,9 @@ GUI::GUI(QWidget *parent) :
     ui->setupUi(this);
     initialize();
 
-     qRegisterMetaType< QSharedPointer<ChannelInfo> >("QSharedPointer<ChannelInfo>");
+    qRegisterMetaType< QSharedPointer<ChannelInfo> >("QSharedPointer<ChannelInfo>");
+    qRegisterMetaType<QHostAddress>("QHostAddress");
+    qRegisterMetaType<Settings::CODEC>("Settings::CODEC");
 }
 
 
@@ -16,6 +18,8 @@ void GUI::initialize() {
 
     dataSize = 0;
     dataPerSec = 0;
+    isPlaying = false;
+    doubleClickEnabled = true;
 
     //get settings
     settings = new Settings(this);
@@ -59,32 +63,6 @@ void GUI::initialize() {
     connect(this, SIGNAL(sendLogoutRequest()), serverCommunicator, SLOT(logout()));
     //******
 
-    //initialize listenerWorker
-    listenerWorker = new Listener(settings);
-    listenerThread = new QThread;
-    listenerWorker->moveToThread(listenerThread);
-    connect(listenerWorker, SIGNAL(finished()), listenerThread, SLOT(quit()));
-    connect(this, SIGNAL(stopListenerWorker()), listenerWorker, SLOT(stopWorker()), Qt::QueuedConnection);
-    connect(listenerThread, SIGNAL(finished()), listenerThread, SLOT(deleteLater()));
-    connect(listenerWorker, SIGNAL(finished()), listenerWorker, SLOT(deleteLater()));
-    listenerThread->start();
-
-    //playback state
-    connect(this, SIGNAL(changePlayBackState( QSharedPointer<ChannelInfo> )), listenerWorker, SLOT(changePlaybackState( QSharedPointer<ChannelInfo> )));
-    connect(listenerWorker, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
-    //volume
-    connect(this, SIGNAL(volumeChanged(qreal)), listenerWorker, SLOT(volumeChanged(qreal)));
-    //change channel on doubleclick
-    connect(ui->channelList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(changeChannelOnDoubleClick(QModelIndex)));
-    //record sound
-    connect(this, SIGNAL(startRecord()), listenerWorker, SLOT(startRecord()));
-    connect(this, SIGNAL(pauseRecord()), listenerWorker, SLOT(pauseRecord()));
-    connect(listenerWorker, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
-    connect(listenerWorker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
-    connect(listenerWorker, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
-    connect(listenerWorker, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
-    connect(ui->deleteChannelButton, SIGNAL(clicked()), this, SLOT(deleteChannel()));
-
     //model for channellist
     channelModel = new ChannelModel(this);
     ui->channelList->setModel(channelModel);
@@ -93,12 +71,19 @@ void GUI::initialize() {
     connect(serverCommunicator, SIGNAL(channelConnected(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
 
     //add/remove channel from channellist(local channel, this will not start a new channel on server)
-    addNewChannelMan = new AddNewChannelFromGui(settings->getOutputDevice(), this);
-    connect(addNewChannelMan, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
+    try {
+        addNewChannelMan = new AddNewChannelFromGui(settings->getOutputDevice(), this);
+        connect(addNewChannelMan, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
+    }
+    catch(NoAudioDeviceException *exc) {
+        addNewChannelMan = NULL;
+        qDebug() << exc->message();
+        delete exc;
+    }
     connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
 
     //signals emitted when server is down
-    connect(this, SIGNAL(stopPlaybackSD()), listenerWorker, SLOT(stopPlayback()));
+//    connect(this, SIGNAL(stopPslaybackSD()), listenerWorker, SLOT(stopPlayback()));
 
     //server down
     connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
@@ -145,29 +130,64 @@ void GUI::setDataReceived(int size) {
 
 //this SLOT is called when the Start button is pushed
 void GUI::playbackButtonPushed() {
-    QModelIndex selectedIndex = ui->channelList->currentIndex();
-    try {
-        QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
-        emit changePlayBackState(selectedChannel);
+    if(!isPlaying) {
+        QModelIndex selectedIndex = ui->channelList->currentIndex();
+        try {
+            QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
+            QAudioDeviceInfo device = settings->getOutputDevice();
+            QHostAddress address = settings->getServerAddress();
+            createListenerThread();
+            emit startListening(selectedChannel, device, address, 50);
+        }
+        catch(ChannelListException *ex) {
+            showErrorMessage(ex->message());
+            delete ex;
+        }
+        ui->playButton->setEnabled(false);
     }
-    catch(ChannelListException *ex) {
-        QMessageBox msg;
-        msg.setText(ex->message());
-        msg.setStandardButtons(QMessageBox::Ok);
-        msg.exec();
-        delete ex;
+    else {
+        ui->playButton->setEnabled(false);
+        emit stopListening();
     }
 }
 
+void GUI::createListenerThread() {
+    //initialize listenerWorker
+    listenerWorker = new Listener;
+    listenerThread = new QThread;
+    listenerWorker->moveToThread(listenerThread);
+    connect(listenerWorker, SIGNAL(finished()), listenerThread, SLOT(quit()));
+    connect(listenerThread, SIGNAL(finished()), listenerThread, SLOT(deleteLater()));
+    connect(listenerWorker, SIGNAL(finished()), listenerWorker, SLOT(deleteLater()));
+    listenerThread->start();
+    //playback state
+    connect(this, SIGNAL(startListening(QSharedPointer<ChannelInfo>, QAudioDeviceInfo, QHostAddress, int)),
+            listenerWorker, SLOT(start(QSharedPointer<ChannelInfo>, QAudioDeviceInfo, QHostAddress, int)));
+    connect(this, SIGNAL(stopListening()), listenerWorker, SLOT(stop()));
+    connect(listenerWorker, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
+    //volume
+    connect(this, SIGNAL(volumeChanged(qreal)), listenerWorker, SLOT(volumeChanged(qreal)));
+    //record sound
+    connect(this, SIGNAL(startRecord(Settings::CODEC, QString)), listenerWorker, SLOT(startRecord(Settings::CODEC, QString)));
+    connect(this, SIGNAL(pauseRecord()), listenerWorker, SLOT(pauseRecord()));
+    connect(listenerWorker, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
+    connect(listenerWorker, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
+    connect(listenerWorker, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
+    //error message
+    connect(listenerWorker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
+}
+
 void GUI::changePlayButtonState(bool isPlaying) {
+    this->isPlaying = isPlaying;
     if(isPlaying) {
         ui->playButton->setText("Stop");
+        ui->playButton->setEnabled(true);
         receiverTimerStart();
     }
     else {
         ui->playButton->setText("Play");
+        ui->playButton->setEnabled(true);
         receiverTimerStop();
-
     }
 }
 
@@ -198,11 +218,31 @@ void GUI::volumeChangedSlot() {
 
 void GUI::changeChannelOnDoubleClick(QModelIndex index) {
     qDebug() << index.row();
+    if(doubleClickEnabled) {
+        if(isPlaying) {
+            doubleClickEnabled = false;
+            connect(listenerThread, SIGNAL(destroyed()), this, SLOT(startNewChannelOnDistroy()));
+        }
+        playbackButtonPushed();
+    }
+}
+
+void GUI::startNewChannelOnDistroy() {
+    if(!isPlaying) {
+        disconnect(listenerThread, SIGNAL(destroyed()), this, SLOT(startNewChannelOnDistroy()));
+        playbackButtonPushed();
+        doubleClickEnabled = true;
+    }
 }
 
 
 void GUI::addNewChannel() {
-    addNewChannelMan->show();
+    if(addNewChannelMan != NULL) {
+        addNewChannelMan->show();
+    }
+    else {
+        showErrorMessage("No input device found!");
+    }
 }
 
 void GUI::menuTriggered(QAction* action) {
@@ -215,7 +255,9 @@ void GUI::menuTriggered(QAction* action) {
 }
 
 void GUI::startRecordPushed() {
-    emit startRecord();
+    Settings::CODEC codec = settings->getRecordCodec();
+    QString path = settings->getRecordPath();
+    emit startRecord(codec, path);
 }
 
 void GUI::pauseRecordPushed() {
@@ -255,14 +297,13 @@ void GUI::showErrorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
-    if(listenerThread->isRunning()) {
-        emit sendLogoutRequest();
+    if(isPlaying) {
         connect(listenerThread, SIGNAL(destroyed()), this, SLOT(close()));
-        emit stopListenerWorker();
-        listenerThread->quit();
+        emit stopListening();
         event->ignore();
     }
     else {
+        emit sendLogoutRequest();
         event->accept();
     }
 }

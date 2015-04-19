@@ -29,7 +29,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
     bool containsClient(qint32 id);
-    QPair<bool, qint32> containsClient(QHostAddress&);
+    QPair<bool, qint32> containsClient(QHostAddress&, qint32 port);
 
     QVector< QSharedPointer<ClientInfo > > getClientList() const;
     void removeOfflineClients();

@@ -10,6 +10,9 @@
 #include <QXmlStreamReader>
 #include <QHostAddress>
 #include <QPointer>
+#include <QReadWriteLock>
+
+#include "noaudiodeviceexception.h"
 
 namespace Ui {
 class Settings;
@@ -24,15 +27,18 @@ public:
     ~Settings();
 
     QAudioDeviceInfo getInputDevice() const;
-    QHostAddress *getServerAddress() const;
+    QHostAddress getServerAddress() const;
     quint16 getServerPort() const;
     quint16 getClientPort() const;
     quint16 getClientPortForSound() const;
     quint32 getClientType() const;
     quint32 getClientId() const;
     void setClientId(const quint32);
+    void setClientPort(const qint32);
 
     bool setServerAddress(const QString);
+
+    bool testMode() const;
 
 
 private:
@@ -50,6 +56,7 @@ private:
     QList<QAudioDeviceInfo> input_devices;
     QAudioDeviceInfo selectedInputDevice;
     QAudioDeviceInfo activeInputDevice;
+    int inputDeviceCounter;
 
     QVariant boxValue(const QComboBox *box);
 

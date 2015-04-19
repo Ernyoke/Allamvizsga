@@ -18,7 +18,6 @@ ServerCommunicator::ServerCommunicator(Settings *settings, QObject *parent) : QO
     refreshCounter = 0;
 
     authentificationStatus = false;
-    qDebug() << "constructor";
 }
 
 ServerCommunicator::~ServerCommunicator()
@@ -118,8 +117,26 @@ void ServerCommunicator::sendLoginRequest() {
         //recreate the socket
         delete socket;
         socket = new QUdpSocket(this);
-//        socket->bind(*settings->getServerAddress(), settings->getClientPort());
-        socket->bind(settings->getClientPort());
+        int port = settings->getClientPort();
+        bool binded = false;
+        if(!socket->bind(port)) {
+            port++;
+            while(port < settings->getClientPort() + 10) {
+                if(socket->bind(port)) {
+                    settings->setClientPort(port);
+                    binded = true;
+                    break;
+                }
+                port++;
+            }
+        }
+        else {
+            binded = true;
+        }
+        if(!binded) {
+            emit authentificationFailed();
+            return;
+        }
         connect(socket, SIGNAL(readyRead()), this, SLOT(readDatagram()));
         sendDatagram(&dgram);
         //create timer for login response
@@ -139,16 +156,20 @@ void ServerCommunicator::logout() {
     if(authentificationStatus) {
         QString respContent = " ";
         Datagram response(Datagram::LOGOUT, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
+        qDebug() << settings->getServerPort();
         sendDatagram(&response);
     }
 }
 
 void ServerCommunicator::sendDatagram(Datagram *dgram) {
-    dgram->sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+    QHostAddress address = settings->getServerAddress();
+    dgram->sendDatagram(socket, &address, settings->getServerPort());
 }
 
 void ServerCommunicator::sendDatagram(Datagram dgram) {
-    dgram.sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+    QHostAddress address = settings->getServerAddress();
+    qDebug() << settings->getServerPort();
+    dgram.sendDatagram(socket, &address, settings->getServerPort());
 }
 
 void ServerCommunicator::processLogin(Datagram& dgram) {

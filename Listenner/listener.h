@@ -1,7 +1,6 @@
 #ifndef LISTENER_H
 #define LISTENER_H
 
-#include <QObject>
 #include <QUdpSocket>
 #include <QtNetwork>
 #include <QAudioFormat>
@@ -19,22 +18,24 @@
 #include "recordaudio.h"
 #include "recordwav.h"
 //#include "g711.h"
-#include "settings.h"
 #include "datagram.h"
 #include "channelinfo.h"
+#include "worker.h"
+#include "noaudiodeviceexception.h"
+#include "settings.h"
 
-class Listener : public QObject
+class Listener : public Worker
 {
     Q_OBJECT
 public:
-    explicit Listener(Settings *settings = 0);
+    Listener();
     ~Listener();
 
     bool isRecRunning();
 
 private:
     QPointer<QUdpSocket> socket;
-    QHostAddress groupAddress;
+    QHostAddress serverAddress;
 
     QAudioFormat format;
     QAudioDeviceInfo m_Outputdevice;
@@ -46,11 +47,9 @@ private:
     qint64 timestamp;
     int binded_port;
 
-    Settings *settings;
-
     bool isPlaying;
 
-    short Snack_Alaw2Lin(unsigned char);
+//    short Snack_Alaw2Lin(unsigned char);
 
     QPointer <RecordAudio > record;
 
@@ -66,22 +65,17 @@ signals:
     void changeRecordButtonState(RecordAudio::STATE);
     //emitted when recording is paused or reloaded from pause state
     void changePauseButtonState(RecordAudio::STATE);
-    //emit when thread work is over
-    void finished();
-    //error message
-    void errorMessage(QString);
+
+public slots:
+    void start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, int volume);
+    void stop();
+    void volumeChanged(qreal);
+    void startRecord(Settings::CODEC codec, QString path);
+    void pauseRecord();
 
 private slots:
     void receiveDatagramm();
-    void playback();
-    void stopPlayback();
-    void volumeChanged(qreal);
-    void channelChanged(QSharedPointer<ChannelInfo> channel);
-    void startRecord();
-    void pauseRecord();
-    void changePlaybackState(QSharedPointer<ChannelInfo> channel);
     void recordingStateChanged(RecordAudio::STATE);
-    void stopWorker();
 
 };
 

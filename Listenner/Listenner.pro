@@ -30,7 +30,9 @@ SOURCES += main.cpp\
     channellistexception.cpp \
     addnewchannelfromgui.cpp \
     baseexception.cpp \
-    invalididexception.cpp
+    invalididexception.cpp \
+    noaudiodeviceexception.cpp \
+    worker.cpp
 
 HEADERS  += gui.h \
     settings.h \
@@ -47,7 +49,9 @@ HEADERS  += gui.h \
     channellistexception.h \
     addnewchannelfromgui.h \
     baseexception.h \
-    invalididexception.h
+    invalididexception.h \
+    noaudiodeviceexception.h \
+    worker.h
 
 FORMS    += gui.ui \
     settings.ui \

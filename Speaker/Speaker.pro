@@ -17,7 +17,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         gui.cpp \
     g711.cpp \
-    managevoice.cpp \
     settings.cpp \
     datagram.cpp \
     logindialog.cpp \
@@ -26,11 +25,15 @@ SOURCES += main.cpp\
     servercommunicator.cpp \
     soundchunk.cpp \
     baseexception.cpp \
-    invalididexception.cpp
+    invalididexception.cpp \
+    noaudiodeviceexception.cpp \
+    worker.cpp \
+    testspeaker.cpp \
+    abstractspeaker.cpp \
+    speaker.cpp
 
 HEADERS  += gui.h \
     g711.h \
-    managevoice.h \
     settings.h \
     datagram.h \
     soundchunk.h \
@@ -39,7 +42,12 @@ HEADERS  += gui.h \
     channelinfo.h \
     servercommunicator.h \
     baseexception.h \
-    invalididexception.h
+    invalididexception.h \
+    noaudiodeviceexception.h \
+    worker.h \
+    testspeaker.h \
+    abstractspeaker.h \
+    speaker.h
 
 FORMS    += gui.ui \
     settings.ui \

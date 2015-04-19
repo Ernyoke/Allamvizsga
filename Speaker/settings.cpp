@@ -1,7 +1,7 @@
 #include "settings.h"
 #include "ui_settings.h"
 
-const static QString settingsFile = "settings.xml";
+const static QString settingsFileName = "settings.xml";
 
 Settings::Settings(QWidget *parent) :
     QDialog(parent),
@@ -13,24 +13,30 @@ Settings::Settings(QWidget *parent) :
     activeInputDevice = selectedInputDevice;
 
     input_devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    inputDeviceCounter = input_devices.size();
     foreach (const QAudioDeviceInfo it,input_devices) {
             ui->deviceBox->addItem(it.deviceName(), QVariant(it.deviceName()));
     }
 
-    readSettingsFromXML();
-
-    //set the input and output device if it exists or set it default;
-    selectedInputDevice = QAudioDeviceInfo::defaultInputDevice();
-    for(QList<QAudioDeviceInfo>::iterator it = input_devices.begin(); it != input_devices.end(); ++it) {
-        if(it->deviceName().compare(inputDeviceName) == 0) {
-            selectedInputDevice = *it;
-            activeInputDevice = *it;
-            break;
+    QFile settingsFile(settingsFileName);
+    if(!settingsFile.exists()) {
+        if(inputDeviceName.isEmpty()) {
+            inputDeviceName = activeInputDevice.deviceName();
         }
+        applySettings();
     }
+    else {
+        readSettingsFromXML();
 
-    if(inputDeviceName.isEmpty()) {
-        inputDeviceName = activeInputDevice.deviceName();
+        //set the input and output device if it exists or set it default;
+        for(QList<QAudioDeviceInfo>::iterator it = input_devices.begin(); it != input_devices.end(); ++it) {
+            if(it->deviceName().compare(inputDeviceName) == 0) {
+                selectedInputDevice = *it;
+                activeInputDevice = *it;
+                break;
+            }
+        }
+
     }
 
     //initialize selected properties for devices
@@ -57,17 +63,27 @@ Settings::~Settings()
 }
 
 QAudioDeviceInfo Settings::getInputDevice() const {
-    return activeInputDevice;
+    if(inputDeviceCounter < 1) {
+        NoAudioDeviceException *exception = new NoAudioDeviceException;
+        exception->setMessage("No input audiodevice found!");
+    }
+    else {
+        return activeInputDevice;
+    }
 }
 
 
-QHostAddress *Settings::getServerAddress() const {
-    return address;
+QHostAddress Settings::getServerAddress() const {
+    return *address;
 }
 
 
 quint16 Settings::getServerPort() const{
     return serverPort;
+}
+
+void Settings::setClientPort(const qint32 clientPort) {
+    this->clientPort = clientPort;
 }
 
 quint16 Settings::getClientPort() const {
@@ -114,7 +130,7 @@ void Settings::applySettings() {
     activeInputDevice = selectedInputDevice;
 
     //store settings in output XML file
-    QFile s_file(settingsFile);
+    QFile s_file(settingsFileName);
     s_file.open(QIODevice::WriteOnly);
     QXmlStreamWriter xmlWriter(&s_file);
     xmlWriter.setAutoFormatting(true);
@@ -138,7 +154,7 @@ void Settings::cancelSetting() {
 //read the settings from XML and parse them
 //update the comboboxes
 void Settings::readSettingsFromXML() {
-    QFile s_file(settingsFile);
+    QFile s_file(settingsFileName);
     if(s_file.open(QIODevice::ReadOnly)) {
         QXmlStreamReader XMLReader;
         XMLReader.setDevice(&s_file);
@@ -214,6 +230,10 @@ bool Settings::checkIpAddress(QString& ip) {
        qDebug("Unknown or invalid address.");
        return false;
     }
+}
+
+bool Settings::testMode() const {
+    return ui->testModeCheckBox->isChecked();
 }
 
 

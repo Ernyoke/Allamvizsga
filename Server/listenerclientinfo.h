@@ -6,7 +6,7 @@
 class ListenerClientInfo : public virtual ClientInfo
 {
 public:
-    ListenerClientInfo(QHostAddress address, QString OSName, double version);
+    ListenerClientInfo(QHostAddress address, qint32 port, QString OSName, double version);
     ListenerClientInfo(ListenerClientInfo&);
     ListenerClientInfo(ListenerClientInfo*);
     virtual ~ListenerClientInfo();

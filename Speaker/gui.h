@@ -7,8 +7,10 @@
 #include <QTimer>
 #include <QCloseEvent>
 #include <QThread>
+#include <QHostAddress>
 #include "settings.h"
-#include "managevoice.h"
+#include "speaker.h"
+#include "testspeaker.h"
 #include "logindialog.h"
 #include "newchanneldialog.h"
 #include "servercommunicator.h"
@@ -26,17 +28,10 @@ public:
     explicit GUI(QWidget *parent = 0);
     ~GUI();
 
-    ManageVoice *speakerWorker;
+    AbstractSpeaker *speakerWorker;
     QThread *speakerThread;
 
-    Settings* getSettings();
-    int getBroadcastingPort();
-
-    bool isChannelRegistered;
-    bool isRecording;
-
     void login();
-
 
 private:
     Ui::GUI *ui;
@@ -45,6 +40,8 @@ private:
     long broadcastDataPerSec;
     long cntBroadcastTime;
 
+    bool isRecording;
+
     QTimer broadcastTimer;
 
     LoginDialog *loginDialog;
@@ -52,13 +49,16 @@ private:
     ServerCommunicator *serverCommunicator;
 
     void stopChannel();
+    void init();
 
 protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
     //this signal is emited when the user enters a valid port and starts the broadcast
-    void broadcastStateChanged(QAudioFormat);
+    void startBroadcast(QAudioFormat speakerFormat, QAudioDeviceInfo device,
+                        QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId);
+    void stopBroadcast();
     void stopSpeaker();
 
     //signals for both

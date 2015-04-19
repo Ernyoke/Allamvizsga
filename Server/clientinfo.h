@@ -14,13 +14,14 @@ public:
         TRANSLATOR = 3
     };
 
-    ClientInfo(QHostAddress address, QString OSName, double version);
+    ClientInfo(QHostAddress address, qint32 port, QString OSName, double version);
     virtual ~ClientInfo();
 
     void setId(quint32 id);
     quint32 getId() const;
     QString getAddressStr() const;
     QHostAddress getAddress() const;
+    qint32 getClientPort()  const;
     QString getOSName() const;
     bool active() const;
     void setAck();
@@ -34,6 +35,7 @@ public:
 protected:
     quint32 id;
     QHostAddress address;
+    qint32 clientPort;
     QString OSName;
     double version;
     bool isActive;

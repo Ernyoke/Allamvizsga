@@ -2,25 +2,16 @@
 
 const int BufferSize = 14096;
 
-Listener::Listener(Settings *settings) :
+Listener::Listener() :
     m_audioOutput(0),
     m_buffer(BufferSize, 0)
 {
-    socket = new QUdpSocket(this);
-    outputBuffer = new QMap<qint64, SoundChunk>();
-
-    binded_port = -1;
-    timestamp = 0;
-
     isPlaying = false;
     record = NULL;
-
-    this->settings = settings;
-
 }
 
 Listener::~Listener() {
-    this->stopPlayback();
+    this->stop();
     if(record != NULL) {
         record->stop();
         delete record;
@@ -29,29 +20,6 @@ Listener::~Listener() {
     delete outputBuffer;
     qDebug() << "Listener destruct!";
 }
-
-//this SLOT is called when Start/Stop button is pushed
-void Listener::changePlaybackState(QSharedPointer<ChannelInfo> channel) {
-    //if the client is receiveng packets then stop
-    if(isPlaying) {
-        qDebug() << "stopped";
-        this->stopPlayback();
-    }
-    //otherswise start receiving
-    else {
-        qDebug() << "playing";
-        binded_port = channel->getOutPort();
-        format.setSampleRate(channel->getSampleRate());
-        format.setSampleSize(channel->getSampleSize());
-        format.setChannelCount(channel->getChannels());
-        format.setCodec(channel->getCodec());
-
-        format.setByteOrder(QAudioFormat::LittleEndian);
-        format.setSampleType(QAudioFormat::UnSignedInt);
-        this->playback();
-    }
-}
-
 
 void Listener::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
@@ -71,7 +39,6 @@ void Listener::receiveDatagramm() {
             outputBuffer->insert(temp, soundChunk);
             QByteArray aux;
             if(outputBuffer->size() == 4) {
-                qDebug() << "played";
                 for(QMap<qint64, SoundChunk>::iterator iter = outputBuffer->begin(); iter != outputBuffer->end(); ++iter) {
                     SoundChunk out = iter.value();
                     aux.append(out.getRawSound());
@@ -91,24 +58,41 @@ void Listener::receiveDatagramm() {
     }
 }
 
-void Listener::playback() {
+void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device,
+                     QHostAddress serverAddress, int volume) {
+
+    outputBuffer = new QMap<qint64, SoundChunk>();
+    this->binded_port = channel->getOutPort();
+    this->serverAddress = serverAddress;
+
+    format.setSampleRate(channel->getSampleRate());
+    format.setSampleSize(channel->getSampleSize());
+    format.setChannelCount(channel->getChannels());
+    format.setCodec(channel->getCodec());
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::UnSignedInt);
+
     if(!isPlaying) {
 
         socket = new QUdpSocket(this);
-        socket->bind(QHostAddress::AnyIPv4, binded_port, QUdpSocket::ShareAddress);
+        if(!socket->bind(QHostAddress::AnyIPv4, binded_port, QUdpSocket::ShareAddress)) {
+            emit errorMessage("Error binding to shareaddress!");
+            return;
+        }
 
-        m_Outputdevice = settings->getOutputDevice();
+        try {
+        m_Outputdevice = device;
 
         if(!m_Outputdevice.isFormatSupported(format)) {
-            qWarning() << "Format not supported!";
+            emit errorMessage("Format not supported!");
+            emit finished();
             return;
         }
 
         m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
         m_audioOutput->setBufferSize(BufferSize);
 
-//        qreal volume = gui->getVolume();
-        qreal volume = 1.0;
+        qreal volume = 0.5;
         m_audioOutput->setVolume(volume);
 
         m_output = m_audioOutput->start();
@@ -118,20 +102,29 @@ void Listener::playback() {
         }
         isPlaying = true;
         emit changePlayButtonState(isPlaying);
+        }
+        catch(NoAudioDeviceException *exception) {
+            emit errorMessage(exception->message());
+            delete exception;
+        }
+    }
+    else {
+//        emit finished();
     }
 }
 
-void Listener::stopPlayback() {
+void Listener::stop() {
     if(isPlaying) {
         m_audioOutput->stop();
         delete m_audioOutput;
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         delete socket;
         isPlaying = false;
-//        gui->changePlayButtonState(isPlaying);
         emit changePlayButtonState(isPlaying);
+        emit finished();
     }
 }
+
 
 void Listener::volumeChanged(qreal volume) {
     if(isPlaying) {
@@ -139,24 +132,8 @@ void Listener::volumeChanged(qreal volume) {
     }
 }
 
-void Listener::channelChanged(QSharedPointer<ChannelInfo> channel) {
-    qDebug() << "portChanged";
-    stopPlayback();
-    binded_port = channel->getOutPort();
-    format.setSampleRate(channel->getSampleRate());
-    format.setSampleSize(channel->getSampleSize());
-    format.setChannelCount(channel->getChannels());
-    format.setCodec(channel->getCodec());
-
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::UnSignedInt);
-    playback();
-}
-
-void Listener::startRecord() {
+void Listener::startRecord(Settings::CODEC codec, QString path) {
     if(record == NULL) {
-        Settings::CODEC codec = settings->getRecordCodec();
-        QString path = settings->getRecordPath();
         switch(codec) {
         case Settings::WAV: {
             record = new RecordWav(path, format, this);
@@ -212,10 +189,5 @@ bool Listener::isRecRunning() {
         }
     }
     return false;
-}
-
-void Listener::stopWorker() {
-    stopPlayback();
-    emit finished();
 }
 

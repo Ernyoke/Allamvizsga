@@ -54,6 +54,8 @@ private:
     long dataSize;
     long dataPerSec;
     long cntTime;
+    bool isPlaying;
+    bool doubleClickEnabled;
 
     //both
     LoginDialog* loginDialog;
@@ -63,6 +65,7 @@ private:
     QPointer<ChannelModel> channelModel;
 
     void initialize();
+    void createListenerThread();
 
 
 protected:
@@ -71,20 +74,17 @@ protected:
 signals:
     //signals for listenner
     void volumeChanged(qreal);
-    void startRecord();
+    void startRecord(Settings::CODEC, QString);
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState(QSharedPointer<ChannelInfo>);
-//    void stopListener();
-    void finalRecordName(bool, QString);
-    void stopListenerWorker();
+    void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, int volume);
+    void stopListening();
 
     //signals for both
     void sendLogoutRequest();
 
     //signals emited when server is down
     void stopPlaybackSD();
-    void stopSpeakingSD();
 
 public slots:
     //slots for listenner
@@ -101,6 +101,7 @@ public slots:
     void changePauseButtonState(RecordAudio::STATE);
     void changePlayButtonState(bool isPlaying);
     void setDataReceived(int);
+    void startNewChannelOnDistroy();
 
     //general
     void menuTriggered(QAction*);

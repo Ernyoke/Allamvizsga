@@ -7,6 +7,7 @@
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QComboBox>
+
 #include "channelinfo.h"
 #include "datagram.h"
 #include "invalididexception.h"

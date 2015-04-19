@@ -7,6 +7,12 @@ GUI::GUI(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    qRegisterMetaType<QHostAddress>("QHostAddress");
+
+    init();
+}
+
+void GUI::init() {
     //create settings dialog
     //this class also holds valuable information, such userid, server address, communication ports, etc.
     settings = new Settings(this);
@@ -34,44 +40,19 @@ GUI::GUI(QWidget *parent) :
     connect(this, SIGNAL(sendLogoutRequest()), serverCommunicator, SLOT(logout()));
     //******
 
-    //initialize speaker worker
-    speakerWorker = new ManageVoice(settings);
-    //initialize speaker thread
-    speakerThread = new QThread;
-    speakerWorker->moveToThread(speakerThread);
-    connect(speakerWorker, SIGNAL(finished()), speakerThread, SLOT(quit()));
-    connect(this, SIGNAL(stopSpeakerWorker()), speakerWorker, SLOT(stopWorker()), Qt::QueuedConnection);
-    connect(speakerWorker, SIGNAL(finished()), speakerWorker, SLOT(deleteLater()));
-    connect(speakerThread, SIGNAL(finished()), speakerThread, SLOT(deleteLater()));
-    speakerThread->start();
-
-    //signal emited when user starts or stops the playback
-    connect(this, SIGNAL(broadcastStateChanged(QAudioFormat)), speakerWorker, SLOT(changeRecordState(QAudioFormat)));
-    //recording state
-    connect(speakerWorker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
-    //updating the ui with the traffic information
-    connect(speakerWorker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
-    //stop the playback
-//    connect(this, SIGNAL(stopSpeaker()), speaker, SLOT(stopRunning()));
-
     broadcastDataSize = 0;
     broadcastDataPerSec = 0;
     cntBroadcastTime = 0;
-    isRecording = false;
 
     broadcastTimer.setInterval(1000);
     connect(&broadcastTimer, SIGNAL(timeout()), this, SLOT(updateBroadcastTime()));
 
-    newChannelDialog = new NewChannelDialog(this);
-    connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-    connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
-    connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-
     //server down
     connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
 
-    //signals emitted when server is down
-    connect(this, SIGNAL(stopSpeakingSD()), speakerWorker, SLOT(stopRecording()));
+    isRecording = false;
+
+    newChannelDialog = NULL;
 
 }
 
@@ -85,21 +66,32 @@ void GUI::login() {
         if(!this->isVisible()) {
             this->show();
         }
+        QHostAddress address = settings->getServerAddress();
+        ui->ipaddressLabel->setText(address.toString());
+        ui->portLabel->setText(QString::number(settings->getClientPort()));
         try {
+            newChannelDialog = new NewChannelDialog(this);
+            connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
+            connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
+            connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
             newChannelDialog->setClientId(settings->getClientId());
             newChannelDialog->setAudioDeviceInfo(settings->getInputDevice());
         }
         catch(InvalidIdException *ex) {
             qDebug() << ex->message();
-
             delete ex;
             this->close();
+        }
+        catch(NoAudioDeviceException *ex) {
+            qDebug() << ex->message();
+            newChannelDialog = NULL;
+            delete ex;
         }
     }
 }
 
 void GUI::serverDownHandle() {
-    emit stopSpeakingSD();
+    emit stopBroadcast();
     stopChannel();
     login();
     qDebug() << "serverDown login";
@@ -133,13 +125,16 @@ void GUI::startNewChannel() {
 }
 
 void GUI::stopChannel() {
-    newChannelDialog->sendCloseChannelReq();
+    if(newChannelDialog != NULL) {
+        newChannelDialog->sendCloseChannelReq();
+    }
     ui->channelLangText->setText("-");
     ui->sampleRateText->setText("-");
     ui->sampleSizeText->setText("-");
     ui->channelNrText->setText("-");
     ui->codecText->setText("-");
     ui->newChannelBtn->setText("New channel");
+    startBroadcast();
 }
 
 void GUI::setDataSent(int size) {
@@ -149,9 +144,58 @@ void GUI::setDataSent(int size) {
 }
 
 void GUI::startBroadcast() {
-    if(newChannelDialog->isChannelAvailable()) {
-        QAudioFormat speakerFormat = newChannelDialog->getAudioFormat();
-        emit broadcastStateChanged(speakerFormat);
+    if(!isRecording) {
+        if(newChannelDialog->isChannelAvailable()) {
+            QAudioFormat speakerFormat = newChannelDialog->getAudioFormat();
+
+            try {
+                QAudioDeviceInfo deviceInfo = settings->getInputDevice();
+                QHostAddress serverAddress = settings->getServerAddress();
+                qint32 port = settings->getClientPortForSound();
+                qint32 id = settings->getClientId();
+
+                //initialize speaker worker
+                if(settings->testMode()) {
+                    speakerWorker = new TestSpeaker;
+                }
+                else {
+                    speakerWorker = new Speaker;
+                }
+                //initialize speaker thread
+                speakerThread = new QThread;
+                //thread lifetime management
+                speakerWorker->moveToThread(speakerThread);
+                connect(speakerWorker, SIGNAL(finished()), speakerThread, SLOT(quit()));
+                connect(this, SIGNAL(stopSpeakerWorker()), speakerWorker, SLOT(stop()));
+                connect(speakerWorker, SIGNAL(finished()), speakerWorker, SLOT(deleteLater()));
+                connect(speakerThread, SIGNAL(finished()), speakerThread, SLOT(deleteLater()));
+                connect(speakerWorker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
+
+
+                //signal emited when user starts or stops the playback
+                connect(this, SIGNAL(startBroadcast(QAudioFormat, QAudioDeviceInfo, QHostAddress, qint32, qint32)),
+                        speakerWorker, SLOT(start(QAudioFormat, QAudioDeviceInfo, QHostAddress, qint32, qint32)));
+                //recording state
+                connect(speakerWorker, SIGNAL(recordingState(bool)), this, SLOT(changeBroadcastButtonState(bool)));
+                //updating the ui with the traffic information
+                connect(speakerWorker, SIGNAL(dataSent(int)), this, SLOT(setDataSent(int)));
+                //stop broadcasting
+                connect(this, SIGNAL(stopBroadcast()), speakerWorker, SLOT(stop()));
+                //start the thread
+                speakerThread->start();
+                //start the broadcast
+                emit startBroadcast(speakerFormat, deviceInfo, serverAddress, port, id);
+
+            }
+            catch(NoAudioDeviceException *ex) {
+                errorMessage(ex->message());
+                delete ex;
+            }
+        }
+    }
+    else {
+        //stop the broadcast
+        emit stopBroadcast();
     }
 }
 
@@ -160,11 +204,14 @@ void GUI::changeBroadcastButtonState(bool isRecording) {
         ui->startBroadcastBtn->setText("Stop Broadcast");
         broadcastDataSize = 0;
         broadcastTimerStart();
+        this->isRecording = true;
     }
     else {
         ui->startBroadcastBtn->setText("Start Broadcast");
         broadcastDataSize = 0;
         broadcastTimerStop();
+        this->isRecording = false;
+
     }
 }
 
@@ -203,17 +250,15 @@ void GUI::errorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
-    this->hide();
-    if(speakerThread->isRunning()) {
-        emit sendLogoutRequest();
+    if(isRecording) {
         connect(speakerThread, SIGNAL(destroyed()), this, SLOT(close()));
-        emit stopSpeakerWorker();
-        speakerThread->quit();
+        emit stopBroadcast();
         event->ignore();
     }
     else {
         event->accept();
     }
+    emit sendLogoutRequest();
 }
 
 
