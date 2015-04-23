@@ -41,13 +41,19 @@ GUI::GUI(QWidget *parent) :
     connect(clientModel, SIGNAL(clientTimedOut(qint32)), channelModel, SLOT(deleteChannel(qint32)));
     connect(clientModel, SIGNAL(clientTimedOut(qint32)), soundWorker, SLOT(removeChannel(qint32)));
 
-    foreach (const QHostAddress &address, QNetworkInterface::allAddresses()) {
-        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
-             if(address.toString().startsWith("192")) {
-                 ui->seriptext->setText(address.toString());
-             }
+    foreach( QNetworkInterface interface, QNetworkInterface::allInterfaces() ){
+        if( interface.humanReadableName().contains( "Local Area" ) ) {
+            foreach (const QHostAddress &address, interface.allAddresses()) {
+                if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+                     if(address.toString().startsWith("192")) {
+                         ui->seriptext->setText(address.toString());
+                         break;
+                     }
+                }
+            }
+            break;
+        }
     }
-
 }
 
 GUI::~GUI()

@@ -75,7 +75,7 @@ void GUI::initialize() {
     //managing speaker thread lifetime
     connect(speakerWorker, SIGNAL(finished()), speakerThread, SLOT(quit()));
     connect(speakerWorker, SIGNAL(finished()), speakerWorker, SLOT(deleteLater()));
-    connect(speakerWorker, SIGNAL(finished()), speakerThread, SLOT(deleteLater()));
+    connect(speakerThread, SIGNAL(finished()), speakerThread, SLOT(deleteLater()));
     connect(speakerWorker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
     speakerWorker->moveToThread(speakerThread);
 
@@ -102,7 +102,7 @@ void GUI::initialize() {
     //manageing listener thread lifetime
     connect(listenerWorker, SIGNAL(finished()), listenerThread, SLOT(quit()));
     connect(listenerWorker, SIGNAL(finished()), listenerWorker, SLOT(deleteLater()));
-    connect(listenerWorker, SIGNAL(finished()), listenerThread, SLOT(deleteLater()));
+    connect(listenerThread, SIGNAL(finished()), listenerThread, SLOT(deleteLater()));
     connect(listenerWorker, SIGNAL(errorMessage(QString)), this, SLOT(showErrorMessage(QString)));
     listenerWorker->moveToThread(listenerThread);
 
@@ -140,6 +140,10 @@ void GUI::initialize() {
     //signals emitted when server is down
     connect(this, SIGNAL(stopPlaybackSD()), listenerWorker, SLOT(stopPlayback()));
     connect(this, SIGNAL(stopSpeakingSD()), speakerWorker, SLOT(stopRecording()));
+
+    //
+    listenerThreadRunning = true;
+    speakerThreadRunning = true;
 
 }
 
@@ -421,29 +425,24 @@ void GUI::showErrorMessage(QString message) {
 
 void GUI::closeEvent(QCloseEvent *event) {
 
-    if(listenerThread->isRunning() || speakerThread->isRunning()) {
-
-        if(listenerThread->isRunning()) {
-
-            emit sendLogoutRequest();
-
-            emit stopListener();
-            connect(listenerThread, SIGNAL(destroyed()), this, SLOT(close()));
-            listenerThread->quit();
-            event->ignore();
-        }
-
-        if(speakerThread->isRunning()) {
-            emit stopSpeaker();
-            connect(speakerThread, SIGNAL(destroyed()), this, SLOT(close()));
-            speakerThread->quit();
-            event->ignore();
-        }
-    }
-    else {
-        event->accept();
+    if(listenerThreadRunning) {
+        emit sendLogoutRequest();
+        emit stopListener();
+        connect(listenerThread, SIGNAL(finished()), this, SLOT(close()));
+        event->ignore();
+        listenerThreadRunning = false;
+        return;
     }
 
+    if(speakerThreadRunning) {
+        emit stopSpeaker();
+        connect(speakerThread, SIGNAL(finished()), this, SLOT(close()));
+        event->ignore();
+        speakerThreadRunning = false;
+        return;
+    }
+
+    event->accept();
 }
 
 //delete selected channel

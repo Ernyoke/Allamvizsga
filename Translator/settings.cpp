@@ -86,44 +86,48 @@ void Settings::changeOutputDevice(int index) {
 
 
 
-QAudioDeviceInfo Settings::getInputDevice() {
+QAudioDeviceInfo Settings::getInputDevice() const {
     return activeInputDevice;
 }
 
-QAudioDeviceInfo Settings::getOutputDevice() {
+QAudioDeviceInfo Settings::getOutputDevice() const {
     return activeOutputDevice;
 }
 
 
-QString Settings::getRecordPath() {
+QString Settings::getRecordPath() const {
     return recordPath;
 }
 
-QHostAddress* Settings::getServerAddress() {
-    return address;
+QHostAddress Settings::getServerAddress() const {
+    return *address;
 }
 
-quint16 Settings::getServerPort() {
+qint32 Settings::getServerPort() const {
     return serverPort;
 }
 
-quint16 Settings::getClientPort() {
+void Settings::setClientPort(const qint32 clientPort) {
+    this->clientPort = clientPort;
+}
+
+qint32 Settings::getClientPort() const {
     return clientPort;
 }
 
-quint16 Settings::getClientPortForSound() {
+qint32 Settings::getClientPortForSound() const {
     return clientPortForSound;
 }
 
-quint32 Settings::getClientType() {
+qint32 Settings::getClientType() const {
     return clientType;
 }
 
-void Settings::setClientId(quint32 id) {
+void Settings::setClientId(const quint32 id) {
     this->clientId = id;
 }
 
-quint32 Settings::getClientId() {
+qint32 Settings::getClientId() const {
     return clientId;
 }
 
@@ -206,7 +210,7 @@ void Settings::readSettingsFromXML() {
 }
 
 //get index of a content from combobox
-int Settings::getBoxIndex(QComboBox *box, QString *content) {
+int Settings::getBoxIndex(QComboBox *box, QString *content) const {
     for(int i = 0; i < box->count(); ++i) {
         QString data = box->itemData(i, Qt::UserRole).toString();
         if(data.compare(*content) == 0) {
@@ -217,7 +221,7 @@ int Settings::getBoxIndex(QComboBox *box, QString *content) {
 }
 
 //get index of a content from combobox
-int Settings::getBoxIndex(QComboBox *box, int content) {
+int Settings::getBoxIndex(QComboBox *box, int content) const {
     for(int i = 0; i < box->count(); ++i) {
         int data = box->itemData(i, Qt::UserRole).toInt();
         if(data == content) {
@@ -236,7 +240,7 @@ void Settings::setBoxIndex(QComboBox *box, int index) {
     }
 }
 
-Settings::CODEC Settings::getRecordCodec() {
+Settings::CODEC Settings::getRecordCodec() const {
     return this->recordCodec;
 }
 
@@ -254,7 +258,7 @@ void Settings::showEvent(QShowEvent *event) {
     initSettingsValues();
 }
 
-bool Settings::setServerAddress(QString address) {
+bool Settings::setServerAddress(const QString address) {
     if(checkIpAddress(address)) {
         this->address = new QHostAddress(address);
         return true;

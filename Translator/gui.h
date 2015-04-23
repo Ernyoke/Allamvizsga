@@ -54,6 +54,9 @@ private:
     QThread *listenerThread;
     QThread *speakerThread;
 
+    bool listenerThreadRunning;
+    bool speakerThreadRunning;
+
     //listenner
     Listener *listenerWorker;
     QTimer timer;

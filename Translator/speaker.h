@@ -27,7 +27,7 @@ private:
     QAudioFormat format;
     QIODevice *intermediateDevice;
     QUdpSocket *socket;
-    QHostAddress *IPAddress;
+    QHostAddress IPAddress;
 
     int broadcasting_port;
     qint64 timestamp;

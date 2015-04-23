@@ -12,7 +12,7 @@ LoginDialog::LoginDialog(Settings *settings, QWidget *parent) :
 
 void LoginDialog::init() {
     ack = false;
-    ui->loginBtn->setText("Retry");
+    ui->loginBtn->setText("Connect");
     ui->status->setText("-");
 }
 
@@ -28,6 +28,12 @@ void LoginDialog::authentificate() {
             emit sendLoginRequest();
             //set status text
             ui->status->setText("Waiting for server response!");
+            ui->loginBtn->setEnabled(false);
+        }
+        else {
+            ui->status->setText("Invalid IPV4 address!");
+            ui->loginBtn->setText("Retry");
+            ui->loginBtn->setEnabled(true);
         }
     }
     else {
@@ -41,6 +47,7 @@ void LoginDialog::authentificationSucces(qint32 id) {
     if(id > 0) {
         ui->status->setText("Authentification succes!");
         ui->loginBtn->setText("Countinue");
+        ui->loginBtn->setEnabled(true);
         ack = true;
         settings->setClientId(id);
     }

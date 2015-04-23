@@ -152,11 +152,13 @@ void ServerCommunicator::logout() {
 }
 
 void ServerCommunicator::sendDatagram(Datagram *dgram) {
-    dgram->sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+    QHostAddress address = settings->getServerAddress();
+    dgram->sendDatagram(socket, &address, settings->getServerPort());
 }
 
 void ServerCommunicator::sendDatagram(Datagram dgram) {
-    dgram.sendDatagram(socket, settings->getServerAddress(), settings->getServerPort());
+    QHostAddress address = settings->getServerAddress();
+    dgram.sendDatagram(socket, &address, settings->getServerPort());
 }
 
 void ServerCommunicator::requestChannelList() {

@@ -27,19 +27,20 @@ public:
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioDeviceInfo getInputDevice();
-    QAudioDeviceInfo getOutputDevice();
-    CODEC getRecordCodec();
-    QString getRecordPath();
-    QHostAddress *getServerAddress();
-    quint16 getServerPort();
-    quint16 getClientPort();
-    quint16 getClientPortForSound();
-    quint32 getClientType();
-    quint32 getClientId();
-    void setClientId(quint32);
+    QAudioDeviceInfo getInputDevice() const;
+    QAudioDeviceInfo getOutputDevice() const;
+    CODEC getRecordCodec() const;
+    QString getRecordPath() const;
+    QHostAddress getServerAddress() const;
+    qint32 getServerPort() const;
+    void setClientPort(const qint32);
+    qint32 getClientPort() const;
+    qint32 getClientPortForSound() const;
+    qint32 getClientType() const;
+    qint32 getClientId() const;
+    void setClientId(const quint32);
 
-    bool setServerAddress(QString);
+    bool setServerAddress(const QString);
 
 private:
 
@@ -49,11 +50,11 @@ private:
     QString outputDeviceName;
 
     QHostAddress *address;
-    quint16 serverPort;
-    quint32 clientType;
-    quint16 clientPort;
-    quint16 clientPortForSound;
-    quint32 clientId;
+    qint32 serverPort;
+    qint32 clientType;
+    qint32 clientPort;
+    qint32 clientPortForSound;
+    qint32 clientId;
 
     QAudioDeviceInfo selectedInputDevice;
     QAudioDeviceInfo activeInputDevice;
@@ -70,8 +71,8 @@ private:
     void displayInputDeviceProperties(QAudioDeviceInfo);
     void displayOutputDeviceProperties(QAudioDeviceInfo);
     void readSettingsFromXML();
-    int getBoxIndex(QComboBox*, QString*);
-    int getBoxIndex(QComboBox*, int);
+    int getBoxIndex(QComboBox*, QString*) const;
+    int getBoxIndex(QComboBox*, int) const;
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
 

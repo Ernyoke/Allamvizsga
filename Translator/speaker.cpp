@@ -15,7 +15,6 @@ Worker(settings)
 
 Speaker::~Speaker() {
     stopRecording();
-    delete this->IPAddress;
     qDebug() << "Speaker deleted!";
 }
 
@@ -64,7 +63,7 @@ void Speaker::transferData(){
         Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
         qDebug() << timestamp;
         //send the data
-        dataGram.sendDatagram(socket, IPAddress, broadcasting_port);
+        dataGram.sendDatagram(socket, &IPAddress, broadcasting_port);
         emit dataSent(dataGram.getSize());
         delete soundChunk;
     }

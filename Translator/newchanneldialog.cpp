@@ -30,10 +30,14 @@ NewChannelDialog::~NewChannelDialog()
 void NewChannelDialog::displayDeviceProperties() {
     clearDeviceProperties();
     foreach (const int it, deviceInfo.supportedSampleRates()) {
+        if(it <= 44100) {
             ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
+        }
     }
     foreach (const int it, deviceInfo.supportedChannelCounts()) {
+        if(it <= 2) {
             ui->channelBox->addItem(QString::number(it), QVariant(it));
+        }
     }
     foreach (const QString &it, deviceInfo.supportedCodecs()) {
             ui->codecBox_2->addItem(it, QVariant(it));
