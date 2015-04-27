@@ -59,7 +59,7 @@ void Listener::receiveDatagramm() {
 }
 
 void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device,
-                     QHostAddress serverAddress, int volume) {
+                     QHostAddress serverAddress, qreal volume) {
 
     outputBuffer = new QMap<qint64, SoundChunk>();
     this->binded_port = channel->getOutPort();
@@ -77,6 +77,8 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
         socket = new QUdpSocket(this);
         if(!socket->bind(QHostAddress::AnyIPv4, binded_port, QUdpSocket::ShareAddress)) {
             emit errorMessage("Error binding to shareaddress!");
+            emit changePlayButtonState(isPlaying);
+            emit finished();
             return;
         }
 
@@ -85,6 +87,7 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
 
         if(!m_Outputdevice.isFormatSupported(format)) {
             emit errorMessage("Format not supported!");
+            emit changePlayButtonState(isPlaying);
             emit finished();
             return;
         }
@@ -92,7 +95,6 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
         m_audioOutput = new QAudioOutput(m_Outputdevice, format, this);
         m_audioOutput->setBufferSize(BufferSize);
 
-        qreal volume = 0.5;
         m_audioOutput->setVolume(volume);
 
         m_output = m_audioOutput->start();

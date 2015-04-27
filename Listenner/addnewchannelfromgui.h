@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QAudioDeviceInfo>
 #include <QComboBox>
+#include <QDebug>
 
 #include "channelinfo.h"
 

@@ -27,11 +27,13 @@ QVariant ChannelModel::data(const QModelIndex &index, int role) const
      if (role == Qt::DisplayRole) {
          if(index.row() < channelList.size()) {
             QSharedPointer<ChannelInfo> chInfo = channelList.at(index.row());
-            return chInfo->getLanguage();
+            return QString("%1 (Port: %2, %3 Hz, %4 bits)").arg(chInfo->getLanguage()).arg(chInfo->getOutPort())
+                    .arg(chInfo->getSampleRate()).arg(chInfo->getSampleSize());
          }
          else {
              QSharedPointer<ChannelInfo> chInfo = userCreatedChannelList.at(index.row() - channelList.size());
-             return chInfo->getLanguage();
+             return QString("%1 (Port: %2, %3 Hz, %4 bits)").arg(chInfo->getLanguage()).arg(chInfo->getOutPort())
+                     .arg(chInfo->getSampleRate()).arg(chInfo->getSampleSize());
          }
      }
      return QVariant();

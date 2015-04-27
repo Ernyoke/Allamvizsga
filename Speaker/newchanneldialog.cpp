@@ -30,17 +30,24 @@ NewChannelDialog::~NewChannelDialog()
 void NewChannelDialog::displayDeviceProperties() {
     clearDeviceProperties();
     foreach (const int it, deviceInfo.supportedSampleRates()) {
-            ui->sampleRateBox->addItem(QString::number(it), QVariant(it));
+        if(it <= 44100) {
+            ui->sampleRateBox->addItem(QString::number(it) + " Hz", QVariant(it));
+        }
     }
     foreach (const int it, deviceInfo.supportedChannelCounts()) {
-            ui->channelBox->addItem(QString::number(it), QVariant(it));
+        if(it == 1) {
+            ui->channelBox->addItem(QString("mono"), QVariant(it));
+        }
+        if(it == 2) {
+            ui->channelBox->addItem(QString("stereo"), QVariant(it));
+        }
     }
     foreach (const QString &it, deviceInfo.supportedCodecs()) {
             ui->codecBox_2->addItem(it, QVariant(it));
     }
 
     foreach (const int it, deviceInfo.supportedSampleSizes()) {
-            ui->sampleSizeBox->addItem(QString::number(it), QVariant(it));
+            ui->sampleSizeBox->addItem(QString::number(it) + " bits", QVariant(it));
     }
 }
 
@@ -53,6 +60,14 @@ void NewChannelDialog::clearDeviceProperties() {
 
 void NewChannelDialog::setFormatProperties() {
     if(!isChannelOnline) {
+
+        language = ui->langInput->text().trimmed();
+
+        if(language.isEmpty()) {
+            ui->statusText->setText("Invalid language!");
+            return;
+        }
+
         formatSpeaker.setByteOrder(QAudioFormat::LittleEndian);
         formatSpeaker.setSampleType(QAudioFormat::UnSignedInt);
 
@@ -60,10 +75,6 @@ void NewChannelDialog::setFormatProperties() {
         formatSpeaker.setSampleRate(boxValue(ui->sampleRateBox).toInt());
         formatSpeaker.setChannelCount(boxValue(ui->channelBox).toInt());
         formatSpeaker.setSampleSize(boxValue(ui->sampleSizeBox).toInt());
-
-        language = ui->langInput->text();
-
-        qDebug() << formatSpeaker.sampleRate();
 
         delete chInfo;
         chInfo = new ChannelInfo(clientId, language, formatSpeaker.codec(), formatSpeaker.sampleRate(), formatSpeaker.sampleSize(), formatSpeaker.channelCount());

@@ -137,18 +137,18 @@ void GUI::playbackButtonPushed() {
             QAudioDeviceInfo device = settings->getOutputDevice();
             QHostAddress address = settings->getServerAddress();
             createListenerThread();
-            emit startListening(selectedChannel, device, address, 50);
+            emit startListening(selectedChannel, device, address, 0.5);
         }
         catch(ChannelListException *ex) {
             showErrorMessage(ex->message());
             delete ex;
+            return;
         }
-        ui->playButton->setEnabled(false);
     }
     else {
-        ui->playButton->setEnabled(false);
         emit stopListening();
     }
+    ui->playButton->setEnabled(false);
 }
 
 void GUI::createListenerThread() {

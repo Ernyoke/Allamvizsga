@@ -93,10 +93,10 @@ qint32 ChannelInfo::getOwner() const {
     return this->ownerId;
 }
 
-void ChannelInfo::setOutPort(qint16 port) {
+void ChannelInfo::setOutPort(qint32 port) {
     this->port = port;
 }
 
-qint16 ChannelInfo::getOutPort() const {
+qint32 ChannelInfo::getOutPort() const {
     return this->port;
 }

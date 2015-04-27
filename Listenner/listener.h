@@ -67,7 +67,7 @@ signals:
     void changePauseButtonState(RecordAudio::STATE);
 
 public slots:
-    void start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, int volume);
+    void start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
     void stop();
     void volumeChanged(qreal);
     void startRecord(Settings::CODEC codec, QString path);

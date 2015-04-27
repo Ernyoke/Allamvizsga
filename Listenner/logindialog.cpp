@@ -18,7 +18,6 @@ void LoginDialog::init() {
 
 LoginDialog::~LoginDialog()
 {
-//    delete dgram;
     delete ui;
 }
 
