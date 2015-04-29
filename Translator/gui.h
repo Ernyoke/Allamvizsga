@@ -13,11 +13,13 @@
 #include "recordaudio.h"
 #include "listener.h"
 #include "speaker.h"
+#include "testspeaker.h"
 #include "logindialog.h"
 #include "servercommunicator.h"
 #include "newchanneldialog.h"
 #include "channelmodel.h"
 #include "addnewchannelfromgui.h"
+#include "noaudiodeviceexception.h"
 
 namespace Ui {
 class GUI;
@@ -54,8 +56,9 @@ private:
     QThread *listenerThread;
     QThread *speakerThread;
 
-    bool listenerThreadRunning;
-    bool speakerThreadRunning;
+    bool isSpeakerRunning;
+    bool isListenerRunning;
+    bool doubleClickEnabled;
 
     //listenner
     Listener *listenerWorker;
@@ -65,7 +68,7 @@ private:
     long cntTime;
 
     //speaker
-    Speaker *speakerWorker;
+    AbstractSpeaker *speakerWorker;
     QTimer broadcastTimer;
     long broadcastDataSize;
     long broadcastDataPerSec;
@@ -83,20 +86,22 @@ private:
 
     void initialize();
     void stopChannel();
+    void createListenerThread();
 
 signals:
     //signals for listenner
-    void volumeChanged(int);
-    void startRecord();
+    void volumeChanged(qreal);
+    void startRecord(Settings::CODEC, QString);
     void stopRecord();
     void pauseRecord();
-    void changePlayBackState(QSharedPointer<ChannelInfo>);
-    void stopListener();
-    void finalRecordName(bool, QString);
+    void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
+    void stopListening();
 
     //signals for broadcast
-    void broadcastStateChanged(QAudioFormat);
-    void stopSpeaker();
+    //this signal is emited when the user enters a valid port and starts the broadcast
+    void startBroadcast(QAudioFormat speakerFormat, QAudioDeviceInfo device,
+                        QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId);
+    void stopBroadcast();
 
     //signals for both
     void sendLogoutRequest();
@@ -118,10 +123,9 @@ public slots:
 
     void changeRecordButtonState(RecordAudio::STATE);
     void changePauseButtonState(RecordAudio::STATE);
-    void changePlayButtonState(bool);
+    void changePlayButtonState(bool isPlaying);
     void setDataReceived(int);
-
-    void setRecordFileName(QString filename);
+    void startNewChannelOnDistroy();
 
 
     //slots for broadcast
@@ -133,7 +137,7 @@ public slots:
 
     //general
     void menuTriggered(QAction*);
-    void showErrorMessage(QString);
+    void errorMessage(QString);
     void serverDownHandle();
 
 

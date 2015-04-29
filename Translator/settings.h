@@ -42,6 +42,8 @@ public:
 
     bool setServerAddress(const QString);
 
+    bool testMode() const;
+
 private:
 
     Ui::Settings *ui;

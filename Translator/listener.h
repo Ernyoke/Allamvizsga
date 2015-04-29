@@ -1,7 +1,6 @@
 #ifndef LISTENER_H
 #define LISTENER_H
 
-#include <QObject>
 #include <QUdpSocket>
 #include <QtNetwork>
 #include <QAudioFormat>
@@ -16,31 +15,32 @@
 #include <QPointer>
 #include <QSharedPointer>
 
-#include "g711.h"
 #include "recordaudio.h"
 #include "recordwav.h"
-#include "worker.h"
-#include "soundchunk.h"
+//#include "g711.h"
 #include "datagram.h"
 #include "channelinfo.h"
+#include "worker.h"
+#include "noaudiodeviceexception.h"
+#include "settings.h"
 
 class Listener : public Worker
 {
     Q_OBJECT
 public:
-    Listener(Settings *settings);
+    Listener();
     ~Listener();
 
     bool isRecRunning();
 
 private:
-    QUdpSocket *socket;
-    QHostAddress groupAddress;
+    QPointer<QUdpSocket> socket;
+    QHostAddress serverAddress;
 
     QAudioFormat format;
     QAudioDeviceInfo m_Outputdevice;
-    QAudioOutput *m_audioOutput;
-    QIODevice *m_output;
+    QPointer<QAudioOutput> m_audioOutput;
+    QPointer<QIODevice> m_output;
     QByteArray m_buffer;
     QMap<qint64, SoundChunk> *outputBuffer;
 
@@ -51,37 +51,32 @@ private:
 
 //    short Snack_Alaw2Lin(unsigned char);
 
-    RecordAudio *record;
+    QPointer <RecordAudio > record;
 
     void storeChunk(QByteArray);
+
 
 signals:
     //this signal is emited whenever the player starts listening
     void changePlayButtonState(bool);
     //is emited when a data package is received(updates the GUI speed and transfer size)
     void dataReceived(int);
-    //emited when recording is started or stopped
+    //emitted when recording is started or stopped
     void changeRecordButtonState(RecordAudio::STATE);
-    //emited when recording is paused or reloaded from pause state
+    //emitted when recording is paused or reloaded from pause state
     void changePauseButtonState(RecordAudio::STATE);
-    //emited when thread work is over
-    void finished();
 
 public slots:
-    void receiveDatagramm();
-    void playback();
-    void stopPlayback();
-    void volumeChanged(int);
-    void portChanged(int);
-    void startRecord();
+    void start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
+    void stop();
+    void volumeChanged(qreal);
+    void startRecord(Settings::CODEC codec, QString path);
     void pauseRecord();
-    void changePlaybackState(QSharedPointer<ChannelInfo> channel);
-    void recordingStateChanged(RecordAudio::STATE);
 
 private slots:
-    void stopRunning();
+    void receiveDatagramm();
+    void recordingStateChanged(RecordAudio::STATE);
 
 };
-
 
 #endif // LISTENER_H

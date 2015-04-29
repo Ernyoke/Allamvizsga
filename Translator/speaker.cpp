@@ -1,53 +1,34 @@
 #include "speaker.h"
 
-Speaker::Speaker(Settings *settings) :
-Worker(settings)
+Speaker::Speaker() : AbstractSpeaker()
 {
-    this->socket = new QUdpSocket(this);
-
-    IPAddress = NULL;
-
-    audioInput = NULL;
-    QDateTime now = QDateTime::currentDateTime();
-    timestamp = now.currentDateTime().toMSecsSinceEpoch();
-    isRecording = false;
 }
 
-Speaker::~Speaker() {
-    stopRecording();
-    qDebug() << "Speaker deleted!";
-}
-
-void Speaker::changeRecordState(QAudioFormat speakerFormat) {
+void Speaker::start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
+                    QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId) {
 
     if(!isRecording) {
-        this->IPAddress = settings->getServerAddress();
-        this->broadcasting_port = settings->getClientPortForSound();
+
         format = speakerFormat;
-        startRecording();
-    }
-    else {
-        stopRecording();
-    }
-}
+        socket = new QUdpSocket(this);
+        this->broadcasting_port = broadcasting_port;
+        this->serverAddress = serverAddress;
+        timestamp = Datagram::generateTimestamp();
+        this->clientId = clientId;
+        QAudioDeviceInfo info = device;
 
-void Speaker::startRecording() {
-    if(!isRecording) {
-
-        QAudioDeviceInfo info = settings->getInputDevice();
         if (!info.isFormatSupported(format)) {
-            qWarning()<<"raw audio format not supported by backend, cannot play audio.";
+            emit errorMessage("Audio format is not supported!");
             return;
         }
 
-       audioInput = new QAudioInput(info, format, this);
-       qDebug() << audioInput->bufferSize();
-       intermediateDevice  = audioInput->start();
-       connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
+        audioInput = new QAudioInput(info, format, this);
+        intermediateDevice  = audioInput->start();
+        connect(intermediateDevice, SIGNAL(readyRead()), this, SLOT(transferData()));
 
-       buffLen = audioInput->periodSize();
-       isRecording = true;
-       emit recordingState(true);
+        buffLen = audioInput->periodSize();
+        isRecording = true;
+        emit recordingState(true);
     }
 }
 
@@ -60,27 +41,28 @@ void Speaker::transferData(){
         //serialize data conform to the protocol
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &chunk);
         //create datagram
-        Datagram dataGram(Datagram::SOUND, settings->getClientId(), timestamp, soundChunk);
-        qDebug() << timestamp;
+        Datagram dataGram(Datagram::SOUND, clientId, timestamp, soundChunk);
         //send the data
-        dataGram.sendDatagram(socket, &IPAddress, broadcasting_port);
+        dataGram.sendDatagram(socket, &serverAddress, broadcasting_port);
         emit dataSent(dataGram.getSize());
         delete soundChunk;
     }
 }
 
-void Speaker::stopRecording()
+void Speaker::stop()
 {
     if(isRecording) {
         audioInput->stop();
         delete audioInput;
         isRecording = false;
-        emit recordingState(false);
+        emit recordingState(isRecording);
+        emit finished();
     }
 }
 
-void Speaker::stopRunning() {
-    stopRecording();
-    emit finished();
+
+Speaker::~Speaker() {
+    stop();
+    qDebug() << "Managevoice destruct!";
 }
 

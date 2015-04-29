@@ -2,22 +2,32 @@
 #define WORKER_H
 
 #include <QObject>
-#include "settings.h"
+#include <QUdpSocket>
+#include <QAudioDeviceInfo>
+#include <QAudioFormat>
+#include <QPointer>
+
+#include "soundchunk.h"
 
 class Worker : public QObject
 {
     Q_OBJECT
 public:
-    Worker(Settings*);
+    Worker();
+
+    virtual ~Worker();
 
 protected:
-    Settings *settings;
+
+    QHostAddress serverAddress;
+    QPointer<QUdpSocket> socket;
+    QAudioFormat format;
 
 signals:
     void errorMessage(QString);
+    void finished();
 
 public slots:
-    virtual void stopRunning() = 0;
 
 };
 

@@ -1,6 +1,10 @@
 #include "worker.h"
 
-Worker::Worker(Settings *settings)
+Worker::Worker()
 {
-    this->settings = settings;
+}
+
+Worker::~Worker()
+{
+
 }

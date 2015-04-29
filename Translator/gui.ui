@@ -279,29 +279,6 @@
        <string>Channels</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_9">
-       <item row="0" column="1">
-        <widget class="QListView" name="channelList">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>1</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>10</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
        <item row="0" column="0">
         <spacer name="horizontalSpacer_3">
          <property name="orientation">
@@ -316,6 +293,30 @@
         </spacer>
        </item>
        <item row="1" column="1">
+        <widget class="QPushButton" name="newLocalChannel">
+         <property name="text">
+          <string>New Channel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="deleteLocalChannel">
+         <property name="text">
+          <string>Delete Channel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QListView" name="channelList">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" colspan="2">
         <widget class="QPushButton" name="refreshButton">
          <property name="text">
           <string>Refresh List</string>
@@ -428,24 +429,10 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
-            <widget class="QPushButton" name="newChannelButton">
-             <property name="text">
-              <string>New Channel</string>
-             </property>
-            </widget>
-           </item>
            <item row="3" column="1">
             <widget class="QPushButton" name="pauseRec">
              <property name="text">
               <string>Pause Record</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QPushButton" name="deleteChannelButton">
-             <property name="text">
-              <string>Delete Channel</string>
              </property>
             </widget>
            </item>

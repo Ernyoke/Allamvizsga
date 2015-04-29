@@ -40,7 +40,7 @@ private:
     long broadcastDataPerSec;
     long cntBroadcastTime;
 
-    bool isRecording;
+    bool isSpeakerRunning;
 
     QTimer broadcastTimer;
 
@@ -59,7 +59,6 @@ signals:
     void startBroadcast(QAudioFormat speakerFormat, QAudioDeviceInfo device,
                         QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId);
     void stopBroadcast();
-    void stopSpeaker();
 
     //signals for both
     void sendLogoutRequest();
@@ -67,8 +66,6 @@ signals:
     //signals emited when server is down
     void stopSpeakingSD();
 
-    //
-    void stopSpeakerWorker();
 
 private slots:
     void setDataSent(int);

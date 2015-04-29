@@ -50,7 +50,7 @@ void GUI::init() {
     //server down
     connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
 
-    isRecording = false;
+    isSpeakerRunning = false;
 
     newChannelDialog = NULL;
 
@@ -92,6 +92,7 @@ void GUI::login() {
 
 void GUI::serverDownHandle() {
     emit stopBroadcast();
+//    emit stopPlaybackSD();
     stopChannel();
     login();
     qDebug() << "serverDown login";
@@ -134,7 +135,9 @@ void GUI::stopChannel() {
     ui->channelNrText->setText("-");
     ui->codecText->setText("-");
     ui->newChannelBtn->setText("New channel");
-    startBroadcast();
+    if(isSpeakerRunning) {
+        startBroadcast();
+    }
 }
 
 void GUI::setDataSent(int size) {
@@ -144,7 +147,7 @@ void GUI::setDataSent(int size) {
 }
 
 void GUI::startBroadcast() {
-    if(!isRecording) {
+    if(!isSpeakerRunning) {
         if(newChannelDialog->isChannelAvailable()) {
             QAudioFormat speakerFormat = newChannelDialog->getAudioFormat();
 
@@ -166,11 +169,9 @@ void GUI::startBroadcast() {
                 //thread lifetime management
                 speakerWorker->moveToThread(speakerThread);
                 connect(speakerWorker, SIGNAL(finished()), speakerThread, SLOT(quit()));
-                connect(this, SIGNAL(stopSpeakerWorker()), speakerWorker, SLOT(stop()));
                 connect(speakerWorker, SIGNAL(finished()), speakerWorker, SLOT(deleteLater()));
                 connect(speakerThread, SIGNAL(finished()), speakerThread, SLOT(deleteLater()));
                 connect(speakerWorker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
-
 
                 //signal emited when user starts or stops the playback
                 connect(this, SIGNAL(startBroadcast(QAudioFormat, QAudioDeviceInfo, QHostAddress, qint32, qint32)),
@@ -199,18 +200,18 @@ void GUI::startBroadcast() {
     }
 }
 
-void GUI::changeBroadcastButtonState(bool isRecording) {
-    if(isRecording) {
+void GUI::changeBroadcastButtonState(bool isSpeakerRunning) {
+    if(isSpeakerRunning) {
         ui->startBroadcastBtn->setText("Stop Broadcast");
         broadcastDataSize = 0;
         broadcastTimerStart();
-        this->isRecording = true;
+        this->isSpeakerRunning = true;
     }
     else {
         ui->startBroadcastBtn->setText("Start Broadcast");
         broadcastDataSize = 0;
         broadcastTimerStop();
-        this->isRecording = false;
+        this->isSpeakerRunning = false;
 
     }
 }
@@ -250,7 +251,7 @@ void GUI::errorMessage(QString message) {
 }
 
 void GUI::closeEvent(QCloseEvent *event) {
-    if(isRecording) {
+    if(isSpeakerRunning) {
         connect(speakerThread, SIGNAL(destroyed()), this, SLOT(close()));
         emit stopBroadcast();
         event->ignore();

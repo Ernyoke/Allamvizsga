@@ -285,3 +285,7 @@ bool Settings::checkIpAddress(QString ip) {
     }
 }
 
+bool Settings::testMode() const {
+    return ui->testModeCheckBox->isChecked();
+}
+

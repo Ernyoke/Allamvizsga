@@ -6,56 +6,32 @@
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
 #include <QUdpSocket>
-#include <QThread>
 #include <QDateTime>
 
-#include "g711.h"
-#include "worker.h"
-#include "soundchunk.h"
 #include "datagram.h"
+#include "soundchunk.h"
+#include "abstractspeaker.h"
 
-class Speaker : public Worker
+class Speaker : public AbstractSpeaker
 {
     Q_OBJECT
 public:
-    Speaker(Settings*);
+    Speaker();
     ~Speaker();
 
 private:
-
     QAudioInput *audioInput;
-    QAudioFormat format;
     QIODevice *intermediateDevice;
-    QUdpSocket *socket;
-    QHostAddress IPAddress;
-
-    int broadcasting_port;
-    qint64 timestamp;
-
-    bool isRecording;
-    int buffLen;
-
-    unsigned char Snack_Lin2Alaw(short);
-    short search(short, short*, short);
-
-    bool checkIP(QString);
-
 
 signals:
-    //is emited when the recordig state(recording or stoped) is changed
-    void recordingState(bool);
-    //is emited when a datachunk is sent
-    void dataSent(int);
-    //is emited when the thread stops
-    void finished();
+
+private slots:
+    void transferData();
 
 public slots:
-    void startRecording();
-    void stopRecording();
-    void changeRecordState(QAudioFormat);
-    void transferData();
-    void stopRunning();
-
+    void start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
+               QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId);
+    void stop();
 };
 
 #endif // SPEAKER_H

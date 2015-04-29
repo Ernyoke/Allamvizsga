@@ -97,6 +97,6 @@ void ChannelInfo::setOutPort(qint32 port) {
     this->port = port;
 }
 
-qint32 ChannelInfo::getOutPort() const {
+qint16 ChannelInfo::getOutPort() const {
     return this->port;
 }

@@ -82,9 +82,6 @@ void GUI::initialize() {
     }
     connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
 
-    //signals emitted when server is down
-//    connect(this, SIGNAL(stopPslaybackSD()), listenerWorker, SLOT(stopPlayback()));
-
     //server down
     connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
 }
