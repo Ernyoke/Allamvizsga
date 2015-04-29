@@ -77,7 +77,7 @@ void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint1
         QByteArray content =  channelModel->serialize();
         Datagram response(Datagram::LIST, 0, dgram.getTimeStamp());
         response.setDatagramContent(&content);
-        response.sendDatagram(socket, &address, SERVER_PORT);
+        sendDatagram(address, port, response);
         break;
     }
     case Datagram::SYNCH_RESP : {
