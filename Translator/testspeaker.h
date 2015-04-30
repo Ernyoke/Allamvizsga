@@ -20,7 +20,12 @@ private:
     QFile *file;
     QTimer *timer;
 
+    int timerId;
+
     int calcBufferSize(QAudioFormat &, int interval);
+
+protected:
+    void timerEvent(QTimerEvent * event);
 
 signals:
 

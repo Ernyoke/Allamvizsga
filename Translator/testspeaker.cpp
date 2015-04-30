@@ -7,7 +7,7 @@ TestSpeaker::TestSpeaker() : AbstractSpeaker()
 TestSpeaker::~TestSpeaker()
 {
     delete file;
-    delete timer;
+//    delete timer;
 }
 
 void TestSpeaker::start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
@@ -28,12 +28,15 @@ void TestSpeaker::start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
             return;
         }
         else {
+
             int interval = 10;
             buffLen = calcBufferSize(format, interval);
-            timer = new QTimer;
-            timer->setInterval(1000 / interval - 7);
-            connect(timer, SIGNAL(timeout()), this, SLOT(transferData()));
-            timer->start();
+//            timer = new QTimer;
+//            timer->setInterval(1000 / interval);
+//            connect(timer, SIGNAL(timeout()), this, SLOT(transferData()));
+//            timer->start();
+
+            timerId = this->startTimer(1000 / interval, Qt::PreciseTimer);
 
             emit recordingState(isRecording);
         }
@@ -41,16 +44,18 @@ void TestSpeaker::start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
 
 }
 
+void TestSpeaker::timerEvent(QTimerEvent *event) {
+    transferData();
+}
+
 void TestSpeaker::transferData() {
     if(file->atEnd()) {
         file->seek(0);
-        qDebug() << "seek";
     }
     char buffer[buffLen];
     int bytes = file->read(buffer, buffLen);
     QByteArray content(buffer, buffLen);
 
-    qDebug() << "content size:" << content.size() << " buffsiez:" << buffLen;
     if(bytes > 0) {
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &content);
         Datagram dataGram(Datagram::SOUND, clientId, timestamp, soundChunk);
@@ -65,7 +70,9 @@ void TestSpeaker::transferData() {
 void TestSpeaker::stop() {
     if(isRecording) {
         isRecording = false;
-        timer->stop();
+//        timer->stop();
+        this->killTimer(timerId);
+
         file->close();
         emit recordingState(isRecording);
         emit finished();

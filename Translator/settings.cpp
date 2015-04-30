@@ -253,7 +253,6 @@ void Settings::selectRecordPath() {
 //this event is overloaded for refreshing settings dialog on every showup
 void Settings::showEvent(QShowEvent *event) {
     QWidget::showEvent(event);
-    qDebug() << "show";
 
     initSettingsValues();
 }
@@ -270,17 +269,14 @@ bool Settings::checkIpAddress(QString ip) {
     QHostAddress address(ip);
     if (QAbstractSocket::IPv4Protocol == address.protocol())
     {
-       qDebug("Valid IPv4 address.");
        return true;
     }
     else if (QAbstractSocket::IPv6Protocol == address.protocol())
     {
-       qDebug("Valid IPv6 address.");
        return true;
     }
     else
     {
-       qDebug("Unknown or invalid address.");
        return false;
     }
 }

@@ -21,7 +21,6 @@ ServerCommunicator::ServerCommunicator(Settings *settings, QObject *parent) : QO
     refreshCounter = 0;
 
     authentificationStatus = false;
-    qDebug() << "constructor";
 
 }
 

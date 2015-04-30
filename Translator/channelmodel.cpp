@@ -62,7 +62,6 @@ void ChannelModel::addNewChannel(ChannelInfo info) {
     QSharedPointer<ChannelInfo> chInfo = QSharedPointer<ChannelInfo>(new ChannelInfo(info));
     channelList.append(chInfo);
     endInsertRows();
-    qDebug() << info.getLanguage();
 }
 
 void ChannelModel::deleteChannel(qint32 id) {
@@ -86,7 +85,6 @@ void ChannelModel::addNewUserCreatedChannel(ChannelInfo info) {
     QSharedPointer<ChannelInfo> chInfo = QSharedPointer<ChannelInfo>(new ChannelInfo(info));
     userCreatedChannelList.append(chInfo);
     endInsertRows();
-    qDebug() << info.getLanguage();
 }
 
 

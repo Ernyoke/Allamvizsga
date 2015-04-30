@@ -63,7 +63,6 @@ void AddNewChannelFromGui::createNewChannel() {
                            boxValue(ui->sampleRateBox).toInt(), boxValue(ui->sampleSizeBox).toInt(), boxValue(ui->channelBox).toInt());
         chInfo.setOutPort(ui->portInput->text().toInt(&ok));
         if(ok) {
-            qDebug() << chInfo.getOutPort();
             ui->statusText->setText("Channel created");
             ui->startBtn->setText("Ok");
             startBtnStatus = false;

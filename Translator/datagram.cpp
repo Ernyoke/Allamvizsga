@@ -99,7 +99,6 @@ void Datagram::sendDatagram(QUdpSocket *socket, QHostAddress *IPAddress, int por
         socket->writeDatagram(buffer, *IPAddress, port);
         ++i;
     }
-    qDebug() << buffer.size();
 }
 
 void Datagram::splitDatagram() {
@@ -125,7 +124,6 @@ void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
     mutex.lock();
     packetCounter++;
     out << packetCounter;
-    qDebug() << packetCounter;
     mutex.unlock();
 
     out << id;
@@ -137,7 +135,6 @@ void Datagram::createDatagram(QByteArray *dataToSend, int packet_nr) {
 }
 
 qint32 Datagram::getSize() const {
-    qDebug() << this->size;
     return this->size;
 }
 

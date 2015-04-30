@@ -32,7 +32,6 @@ void Listener::receiveDatagramm() {
         emit dataReceived(datagramSize);
         Datagram datagram(&m_buffer);
         temp = datagram.getTimeStamp();
-        qDebug() << datagram.getTimeStamp() << " " << timestamp;
         if(timestamp < temp) {
             QByteArray content = datagram.getContent();
             SoundChunk soundChunk(&content);
@@ -52,7 +51,6 @@ void Listener::receiveDatagramm() {
             }
         }
         else {
-            qDebug() << temp;
         }
         length = socket->bytesAvailable();
     }
