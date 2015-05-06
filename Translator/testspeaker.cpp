@@ -58,7 +58,7 @@ void TestSpeaker::transferData() {
 
     if(bytes > 0) {
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &content);
-        Datagram dataGram(Datagram::SOUND, clientId, timestamp, soundChunk);
+        Datagram dataGram(Datagram::SOUND, clientId, Datagram::generateTimestamp(), soundChunk);
         //send the data
         dataGram.sendDatagram(socket, &serverAddress, broadcasting_port);
         emit dataSent(dataGram.getSize());
