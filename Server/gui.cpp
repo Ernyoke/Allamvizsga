@@ -7,12 +7,27 @@ GUI::GUI(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    init();
+}
+
+GUI::~GUI()
+{
+    delete ui;
+}
+
+void GUI::init() {
     channelModel = new ChannelModel(this);
     clientModel = new ClientModel(this);
 
-    soundWorker = new AcceptData;
+    mutex = new QMutex;
+
+    settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, Settings::organization_label, Settings::appName_label, this);
+    QString addressStr = settings->value(Settings::bcast_label, "192.168.0.255").toString();
+    QHostAddress address(addressStr);
+    soundWorker = new AcceptData(address, mutex);
     soundThread = new QThread;
     soundWorker->moveToThread(soundThread);
+    connect(soundThread, SIGNAL(started()), soundWorker, SLOT(init()));
     connect(soundWorker, SIGNAL(finished()), soundThread, SLOT(quit()));
     connect(this, SIGNAL(stopSoundWorker()), soundWorker, SLOT(stopWorker()), Qt::DirectConnection);
     connect(soundThread, SIGNAL(finished()), soundThread, SLOT(deleteLater()));
@@ -21,9 +36,11 @@ GUI::GUI(QWidget *parent) :
 
     //menu handlers
     connect(ui->actionConnected_Clients, SIGNAL(triggered()), this, SLOT(showClientList()));
+    connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(showSettings()));
+    connect(ui->actionStop_server_and_Exit, SIGNAL(triggered()), this, SLOT(close()));
 
     ui->channelTab->setModel(channelModel);
-    manageClients = new ManageClients(clientModel, channelModel, this);
+    manageClients = new ManageClients(clientModel, channelModel, mutex);
     connect(manageClients, SIGNAL(newChannelAdded(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
     connect(manageClients, SIGNAL(newChannelAdded(ChannelInfo)), soundWorker, SLOT(addChannel(ChannelInfo)));
     connect(manageClients, SIGNAL(channelClosed(qint32)), channelModel, SLOT(deleteChannel(qint32)));
@@ -54,11 +71,17 @@ GUI::GUI(QWidget *parent) :
             break;
         }
     }
-}
 
-GUI::~GUI()
-{
-    delete ui;
+    connect(this, SIGNAL(startPacketLog(QFile*)), manageClients, SLOT(startPacketLog(QFile*)));
+    connect(this, SIGNAL(startPacketLog(QFile*)), soundWorker, SLOT(startPacketLog(QFile*)));
+    connect(this, SIGNAL(stopPacketLog()), manageClients, SLOT(stopPacketLog()));
+    connect(this, SIGNAL(stopPacketLog()), soundWorker, SLOT(stopPacketLog()));
+
+    isLogging = false;
+    settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, Settings::organization_label, Settings::appName_label, this);
+    if(settings->value(Settings::log_label, false).toBool()) {
+        preparePacketLog(settings->value(Settings::logPath_label, QDir::currentPath()).toString());
+    }
 }
 
 
@@ -79,6 +102,36 @@ void GUI::closeEvent(QCloseEvent *event) {
 
 void GUI::showClientList() {
     showClients->show();
+}
+
+void GUI::showSettings() {
+    Settings *settingsDialog = new Settings;
+    settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(settingsDialog, SIGNAL(broadcastAddressChanged(QString)), soundWorker, SLOT(changeBroadcastAddress(QString)));
+    connect(settingsDialog, SIGNAL(packetLogStarted(QString)), this, SLOT(preparePacketLog(QString)));
+    connect(settingsDialog, SIGNAL(packetLogStopped()), this, SLOT(finalizePacketLog()));
+    settingsDialog->show();
+}
+
+void GUI::preparePacketLog(QString path) {
+    if(!isLogging) {
+        QString fileName = "/serverLog.txt";
+        packetLoggerFile = new QFile(path + fileName, this);
+        if(!packetLoggerFile->open(QIODevice::WriteOnly)) {
+            emit errorMessage("serverLog.txt could not been created!");
+            return;
+        }
+        emit startPacketLog(packetLoggerFile);
+        isLogging = true;
+    }
+}
+
+void GUI::finalizePacketLog() {
+    if(isLogging) {
+        emit stopPacketLog();
+        packetLoggerFile->close();
+        delete packetLoggerFile;
+    }
 }
 
 void GUI::logClientConnected(ClientInfo *client) {

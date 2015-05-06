@@ -4,9 +4,8 @@ const int SERVER_CLIENTID = 0;
 const int ONE_SEC = 10000;
 const int FIVE_SEC = 5 * ONE_SEC;
 
-ServerCommunicator::ServerCommunicator(Settings *settings, QObject *parent) : QObject(parent)
+ServerCommunicator::ServerCommunicator(QObject *parent) : QObject(parent)
 {
-    this->settings = settings;
     socket = NULL;
     listReqTimer = new QTimer(this);
     connect(listReqTimer, SIGNAL(timeout()), this, SLOT(listReqTimedOut()));
@@ -22,6 +21,9 @@ ServerCommunicator::ServerCommunicator(Settings *settings, QObject *parent) : QO
 
     authentificationStatus = false;
     qDebug() << "constructor";
+
+    serverPort = 10000;
+    clientPort = 40000;
 
 }
 
@@ -107,8 +109,15 @@ void ServerCommunicator::processDatagram(Datagram &dgram) {
     }
 }
 
-void ServerCommunicator::sendLoginRequest() {
+void ServerCommunicator::sendLoginRequest(QString address) {
     if(!authentificationStatus)  {
+        if(Settings::checkIpAddress(address)) {
+            serverAddress = QHostAddress(address);
+        }
+        else {
+            emit authentificationFailed();
+            return;
+        }
         //get the current timespamp;
         qint64 timeStamp = Datagram::generateTimestamp();
         //get system information
@@ -118,26 +127,25 @@ void ServerCommunicator::sendLoginRequest() {
         //4 byte SPEAKER_ID, remaining bytes os info
         QByteArray content;
         QDataStream in(&content, QIODevice::WriteOnly);
-        in << settings->getClientType();
+        in << Settings::CLIENT_TYPE;
         in << os;
         //create the datagram
-        Datagram dgram(Datagram::LOGIN, settings->getClientId(), timeStamp);
+        Datagram dgram(Datagram::LOGIN, 0, timeStamp);
         dgram.setDatagramContent(&content);
         //recreate the socket
         delete socket;
         socket = new QUdpSocket(this);
         //bind to a port
-        int port = settings->getClientPort();
         bool binded = false;
-        if(!socket->bind(port)) {
-            port++;
-            while(port < settings->getClientPort() + 10) {
-                if(socket->bind(port)) {
-                    settings->setClientPort(port);
+        int tries = 0;
+        if(!socket->bind(clientPort)) {
+            clientPort++;
+            while(tries < 10) {
+                if(socket->bind(clientPort)) {
                     binded = true;
                     break;
                 }
-                port++;
+                clientPort++;
             }
         }
         else {
@@ -165,19 +173,17 @@ void ServerCommunicator::loginTimedOut() {
 void ServerCommunicator::logout() {
     if(authentificationStatus) {
         QString respContent = " ";
-        Datagram response(Datagram::LOGOUT, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
+        Datagram response(Datagram::LOGOUT, myclientId, Datagram::generateTimestamp(), &respContent);
         sendDatagram(&response);
     }
 }
 
 void ServerCommunicator::sendDatagram(Datagram *dgram) {
-    QHostAddress address = settings->getServerAddress();
-    dgram->sendDatagram(socket, &address, settings->getServerPort());
+    dgram->sendDatagram(socket, &serverAddress, serverPort);
 }
 
 void ServerCommunicator::sendDatagram(Datagram dgram) {
-    QHostAddress address = settings->getServerAddress();
-    dgram.sendDatagram(socket, &address, settings->getServerPort());
+    dgram.sendDatagram(socket, &serverAddress, serverPort);
 }
 
 void ServerCommunicator::requestChannelList() {
@@ -186,7 +192,7 @@ void ServerCommunicator::requestChannelList() {
         reqListStart = Datagram::generateTimestamp();
         listContent.clear();
         QString toSend("LIST");
-        Datagram dgram(Datagram::GET_LIST, settings->getClientId(), reqListStart, &toSend);
+        Datagram dgram(Datagram::GET_LIST, myclientId, reqListStart, &toSend);
         sendDatagram(&dgram);
         listReqTimer->setSingleShot(true);
         listReqTimer->start(ONE_SEC);
@@ -199,12 +205,11 @@ void ServerCommunicator::processLogin(Datagram& dgram) {
         if(dgram.getId() == Datagram::LOGIN_ACK) {
             QByteArray content(dgram.getContent());
             QDataStream out(&content, QIODevice::ReadOnly);
-            qint32 id;
-            out >> id;
-            if(id > 0) {
-                emit authentificationSucces(id);
+            out >> myclientId;
+            if(myclientId > 0) {
+                emit authentificationSucces(myclientId);
                 QString respContent = " ";
-                Datagram response(Datagram::LOGIN_ACK, settings->getClientId(), Datagram::generateTimestamp(), &respContent);
+                Datagram response(Datagram::LOGIN_ACK, myclientId, Datagram::generateTimestamp(), &respContent);
                 sendDatagram(&response);
 
                 authentificationStatus = true;
@@ -261,7 +266,7 @@ void ServerCommunicator::processSynch(Datagram &dgram) {
     if(authentificationStatus) {
         if(dgram.getClientId() == SERVER_CLIENTID) {
             QString toSend("SYNCH");
-            Datagram response(Datagram::SYNCH_RESP, settings->getClientId(), Datagram::generateTimestamp(), &toSend);
+            Datagram response(Datagram::SYNCH_RESP, myclientId, Datagram::generateTimestamp(), &toSend);
             sendDatagram(&response);
             refreshCounter++;
             qDebug() << "synch";
@@ -297,4 +302,12 @@ void ServerCommunicator::processRemoveChannel(Datagram &dgram) {
             emit removeChannel(id);
         }
     }
+}
+
+QHostAddress ServerCommunicator::getServerAddress() const {
+    return serverAddress;
+}
+
+qint32 ServerCommunicator::getClientId() const {
+    return myclientId;
 }

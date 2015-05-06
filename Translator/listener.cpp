@@ -31,6 +31,7 @@ void Listener::receiveDatagramm() {
         m_buffer.resize(datagramSize);
         emit dataReceived(datagramSize);
         Datagram datagram(&m_buffer);
+        createLogEntry(datagram);
         temp = datagram.getTimeStamp();
         if(timestamp < temp) {
             QByteArray content = datagram.getContent();
@@ -116,6 +117,7 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
 void Listener::stop() {
     if(isPlaying) {
         m_audioOutput->stop();
+        PacketLogger::stopPacketLog();
         delete m_audioOutput;
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         delete socket;
@@ -132,10 +134,9 @@ void Listener::volumeChanged(qreal volume) {
     }
 }
 
-void Listener::startRecord(Settings::CODEC codec, QString path) {
+void Listener::startRecord(QString codec, QString path) {
     if(record == NULL) {
-        switch(codec) {
-        case Settings::WAV: {
+        if(codec.compare("wav") == 0) {
             record = new RecordWav(path, format, this);
             connect(record, SIGNAL(recordingState(RecordAudio::STATE)), this, SLOT(recordingStateChanged(RecordAudio::STATE)));
             if(record->getState() == RecordAudio::STOPPED) {
@@ -145,8 +146,6 @@ void Listener::startRecord(Settings::CODEC codec, QString path) {
                     msgBox.exec();
                 }
             }
-            break;
-        }
         }
     }
     else {
@@ -189,5 +188,14 @@ bool Listener::isRecRunning() {
         }
     }
     return false;
+}
+
+//redirect slots for packetlogger
+void Listener::startPacketLog(QMutex *mutex, QFile *file) {
+    PacketLogger::startPacketLog(mutex, file);
+}
+
+void Listener::stopPacketLog() {
+    PacketLogger::stopPacketLog();
 }
 

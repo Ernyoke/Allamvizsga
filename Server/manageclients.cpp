@@ -8,8 +8,8 @@ const int MAXCLIENTS = 1024;
 const int MIN_PORT = 10000;
 const int MAX_PORT = 65000;
 
-ManageClients::ManageClients(ClientModel *tableModel, ChannelModel *channelModel, QWidget *parent) :
-    QObject(parent)
+ManageClients::ManageClients(ClientModel *tableModel, ChannelModel *channelModel, QMutex *mutex) :
+    PacketLogger(mutex)
 {
     this->socket = new QUdpSocket(this);
     socket->bind(PORT);
@@ -31,6 +31,7 @@ ManageClients::ManageClients(ClientModel *tableModel, ChannelModel *channelModel
 
 ManageClients::~ManageClients()
 {
+    qDebug() << "delete manageClients";
     synchTimer->stop();
     delete socket;
 }
@@ -48,6 +49,7 @@ void ManageClients::readPendingDatagrams() {
 }
 
 void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint16 port) {
+    createLogEntry(dgram);
     switch(dgram.getId()) {
     case Datagram::LOGIN : {
         if(isAvNextClient()) {

@@ -6,21 +6,24 @@
 #include <QUdpSocket>
 #include <QHostAddress>
 #include <QMetaType>
+#include <QFile>
+#include <QDir>
 #include "channelinfo.h"
 #include "datagram.h"
+#include "packetlogger.h"
 
-class AcceptData : public QObject
+class AcceptData : public PacketLogger
 {
     Q_OBJECT
 public:
-    explicit AcceptData(QObject *parent = 0);
+    AcceptData(QHostAddress, QMutex *mutex);
     ~AcceptData();
     int getPortIn();
     int getPortOut();
 
 private:
     QUdpSocket *socket;
-    QHostAddress groupAddress;
+    QHostAddress broadcastAddress;
     QByteArray data;
 
     QMap<qint32, ChannelInfo*> channels;
@@ -29,12 +32,15 @@ private:
 
 signals:
     void finished();
+    void errorMessage(QString);
 
 public slots:
+    void init();
     void readData();
     void addChannel(ChannelInfo);
     void removeChannel(qint32);
     void stopWorker();
+    void changeBroadcastAddress(QString);
 
 };
 

@@ -8,11 +8,15 @@
 #include <QThread>
 #include <QNetworkInterface>
 #include <QDateTime>
+#include <QSettings>
+#include <QPointer>
+#include <QFile>
 #include "acceptdata.h"
 #include "manageclients.h"
 #include "channelmodel.h"
 #include "clientmodel.h"
 #include "showclients.h"
+#include "settings.h"
 
 namespace Ui {
 class GUI;
@@ -28,7 +32,8 @@ public:
 
 private:
     Ui::GUI *ui;
-    ManageClients *manageClients;
+    QPointer<ManageClients> manageClients;
+    QSettings *settings;
 
     ChannelModel *channelModel;
     ClientModel *clientModel;
@@ -37,6 +42,11 @@ private:
     AcceptData *soundWorker;
     QThread *soundThread;
 
+    QMutex *mutex;
+    QFile *packetLoggerFile;
+    bool isLogging;
+
+    void init();
     bool checkUsedPorts(int, int);
     QString generateTimeStamp();
 
@@ -45,14 +55,18 @@ protected:
 
 private slots:
     void showClientList();
+    void showSettings();
     void logClientConnected(ClientInfo*);
     void logClientDisconnected(qint32 id);
     void logClientTimedOut(qint32 id);
-//    void manageTreadFinished();
-//    void acceptThreadFinished();
+    void preparePacketLog(QString);
+    void finalizePacketLog();
 
 signals:
     void stopSoundWorker();
+    void startPacketLog(QFile*);
+    void stopPacketLog();
+    void errorMessage(QString);
 
 };
 

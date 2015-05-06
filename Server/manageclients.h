@@ -13,13 +13,14 @@
 #include "clientmodel.h"
 #include "channelinfo.h"
 #include "channelmodel.h"
+#include "packetlogger.h"
 
-class ManageClients : public QObject
+class ManageClients : public PacketLogger
 {
     Q_OBJECT
 
 public:
-    explicit ManageClients(ClientModel *tableModel, ChannelModel *channelModel, QWidget *parent = 0);
+    ManageClients(ClientModel *tableModel, ChannelModel *channelModel, QMutex *mutex);
     ~ManageClients();
 
 private:

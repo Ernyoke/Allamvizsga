@@ -4,17 +4,25 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QMap>
 
 #include "settings.h"
 #include "datagram.h"
 #include "channelinfo.h"
+#include "packetlogger.h"
 
-class ServerCommunicator : public QObject
+class ServerCommunicator : public QObject, public PacketLogger
 {
     Q_OBJECT
 public:
-    explicit ServerCommunicator(Settings *settings, QObject *parent = 0);
+    explicit ServerCommunicator(QObject *parent = 0);
     ~ServerCommunicator();
+
+    QHostAddress getServerAddress() const;
+    qint32 getClientId() const;
+    qint32 getClientPort() const;
+    qint32 getServerPort() const;
+    qint32 getClientPortForSound() const;
 
 private:
     QUdpSocket *socket;
@@ -30,6 +38,12 @@ private:
     qint64 reqListStart;
     QMap<qint32, QByteArray> listContent;
 
+    qint32 myclientId;
+    QHostAddress serverAddress;
+    qint32 serverPort;
+    qint32 clientPort;
+    qint32 clientPortForSound;
+
     void processDatagram(Datagram&);
     void processList(Datagram&);
     void processNewChannel(Datagram&);
@@ -40,7 +54,7 @@ private:
     void processRemoveChannel(Datagram&);
 
 private slots:
-    void sendLoginRequest();
+    void sendLoginRequest(QString address);
     void logout();
     void sendDatagram(Datagram *);
     void sendDatagram(Datagram);
@@ -51,6 +65,9 @@ private slots:
 
 public slots:
     void requestChannelList();
+    void startPacketLog(QMutex *mutex, QFile *file);
+    void stopPacketLog();
+
 
 signals:
     void authentificationSucces(qint32);
@@ -62,6 +79,7 @@ signals:
     void serverDown();
     void removeChannel(qint32);
 
+public slots:
 };
 
 #endif // SERVERCOMMUNICATOR_H

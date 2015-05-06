@@ -103,8 +103,7 @@ void Datagram::sendDatagram(QUdpSocket *socket, QHostAddress *IPAddress, int por
 
 void Datagram::splitDatagram() {
     QDataStream in(&buffer, QIODevice::ReadOnly);
-    qint64 packetCounterTmp;
-    in >> packetCounterTmp;
+    in >> recPacketCounter;
     in >> id;
     in >> clientId;
     in >> timestamp;
@@ -176,4 +175,8 @@ qint64 Datagram::generateTimestamp() {
     QDateTime now = QDateTime::currentDateTime();
     qint64 timeStamp = now.currentDateTime().toMSecsSinceEpoch();
     return timeStamp;
+}
+
+qint64 Datagram::getPacketCounter() const {
+    return recPacketCounter;
 }

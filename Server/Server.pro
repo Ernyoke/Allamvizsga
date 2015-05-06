@@ -26,7 +26,9 @@ SOURCES += main.cpp\
     listenerclientinfo.cpp \
     translatorclientinfo.cpp \
     clientmodel.cpp \
-    channelnotfoundex.cpp
+    channelnotfoundex.cpp \
+    settings.cpp \
+    packetlogger.cpp
 
 HEADERS  += gui.h \
     acceptdata.h \
@@ -40,9 +42,12 @@ HEADERS  += gui.h \
     listenerclientinfo.h \
     translatorclientinfo.h \
     clientmodel.h \
-    channelnotfoundex.h
+    channelnotfoundex.h \
+    settings.h \
+    packetlogger.h
 
 FORMS    += gui.ui \
     manageclients.ui \
-    showclients.ui
+    showclients.ui \
+    settings.ui
 

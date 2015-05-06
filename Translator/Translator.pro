@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     invalididexception.cpp \
     abstractspeaker.cpp \
     noaudiodeviceexception.cpp \
-    testspeaker.cpp
+    testspeaker.cpp \
+    packetlogger.cpp
 
 HEADERS  += gui.h \
     speaker.h \
@@ -59,7 +60,8 @@ HEADERS  += gui.h \
     invalididexception.h \
     abstractspeaker.h \
     testspeaker.h \
-    noaudiodeviceexception.h
+    noaudiodeviceexception.h \
+    packetlogger.h
 
 FORMS    += gui.ui \
     settings.ui \

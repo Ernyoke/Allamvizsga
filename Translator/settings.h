@@ -11,6 +11,7 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamAttribute>
 #include <QHostAddress>
+#include <QSettings>
 
 namespace Ui {
 class Settings;
@@ -24,73 +25,58 @@ public:
 
     enum CODEC {WAV};
 
+    static const QString appname_label;
+    static const QString organization_label;
+    static const QString record_codec_label;
+    static const QString record_path_label;
+    static const QString output_device_label;
+    static const QString input_device_label;
+    static const QString server_address_label;
+    static const QString testmode_label;
+    static const QString log_label;
+    static const QString logPath_label;
+
+    static const int CLIENT_TYPE;
+
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioDeviceInfo getInputDevice() const;
-    QAudioDeviceInfo getOutputDevice() const;
-    CODEC getRecordCodec() const;
-    QString getRecordPath() const;
-    QHostAddress getServerAddress() const;
-    qint32 getServerPort() const;
-    void setClientPort(const qint32);
-    qint32 getClientPort() const;
-    qint32 getClientPortForSound() const;
-    qint32 getClientType() const;
-    qint32 getClientId() const;
-    void setClientId(const quint32);
-
-    bool setServerAddress(const QString);
-
-    bool testMode() const;
+    static bool checkIpAddress(const QString);
 
 private:
 
     Ui::Settings *ui;
 
-    QString inputDeviceName;
-    QString outputDeviceName;
-
-    QHostAddress *address;
-    qint32 serverPort;
-    qint32 clientType;
-    qint32 clientPort;
-    qint32 clientPortForSound;
-    qint32 clientId;
-
-    QAudioDeviceInfo selectedInputDevice;
-    QAudioDeviceInfo activeInputDevice;
-    QAudioDeviceInfo selectedOutputDevice;
-    QAudioDeviceInfo activeOutputDevice;
+    QSettings *settings;
 
     QList<QAudioDeviceInfo> input_devices;
     QList<QAudioDeviceInfo> output_devices;
+    QList<QString> recordCodecs;
+
     CODEC recordCodec;
     QFileDialog *fileBrowser;
     QString recordPath;
 
+    bool log;
+    QString logPath;
+
     QVariant boxValue(const QComboBox *box);
-    void displayInputDeviceProperties(QAudioDeviceInfo);
-    void displayOutputDeviceProperties(QAudioDeviceInfo);
-    void readSettingsFromXML();
     int getBoxIndex(QComboBox*, QString*) const;
     int getBoxIndex(QComboBox*, int) const;
     void setBoxIndex(QComboBox*, int);
     void initSettingsValues();
 
-    void showEvent(QShowEvent * event);
-
-    bool checkIpAddress(QString);
 
 private slots:
     void applySettings();
-    void cancelSetting();
-    void changeInputDevice(int);
-    void changeOutputDevice(int);
+    void cancelSettings();
     void selectRecordPath();
+    void browseLogPath();
+    void enableLogPath(bool);
 
-    //overrided
-
+signals:
+    void packetLogStarted(QString);
+    void packetLogStopped();
 };
 
 #endif // SETTINGS_H

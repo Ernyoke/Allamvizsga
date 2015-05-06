@@ -134,7 +134,7 @@ void Listener::volumeChanged(qreal volume) {
     }
 }
 
-void Listener::startRecord(Settings::CODEC codec, QString path) {
+void Listener::startRecord(QString codec, QString path) {
     if(record == NULL) {
         switch(codec) {
         case Settings::WAV: {

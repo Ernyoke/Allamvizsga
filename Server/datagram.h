@@ -49,6 +49,7 @@ public:
     qint32 getClientId() const;
     qint32 getCurrentPackNumber() const;
     qint32 getPacketsNumber() const;
+    qint64 getPacketCounter() const;
 
     //static methods
     static qint64 generateTimestamp();
@@ -69,6 +70,7 @@ private:
     quint32 size;
 
     static qint64 packetCounter;
+    qint64 recPacketCounter;
 
     void createDatagram(QByteArray *, int packet_nr);
     void splitDatagram();

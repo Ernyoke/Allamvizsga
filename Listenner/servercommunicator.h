@@ -14,8 +14,11 @@ class ServerCommunicator : public QObject
 {
     Q_OBJECT
 public:
-    explicit ServerCommunicator(Settings *settings, QObject *parent = 0);
+    explicit ServerCommunicator(QObject *parent = 0);
     ~ServerCommunicator();
+
+    QHostAddress getServerAddress() const;
+    qint32 getClientId() const;
 
 private:
     QUdpSocket *socket;
@@ -31,6 +34,11 @@ private:
     qint64 reqListStart;
     QMap<qint32, QByteArray> listContent;
 
+    qint32 myclientId;
+    QHostAddress serverAddress;
+    int serverPort;
+    int clientPort;
+
     void processDatagram(Datagram&);
     void processList(Datagram&);
     void processNewChannel(Datagram&);
@@ -41,7 +49,7 @@ private:
     void processRemoveChannel(Datagram&);
 
 private slots:
-    void sendLoginRequest();
+    void sendLoginRequest(QString address);
     void logout();
     void sendDatagram(Datagram *);
     void sendDatagram(Datagram);

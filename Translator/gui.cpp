@@ -21,19 +21,17 @@ void GUI::initialize() {
     broadcastDataSize = 0;
     broadcastDataPerSec = 0;
 
-    broadcasting_port = -1;
-
-    //create settings dialog
-    //this class also holds valuable information, such userid, server address, communication ports, etc.
-    settings = new Settings(this);
+    //init settings
+    settings = settings = new QSettings(QSettings::IniFormat, QSettings::UserScope,
+                                        Settings::organization_label, Settings::appname_label, this);
 
     //create servercommunicator class
-    serverCommunicator = new ServerCommunicator(settings, this);
+    serverCommunicator = new ServerCommunicator(this);
 
     //set up logindialog
-    loginDialog = new LoginDialog(settings, this);
+    loginDialog = new LoginDialog(this);
     //login request passed from logindialog to servercommunicator
-    connect(loginDialog, SIGNAL(sendLoginRequest()), serverCommunicator, SLOT(sendLoginRequest()));
+    connect(loginDialog, SIGNAL(sendLoginRequest(QString)), serverCommunicator, SLOT(sendLoginRequest(QString)));
     //logout request passed from logindialog to servercommunicator
     connect(loginDialog, SIGNAL(sendLogoutRequest()), serverCommunicator, SLOT(logout()));
     //signal emitted when authentification was successfull
@@ -43,6 +41,9 @@ void GUI::initialize() {
     //signal emitted when authentification timed out
     connect(serverCommunicator, SIGNAL(authentificationTimedOut()), loginDialog, SLOT(authentificationTimedOut()));
 
+    connect(this, SIGNAL(startPacketLog(QMutex*,QFile*)), serverCommunicator, SLOT(startPacketLog(QMutex*,QFile*)));
+    connect(this, SIGNAL(stopPacketLog()), serverCommunicator, SLOT(stopPacketLog()));
+
 
     //initialize volume slider
     ui->volumeSlider->setMaximum(100);
@@ -51,7 +52,7 @@ void GUI::initialize() {
     //****GUI SIGNALS***
     connect(ui->volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(volumeChangedSlot()));
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playbackButtonPushed()));
-    connect(ui->newLocalChannel, SIGNAL(clicked()), this, SLOT(addNewChannel()));
+    connect(ui->newLocalChannel, SIGNAL(clicked()), this, SLOT(addNewLocalChannel()));
     connect(ui->recordButton, SIGNAL(clicked()), this, SLOT(startRecordPushed()));
     connect(ui->pauseRec, SIGNAL(clicked()), this, SLOT(pauseRecordPushed()));
     connect(ui->startBroadcastBtn, SIGNAL(clicked()), this, SLOT(startBroadcast()));
@@ -69,9 +70,6 @@ void GUI::initialize() {
     connect(serverCommunicator, SIGNAL(serverList(QByteArray)), channelModel, SLOT(newChannelList(QByteArray)));
     connect(serverCommunicator, SIGNAL(channelConnected(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
 
-     //add/remove channel from channellist(local channel, this will not start a new channel on server)
-    addNewChannelMan = new AddNewChannelFromGui(settings->getOutputDevice(), this);
-    connect(addNewChannelMan, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
     connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
 
     //initialize timers
@@ -92,6 +90,11 @@ void GUI::initialize() {
     isListenerRunning = false;
     isSpeakerRunning = false;
     doubleClickEnabled = true;
+    isLogging = false;
+    logMutex = new QMutex;
+    if(settings->value(Settings::log_label, false).toBool()) {
+        preparePacketLog(settings->value(Settings::logPath_label, QDir::currentPath()).toString());
+    }
 
 }
 
@@ -105,16 +108,16 @@ void GUI::login() {
         if(!this->isVisible()) {
             this->show();
         }
-        QHostAddress address = settings->getServerAddress();
+        QHostAddress address = serverCommunicator->getServerAddress();
         ui->ipaddressLabel->setText(address.toString());
-        ui->portLabel->setText(QString::number(settings->getClientPort()));
+        ui->portLabel->setText(QString::number(serverCommunicator->getClientPort()));
         try {
             newChannelDialog = new NewChannelDialog(this);
             connect(newChannelDialog, SIGNAL(requestNewChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
             connect(serverCommunicator, SIGNAL(newChannelAckReceived(Datagram)), newChannelDialog, SLOT(newChannelAck(Datagram)));
             connect(newChannelDialog, SIGNAL(closeChannel(Datagram)), serverCommunicator, SLOT(sendDatagram(Datagram)));
-            newChannelDialog->setClientId(settings->getClientId());
-            newChannelDialog->setAudioDeviceInfo(settings->getInputDevice());
+            newChannelDialog->setClientId(serverCommunicator->getClientId());
+            newChannelDialog->setAudioDeviceInfo(getInputDevice());
 
             serverCommunicator->requestChannelList();
         }
@@ -200,13 +203,15 @@ void GUI::startBroadcast() {
             QAudioFormat speakerFormat = newChannelDialog->getAudioFormat();
 
             try {
-                QAudioDeviceInfo deviceInfo = settings->getInputDevice();
-                QHostAddress serverAddress = settings->getServerAddress();
-                qint32 port = settings->getClientPortForSound();
-                qint32 id = settings->getClientId();
+                QAudioDeviceInfo deviceInfo = getInputDevice();
+                QHostAddress serverAddress = serverCommunicator->getServerAddress();
+                qint32 port = serverCommunicator->getClientPortForSound();
+                qint32 id = serverCommunicator->getClientId();
+
+                bool testMode = settings->value(Settings::testmode_label, false).toBool();
 
                 //initialize speaker worker
-                if(settings->testMode()) {
+                if(testMode) {
                     speakerWorker = new TestSpeaker;
                 }
                 else {
@@ -270,8 +275,8 @@ void GUI::playbackButtonPushed() {
         QModelIndex selectedIndex = ui->channelList->currentIndex();
         try {
             QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
-            QAudioDeviceInfo device = settings->getOutputDevice();
-            QHostAddress address = settings->getServerAddress();
+            QAudioDeviceInfo device = getOutputDevice();
+            QHostAddress address = serverCommunicator->getServerAddress();
             createListenerThread();
             emit startListening(selectedChannel, device, address, 0.5);
         }
@@ -283,6 +288,7 @@ void GUI::playbackButtonPushed() {
     }
     else {
         emit stopListening();
+
     }
     ui->playButton->setEnabled(false);
 }
@@ -304,13 +310,19 @@ void GUI::createListenerThread() {
     //volume
     connect(this, SIGNAL(volumeChanged(qreal)), listenerWorker, SLOT(volumeChanged(qreal)));
     //record sound
-    connect(this, SIGNAL(startRecord(Settings::CODEC, QString)), listenerWorker, SLOT(startRecord(Settings::CODEC, QString)));
+    connect(this, SIGNAL(startRecord(QString, QString)), listenerWorker, SLOT(startRecord(QString, QString)));
     connect(this, SIGNAL(pauseRecord()), listenerWorker, SLOT(pauseRecord()));
     connect(listenerWorker, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
     connect(listenerWorker, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
     connect(listenerWorker, SIGNAL(changePauseButtonState(RecordAudio::STATE)), this, SLOT(changePauseButtonState(RecordAudio::STATE)));
     //error message
     connect(listenerWorker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
+    //packetlog
+    connect(this, SIGNAL(startPacketLog(QMutex*, QFile*)), listenerWorker, SLOT(startPacketLog(QMutex*,QFile*)));
+    connect(this, SIGNAL(stopPacketLog()), listenerWorker, SLOT(stopPacketLog()));
+    if(isLogging) {
+        emit startPacketLog(logMutex, packetLoggerFile);
+    }
 }
 
 void GUI::changePlayButtonState(bool isPlaying) {
@@ -389,27 +401,36 @@ void GUI::startNewChannelOnDistroy() {
     }
 }
 
-void GUI::addNewChannel() {
-    if(addNewChannelMan != NULL) {
-        addNewChannelMan->show();
+void GUI::addNewLocalChannel() {
+    //add/remove channel from channellist(local channel, this will not start a new channel on server)
+    try {
+        AddNewChannelFromGui *addNewChannelFromGUI = new AddNewChannelFromGui(getOutputDevice(), this);
+        connect(addNewChannelFromGUI, SIGNAL(newUserCreatedChannel(ChannelInfo)), channelModel, SLOT(addNewUserCreatedChannel(ChannelInfo)));
+        addNewChannelFromGUI->show();
     }
-    else {
-        errorMessage("No input device found!");
+    catch(NoAudioDeviceException *exc) {
+        errorMessage(exc->message());
+        delete exc;
     }
 }
 
 void GUI::menuTriggered(QAction* action) {
     if(action == ui->actionSettings) {
-        settings->exec();
-    }
-    else {
+        Settings *settingsDialog = new Settings;
+        settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
+        connect(settingsDialog, SIGNAL(packetLogStarted(QString)), this, SLOT(preparePacketLog(QString)));
+        connect(settingsDialog, SIGNAL(packetLogStopped()), this, SLOT(finalizePacketLog()));
+        settingsDialog->show();
         return;
+    }
+    if(action == ui->actionExit) {
+        this->close();
     }
 }
 
 void GUI::startRecordPushed() {
-    Settings::CODEC codec = settings->getRecordCodec();
-    QString path = settings->getRecordPath();
+    QString codec = settings->value(Settings::record_codec_label, "wav").toString();
+    QString path = settings->value(Settings::record_path_label, QDir::currentPath()).toString();
     emit startRecord(codec, path);
 }
 
@@ -433,7 +454,7 @@ void GUI::changeRecordButtonState(RecordAudio::STATE state) {
 void GUI::changePauseButtonState(RecordAudio::STATE state) {
     switch(state) {
     case RecordAudio::PAUSED : {
-        ui->pauseRec->setText("Unpause");
+        ui->pauseRec->setText("Resume");
         break;
     }
     case RecordAudio::RECORDING : {
@@ -472,6 +493,70 @@ void GUI::closeEvent(QCloseEvent *event) {
 void GUI::deleteChannel() {
     QModelIndex selectedIndex = ui->channelList->currentIndex();
     channelModel->deleteUserCreatedChannel(selectedIndex);
+}
+
+void GUI::preparePacketLog(QString path) {
+    if(!isLogging) {
+        QString fileName = "/translatorLog.txt";
+        packetLoggerFile = new QFile(path + fileName, this);
+        if(!packetLoggerFile->open(QIODevice::WriteOnly)) {
+            emit errorMessage("translatorLog.txt could not been created!");
+            return;
+        }
+        emit startPacketLog(logMutex, packetLoggerFile);
+        isLogging = true;
+    }
+}
+
+void GUI::finalizePacketLog() {
+    if(isLogging) {
+        emit stopPacketLog();
+        packetLoggerFile->close();
+        delete packetLoggerFile;
+        isLogging = false;
+    }
+}
+
+//get outputdevice from QSettings
+//if it's not set a device, the default device will be returned
+//it there is no outputdevice, exception is thrown
+QAudioDeviceInfo GUI::getOutputDevice() const {
+    QString audioDeviceName = settings->value(Settings::output_device_label, "").toString();
+    QList<QAudioDeviceInfo> outputDevices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    if(outputDevices.size() == 0) {
+        NoAudioDeviceException *exception = new NoAudioDeviceException;
+        exception->setMessage("No output aoudio device found!");
+        throw exception;
+    }
+    else {
+        foreach (const QAudioDeviceInfo it, outputDevices) {
+            if(it.deviceName().compare(audioDeviceName) == 0) {
+                return it;
+            }
+        }
+        return QAudioDeviceInfo::defaultOutputDevice();
+    }
+}
+
+//get inputdevice from QSettings
+//if it's not set a device, the default device will be returned
+//it there is no inputdevice, exception is thrown
+QAudioDeviceInfo GUI::getInputDevice() const {
+    QString audioDeviceName = settings->value(Settings::input_device_label, "").toString();
+    QList<QAudioDeviceInfo> inputDevices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    if(inputDevices.size() == 0) {
+        NoAudioDeviceException *exception = new NoAudioDeviceException;
+        exception->setMessage("No input aoudio device found!");
+        throw exception;
+    }
+    else {
+        foreach (const QAudioDeviceInfo it, inputDevices) {
+            if(it.deviceName().compare(audioDeviceName) == 0) {
+                return it;
+            }
+        }
+        return QAudioDeviceInfo::defaultInputDevice();
+    }
 }
 
 

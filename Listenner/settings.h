@@ -12,6 +12,7 @@
 #include <QXmlStreamAttribute>
 #include <QHostAddress>
 #include <QMutex>
+#include <QSettings>
 
 #include "noaudiodeviceexception.h"
 
@@ -26,53 +27,39 @@ class Settings : public QDialog
 public:
     enum CODEC {WAV};
 
+    static const QString appname_label;
+    static const QString organization_label;
+    static const QString record_codec_label;
+    static const QString record_path_label;
+    static const QString output_device_label;
+    static const QString server_address_label;
+
+    static const int CLIENT_TYPE;
+
+
     explicit Settings(QWidget *parent = 0);
     ~Settings();
 
-    QAudioDeviceInfo getOutputDevice() const;
-    QHostAddress getServerAddress() const;
-    qint32 getServerPort() const;
-    qint32 getClientPort() const;
-    void setClientPort(const int);
-    qint32 getClientType() const;
-    qint32 getClientId() const;
-    void setClientId(const qint32);
-    CODEC getRecordCodec() const;
-    QString getRecordPath() const;
-
-    bool setServerAddress(QString);
+    static bool checkIpAddress(const QString);
 
 private:
     Ui::Settings *ui;
 
-    QString outputDeviceName;
-
-    QHostAddress *address;
-    qint32 serverPort;
-    qint32 clientType;
-    qint32 clientPort;
-    qint32 clientId;
-
-    QList<QAudioDeviceInfo> output_devices;
-    QAudioDeviceInfo selectedOutputDevice;
-    QAudioDeviceInfo activeOutputDevice;
-    CODEC recordCodec;
+    QSettings *settings;
     QFileDialog *fileBrowser;
+    QList<QAudioDeviceInfo> output_devices;
+    QList<QString> recordCodecs;
     QString recordPath;
 
-    QVariant boxValue(const QComboBox *box);
-    void readSettingsFromXML();
     int getBoxIndex(QComboBox*, QString*) const;
     int getBoxIndex(QComboBox*, int) const;
     void setBoxIndex(QComboBox*, int);
+    QVariant boxValue(const QComboBox *box);
     void initSettingsValues();
-
-    bool checkIpAddress(QString);
 
 private slots:
     void applySettings();
-    void cancelSetting();
-    void changeDevice(int);
+    void cancelSettings();
     void selectRecordPath();
 };
 

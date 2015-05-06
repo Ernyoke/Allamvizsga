@@ -37,11 +37,11 @@ void Speaker::transferData(){
         //initialize byte array
         QByteArray chunk;
         chunk = intermediateDevice->read(buffLen);
-        timestamp++;
+//        timestamp++;
         //serialize data conform to the protocol
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &chunk);
         //create datagram
-        Datagram dataGram(Datagram::SOUND, clientId, timestamp, soundChunk);
+        Datagram dataGram(Datagram::SOUND, clientId, Datagram::generateTimestamp(), soundChunk);
         //send the data
         dataGram.sendDatagram(socket, &serverAddress, broadcasting_port);
         emit dataSent(dataGram.getSize());

@@ -60,6 +60,10 @@ private:
     bool isListenerRunning;
     bool doubleClickEnabled;
 
+    bool isLogging;
+    QFile *packetLoggerFile;
+    QMutex *logMutex;
+
     //listenner
     Listener *listenerWorker;
     QTimer timer;
@@ -73,13 +77,11 @@ private:
     long broadcastDataSize;
     long broadcastDataPerSec;
     long cntBroadcastTime;
-    int broadcasting_port;
 
     //both
-    Settings *settings;
+    QSettings *settings;
     LoginDialog *loginDialog;
     NewChannelDialog *newChannelDialog;
-    AddNewChannelFromGui *addNewChannelMan;
     QPointer<ServerCommunicator> serverCommunicator;
     QPointer<ChannelModel> channelModel;
 
@@ -87,11 +89,13 @@ private:
     void initialize();
     void stopChannel();
     void createListenerThread();
+    QAudioDeviceInfo getInputDevice() const;
+    QAudioDeviceInfo getOutputDevice() const;
 
 signals:
     //signals for listenner
     void volumeChanged(qreal);
-    void startRecord(Settings::CODEC, QString);
+    void startRecord(QString, QString);
     void stopRecord();
     void pauseRecord();
     void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
@@ -105,6 +109,8 @@ signals:
 
     //signals for both
     void sendLogoutRequest();
+    void startPacketLog(QMutex*, QFile*);
+    void stopPacketLog();
 
     //signals emited when server is down
     void stopPlaybackSD();
@@ -119,7 +125,7 @@ public slots:
     void updateTime();
     void volumeChangedSlot();
     void changeChannelOnDoubleClick(QModelIndex);
-    void addNewChannel();
+    void addNewLocalChannel();
 
     void changeRecordButtonState(RecordAudio::STATE);
     void changePauseButtonState(RecordAudio::STATE);
@@ -139,6 +145,8 @@ public slots:
     void menuTriggered(QAction*);
     void errorMessage(QString);
     void serverDownHandle();
+    void preparePacketLog(QString);
+    void finalizePacketLog();
 
 
 };

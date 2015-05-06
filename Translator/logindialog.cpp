@@ -1,12 +1,11 @@
 #include "logindialog.h"
 #include "ui_logindialog.h"
 
-LoginDialog::LoginDialog(Settings *settings, QWidget *parent) :
+LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
-    this->settings = settings;
     connect(ui->loginBtn, SIGNAL(clicked()), this, SLOT(authentificate()));
 }
 
@@ -24,8 +23,8 @@ LoginDialog::~LoginDialog()
 
 void LoginDialog::authentificate() {
     if(!ack) {
-        if(settings->setServerAddress(ui->address->text())) {
-            emit sendLoginRequest();
+        if(Settings::checkIpAddress(ui->address->text())) {
+            emit sendLoginRequest(ui->address->text());
             //set status text
             ui->status->setText("Waiting for server response!");
             ui->loginBtn->setEnabled(false);
@@ -49,7 +48,7 @@ void LoginDialog::authentificationSucces(qint32 id) {
         ui->loginBtn->setText("Countinue");
         ui->loginBtn->setEnabled(true);
         ack = true;
-        settings->setClientId(id);
+//        settings->setClientId(id);
     }
     else {
         authentificationFailed();

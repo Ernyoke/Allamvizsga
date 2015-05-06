@@ -20,7 +20,7 @@ class LoginDialog : public QDialog
     Q_OBJECT
 
 public:
-    LoginDialog(Settings *settings, QWidget *parent = 0);
+    LoginDialog(QWidget *parent = 0);
     ~LoginDialog();
 
     bool authentificationStatus();
@@ -28,8 +28,6 @@ public:
 
 private:
     Ui::LoginDialog *ui;
-
-    Settings *settings;
 
     bool ack;
 
@@ -41,7 +39,7 @@ private slots:
     void logout();
 
 signals:
-    void sendLoginRequest();
+    void sendLoginRequest(QString);
     void sendLogoutRequest();
 };
 

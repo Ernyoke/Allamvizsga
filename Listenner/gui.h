@@ -10,6 +10,8 @@
 #include <QCloseEvent>
 #include <QPointer>
 #include <QThread>
+#include <QSettings>
+#include <QAudioDeviceInfo>
 
 #include "settings.h"
 #include "recordaudio.h"
@@ -59,13 +61,15 @@ private:
 
     //both
     LoginDialog* loginDialog;
-    Settings* settings;
+    QSettings* settings;
     AddNewChannelFromGui *addNewChannelMan;
     QPointer<ServerCommunicator> serverCommunicator;
     QPointer<ChannelModel> channelModel;
 
     void initialize();
     void createListenerThread();
+    QAudioDeviceInfo getOutputDevice() const;
+
 
 
 protected:
@@ -77,7 +81,7 @@ signals:
     void startRecord(Settings::CODEC, QString);
     void stopRecord();
     void pauseRecord();
-    void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, int volume);
+    void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
     void stopListening();
 
     //signals for both
