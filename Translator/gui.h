@@ -62,7 +62,7 @@ private:
 
     bool isLogging;
     QFile *packetLoggerFile;
-    QMutex *logMutex;
+    QMutex* logMutex;
 
     //listenner
     Listener *listenerWorker;
