@@ -18,7 +18,7 @@ public:
     virtual ~ClientInfo();
 
     void setId(quint32 id);
-    quint32 getId() const;
+    qint32 getId() const;
     QString getAddressStr() const;
     QHostAddress getAddress() const;
     qint32 getClientPort()  const;
@@ -33,7 +33,7 @@ public:
     virtual QString getClientTypeStr() const = 0;
 
 protected:
-    quint32 id;
+    qint32 id;
     QHostAddress address;
     qint32 clientPort;
     QString OSName;

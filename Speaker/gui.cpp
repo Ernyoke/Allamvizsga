@@ -111,8 +111,8 @@ void GUI::startNewChannel() {
         if(newChannelDialog->isChannelAvailable()) {
             const ChannelInfo* chInfo = newChannelDialog->getChannelInformation();
             ui->channelLangText->setText(chInfo->getLanguage());
-            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()));
-            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()));
+            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()) + "bits");
+            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()) + "Hz");
             ui->channelNrText->setText(QString::number(chInfo->getChannels()));
             ui->codecText->setText(chInfo->getCodec());
             ui->newChannelBtn->setText("Close channel");

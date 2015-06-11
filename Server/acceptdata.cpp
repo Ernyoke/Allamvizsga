@@ -35,12 +35,13 @@ void AcceptData::readData() {
         quint16 senderPort;
         socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
         Datagram receivedDatagram(&data);
-        createLogEntry(receivedDatagram);
+        createLogEntry(PacketLogger::IN, receivedDatagram);
         if(receivedDatagram.getId() == Datagram::SOUND) {
             QMap<qint32, ChannelInfo*>::iterator iter = channels.find(receivedDatagram.getClientId());
             if(iter != channels.end()) {
-                qint16 port = iter.value()->getOutPort();
+                qint32 port = iter.value()->getOutPort();
                 socket->writeDatagram(data.data(), data.size(), broadcastAddress, port);
+                createLogEntry(PacketLogger::OUT, receivedDatagram);
             }
         }
     }

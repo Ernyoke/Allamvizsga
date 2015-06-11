@@ -14,12 +14,14 @@ public:
     explicit PacketLogger(QMutex *mutex = 0);
     ~PacketLogger();
 
+    enum DIRECTION { IN, OUT };
+
 protected:
     QMutex *mutex;
 
     QFile *logFile;
     bool isLogActivated;
-    void createLogEntry(Datagram&);
+    void createLogEntry(DIRECTION, Datagram&);
 
 signals:
     void errorMessage(QString);

@@ -82,6 +82,7 @@ void GUI::initialize() {
         delete exc;
     }
     connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
+    connect(serverCommunicator, SIGNAL(removeChannel(qint32)), this, SLOT(channelStopedByServer(qint32)));
 
     //server down
     connect(serverCommunicator, SIGNAL(serverDown()), this, SLOT(serverDownHandle()));
@@ -131,7 +132,7 @@ void GUI::playbackButtonPushed() {
     if(!isPlaying) {
         QModelIndex selectedIndex = ui->channelList->currentIndex();
         try {
-            QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
+            selectedChannel = channelModel->getData(selectedIndex);
             QAudioDeviceInfo device = getOutputDevice();
             QHostAddress address = serverCommunicator->getServerAddress();
             createListenerThread();
@@ -171,7 +172,7 @@ void GUI::createListenerThread() {
     //volume
     connect(this, SIGNAL(volumeChanged(qreal)), listenerWorker, SLOT(volumeChanged(qreal)));
     //record sound
-//    connect(this, SIGNAL(startRecord(Settings::CODEC, QString)), listenerWorker, SLOT(startRecord(Settings::CODEC, QString)));
+    connect(this, SIGNAL(startRecord(QString, QString)), listenerWorker, SLOT(startRecord(QString, QString)));
     connect(this, SIGNAL(pauseRecord()), listenerWorker, SLOT(pauseRecord()));
     connect(listenerWorker, SIGNAL(dataReceived(int)), this, SLOT(setDataReceived(int)));
     connect(listenerWorker, SIGNAL(changeRecordButtonState(RecordAudio::STATE)), this, SLOT(changeRecordButtonState(RecordAudio::STATE)));
@@ -186,11 +187,22 @@ void GUI::changePlayButtonState(bool isPlaying) {
         ui->playButton->setText("Stop");
         ui->playButton->setEnabled(true);
         receiverTimerStart();
+
+        ui->channelPlaying->setText(selectedChannel->getLanguage());
+        ui->portPlaying->setText(QString::number(selectedChannel->getOutPort()));
+        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + "Hz");
+        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + "bits");
+
     }
     else {
         ui->playButton->setText("Play");
         ui->playButton->setEnabled(true);
         receiverTimerStop();
+
+        ui->channelPlaying->setText("-");
+        ui->portPlaying->setText("-");
+        ui->sampleRatePlaying->setText("-");
+        ui->sampleSizePlaying->setText("-");
     }
 }
 
@@ -260,9 +272,9 @@ void GUI::menuTriggered(QAction* action) {
 }
 
 void GUI::startRecordPushed() {
-//    Settings::CODEC codec = settings->getRecordCodec();
-//    QString path = settings->getRecordPath();
-//    emit startRecord(codec, path);
+    QString codec = settings->value(Settings::record_codec_label, "wav").toString();
+    QString path = settings->value(Settings::record_path_label, QDir::currentPath()).toString();
+    emit startRecord(codec, path);
 }
 
 void GUI::pauseRecordPushed() {
@@ -335,6 +347,15 @@ QAudioDeviceInfo GUI::getOutputDevice() const {
             }
         }
         return QAudioDeviceInfo::defaultOutputDevice();
+    }
+}
+
+void GUI::channelStopedByServer(qint32 id) {
+    if(isPlaying) {
+        if(selectedChannel->getOwner() == id) {
+            emit stopListening();
+            showErrorMessage("Channel stoped by the server!");
+        }
     }
 }
 

@@ -20,7 +20,7 @@ void ClientInfo::setId(quint32 id) {
     this->id = id;
 }
 
-quint32 ClientInfo::getId() const {
+qint32 ClientInfo::getId() const {
     return this->id;
 }
 

@@ -23,9 +23,8 @@
 #include "worker.h"
 #include "noaudiodeviceexception.h"
 #include "settings.h"
-#include "packetlogger.h"
 
-class Listener : public Worker, public PacketLogger
+class Listener : public Worker
 {
     Q_OBJECT
 public:
@@ -50,8 +49,6 @@ private:
 
     bool isPlaying;
 
-    PacketLogger *packetLogger;
-
 //    short Snack_Alaw2Lin(unsigned char);
 
     QPointer <RecordAudio > record;
@@ -75,9 +72,6 @@ public slots:
     void volumeChanged(qreal);
     void startRecord(QString codec, QString path);
     void pauseRecord();
-
-    void startPacketLog(QMutex*, QFile*);
-    void stopPacketLog();
 
 private slots:
     void receiveDatagramm();

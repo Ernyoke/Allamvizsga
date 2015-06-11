@@ -9,18 +9,22 @@
 class PacketLogger
 {
 public:
-    explicit PacketLogger();
+    PacketLogger();
     ~PacketLogger();
+
+    enum DIRECTION { IN, OUT };
+
+    void createLogEntry(DIRECTION, Datagram&);
+
+    void startPacketLog(QMutex *mutex, QFile *logFile);
+    void stopPacketLog();
 
 protected:
     QMutex *mutex;
 
     QFile *logFile;
     bool isLogActivated;
-    void createLogEntry(Datagram&);
 
-    void startPacketLog(QMutex *mutex, QFile *logFile);
-    void stopPacketLog();
 };
 
 #endif // PACKETLOGGER_H

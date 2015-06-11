@@ -59,6 +59,8 @@ private:
     bool isPlaying;
     bool doubleClickEnabled;
 
+    QSharedPointer<ChannelInfo> selectedChannel;
+
     //both
     LoginDialog* loginDialog;
     QSettings* settings;
@@ -72,13 +74,14 @@ private:
 
 
 
+
 protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
     //signals for listenner
     void volumeChanged(qreal);
-    void startRecord(Settings::CODEC, QString);
+    void startRecord(QString, QString);
     void stopRecord();
     void pauseRecord();
     void startListening(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
@@ -106,6 +109,7 @@ public slots:
     void changePlayButtonState(bool isPlaying);
     void setDataReceived(int);
     void startNewChannelOnDistroy();
+    void channelStopedByServer(qint32);
 
     //general
     void menuTriggered(QAction*);

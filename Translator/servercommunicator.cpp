@@ -48,7 +48,7 @@ void ServerCommunicator::readDatagram() {
 }
 
 void ServerCommunicator::processDatagram(Datagram &dgram) {
-    createLogEntry(dgram);
+    createLogEntry(DIRECTION::IN, dgram);
     switch(dgram.getId()) {
     case Datagram::LOGIN :{
         //invalid package, throw it
@@ -181,10 +181,12 @@ void ServerCommunicator::logout() {
 
 void ServerCommunicator::sendDatagram(Datagram *dgram) {
     dgram->sendDatagram(socket, &serverAddress, serverPort);
+    createLogEntry(OUT, *dgram);
 }
 
 void ServerCommunicator::sendDatagram(Datagram dgram) {
     dgram.sendDatagram(socket, &serverAddress, serverPort);
+    createLogEntry(OUT, dgram);
 }
 
 void ServerCommunicator::requestChannelList() {

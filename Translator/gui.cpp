@@ -71,6 +71,7 @@ void GUI::initialize() {
     connect(serverCommunicator, SIGNAL(channelConnected(ChannelInfo)), channelModel, SLOT(addNewChannel(ChannelInfo)));
 
     connect(serverCommunicator, SIGNAL(removeChannel(qint32)), channelModel, SLOT(deleteChannel(qint32)));
+    connect(serverCommunicator, SIGNAL(removeChannel(qint32)), this, SLOT(channelStopedByServer(qint32)));
 
     //initialize timers
     timer.setInterval(1000);
@@ -237,6 +238,11 @@ void GUI::startBroadcast() {
                 connect(this, SIGNAL(stopBroadcast()), speakerWorker, SLOT(stop()));
                 //start the thread
                 speakerThread->start();
+                connect(this, SIGNAL(startPacketLog(QMutex*, QFile*)), speakerWorker, SLOT(startPacketLog(QMutex*, QFile*)));
+                connect(this, SIGNAL(stopPacketLog()), speakerWorker, SLOT(stopPacketLog()));
+                if(isLogging) {
+                    emit startPacketLog(logMutex, packetLoggerFile);
+                }
                 //start the broadcast
                 emit startBroadcast(speakerFormat, deviceInfo, serverAddress, port, id);
 
@@ -274,7 +280,7 @@ void GUI::playbackButtonPushed() {
     if(!isListenerRunning) {
         QModelIndex selectedIndex = ui->channelList->currentIndex();
         try {
-            QSharedPointer<ChannelInfo> selectedChannel = channelModel->getData(selectedIndex);
+            selectedChannel = channelModel->getData(selectedIndex);
             QAudioDeviceInfo device = getOutputDevice();
             QHostAddress address = serverCommunicator->getServerAddress();
             createListenerThread();
@@ -318,7 +324,7 @@ void GUI::createListenerThread() {
     //error message
     connect(listenerWorker, SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
     //packetlog
-    connect(this, SIGNAL(startPacketLog(QMutex*, QFile*)), listenerWorker, SLOT(startPacketLog(QMutex*,QFile*)));
+    connect(this, SIGNAL(startPacketLog(QMutex*, QFile*)), listenerWorker, SLOT(startPacketLog(QMutex*, QFile*)));
     connect(this, SIGNAL(stopPacketLog()), listenerWorker, SLOT(stopPacketLog()));
     if(isLogging) {
         emit startPacketLog(logMutex, packetLoggerFile);
@@ -326,16 +332,27 @@ void GUI::createListenerThread() {
 }
 
 void GUI::changePlayButtonState(bool isPlaying) {
-    this->isListenerRunning = isPlaying;
-    if(isPlaying) {
+    isListenerRunning = isPlaying;
+    if(isListenerRunning) {
         ui->playButton->setText("Stop");
         ui->playButton->setEnabled(true);
         receiverTimerStart();
+
+        ui->channelPlaying->setText(selectedChannel->getLanguage());
+        ui->portPlaying->setText(QString::number(selectedChannel->getOutPort()));
+        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + "Hz");
+        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + "bits");
+
     }
     else {
         ui->playButton->setText("Play");
         ui->playButton->setEnabled(true);
         receiverTimerStop();
+
+        ui->channelPlaying->setText("-");
+        ui->portPlaying->setText("-");
+        ui->sampleRatePlaying->setText("-");
+        ui->sampleSizePlaying->setText("-");
     }
 }
 
@@ -556,6 +573,15 @@ QAudioDeviceInfo GUI::getInputDevice() const {
             }
         }
         return QAudioDeviceInfo::defaultInputDevice();
+    }
+}
+
+void GUI::channelStopedByServer(qint32 id) {
+    if(isListenerRunning) {
+        if(selectedChannel->getOwner() == id) {
+            emit stopListening();
+            errorMessage("Channel stoped by the server!");
+        }
     }
 }
 

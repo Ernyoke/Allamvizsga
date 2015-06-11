@@ -136,8 +136,7 @@ void Listener::volumeChanged(qreal volume) {
 
 void Listener::startRecord(QString codec, QString path) {
     if(record == NULL) {
-        switch(codec) {
-        case Settings::WAV: {
+        if(codec.compare("wav") == 0) {
             record = new RecordWav(path, format, this);
             connect(record, SIGNAL(recordingState(RecordAudio::STATE)), this, SLOT(recordingStateChanged(RecordAudio::STATE)));
             if(record->getState() == RecordAudio::STOPPED) {
@@ -147,8 +146,6 @@ void Listener::startRecord(QString codec, QString path) {
                     msgBox.exec();
                 }
             }
-            break;
-        }
         }
     }
     else {

@@ -26,7 +26,7 @@ public:
 
     void setOutPort(qint16 port);
     qint32 getOwner() const;
-    qint16 getOutPort() const;
+    qint32 getOutPort() const;
 
 private:
     QString language;
@@ -35,7 +35,7 @@ private:
     qint32 channels;
     qint32 sample_size;
     qint32 ownerId;
-    qint16 port;
+    qint32 port;
 
     void deserialize(QByteArray &content);
 

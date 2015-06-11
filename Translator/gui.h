@@ -71,6 +71,8 @@ private:
     long dataPerSec;
     long cntTime;
 
+    QSharedPointer<ChannelInfo> selectedChannel;
+
     //speaker
     AbstractSpeaker *speakerWorker;
     QTimer broadcastTimer;
@@ -132,6 +134,7 @@ public slots:
     void changePlayButtonState(bool isPlaying);
     void setDataReceived(int);
     void startNewChannelOnDistroy();
+    void channelStopedByServer(qint32);
 
 
     //slots for broadcast

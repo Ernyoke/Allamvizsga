@@ -24,11 +24,12 @@ void PacketLogger::stopPacketLog() {
     }
 }
 
-void PacketLogger::createLogEntry(Datagram &dgram) {
+void PacketLogger::createLogEntry(DIRECTION direction, Datagram &dgram) {
     if(isLogActivated) {
         QTextStream stream(logFile);
         mutex->lock();
         QString type("INVALID");
+        QString directionStr("IN");
         switch (dgram.getId()) {
         case Datagram::LOGIN :{
             type = "LOGIN";
@@ -83,8 +84,23 @@ void PacketLogger::createLogEntry(Datagram &dgram) {
             break;
         }
         }
-        stream << dgram.getClientId() << " " << type << " " << dgram.getPacketCounter() << " "
-               << dgram.getTimeStamp() << " " << Datagram::generateTimestamp() << "\n";
+
+        qint64 counter = 0;
+        switch(direction) {
+        case IN: {
+            directionStr = "IN";
+            counter = dgram.getRecPacketCounter();
+            break;
+        }
+        case OUT: {
+            directionStr = "OUT";
+            counter = dgram.getPacketCounter();
+            break;
+        }
+        }
+
+        stream << directionStr <<  " " << dgram.getClientId() << " " << type << " " << counter << " "
+               << dgram.getTimeStamp() << " " << Datagram::generateTimestamp() << " " << dgram.getSize() << "\n";
         mutex->unlock();
     }
 }

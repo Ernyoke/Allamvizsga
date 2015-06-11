@@ -50,6 +50,7 @@ public:
     qint32 getCurrentPackNumber() const;
     qint32 getPacketsNumber() const;
     qint64 getPacketCounter() const;
+    qint64 getRecPacketCounter() const;
 
     //static methods
     static qint64 generateTimestamp();

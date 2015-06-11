@@ -20,6 +20,7 @@ Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp, SoundChunk *dat
 Datagram::Datagram(QByteArray *data) {
     this->buffer.append(*data);
     splitDatagram();
+    this->size = data->size();
 }
 
 Datagram::Datagram(qint32 id, qint32 clientId, qint64 timestamp, QString *data) {
@@ -56,7 +57,6 @@ void Datagram::splitContent(QString *data) {
         this->data.append(dataChunk);
         size += dataChunk->size() + headerSize();
         tempData.remove(0, CONTENTSIZE);
-        //
         packets++;
     }
 }
@@ -155,7 +155,8 @@ qint32 Datagram::getId() const {
 }
 
 quint32 Datagram::headerSize() const {
-    quint32 hsize = sizeof(timestamp) + sizeof(id) + sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(buffsize);
+    quint32 hsize = sizeof(packetCounter) + sizeof(timestamp) + sizeof(id) +
+            sizeof(clientId) + sizeof(packets) + sizeof(packetnr) + sizeof(quint32);
     return hsize;
 }
 
@@ -178,5 +179,9 @@ qint64 Datagram::generateTimestamp() {
 }
 
 qint64 Datagram::getPacketCounter() const {
+    return packetCounter;
+}
+
+qint64 Datagram::getRecPacketCounter() const {
     return recPacketCounter;
 }

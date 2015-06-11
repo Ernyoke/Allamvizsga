@@ -19,19 +19,19 @@ public:
     Speaker();
     ~Speaker();
 
-private:
+protected:
     QAudioInput *audioInput;
     QIODevice *intermediateDevice;
 
 signals:
 
-private slots:
-    void transferData();
+protected slots:
+    virtual void transferData();
 
 public slots:
-    void start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
+    virtual void start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
                QHostAddress serverAddress, qint32 broadcasting_port, qint32 clientId);
-    void stop();
+    virtual void stop();
 };
 
 #endif // SPEAKER_H

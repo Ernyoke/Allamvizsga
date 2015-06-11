@@ -29,16 +29,12 @@ void TestSpeaker::start(QAudioFormat speakerFormat, QAudioDeviceInfo device,
         }
         else {
 
-            int interval = 10;
-            buffLen = calcBufferSize(format, interval);
-//            timer = new QTimer;
-//            timer->setInterval(1000 / interval);
-//            connect(timer, SIGNAL(timeout()), this, SLOT(transferData()));
-//            timer->start();
+        int interval = 10;
+        buffLen = calcBufferSize(format, interval);
 
-            timerId = this->startTimer(1000 / interval, Qt::PreciseTimer);
+        timerId = this->startTimer(1000 / interval, Qt::PreciseTimer);
 
-            emit recordingState(isRecording);
+        emit recordingState(isRecording);
         }
     }
 
@@ -58,10 +54,11 @@ void TestSpeaker::transferData() {
 
     if(bytes > 0) {
         SoundChunk *soundChunk = new SoundChunk(format.sampleRate(), format.sampleSize(), format.channelCount(), format.codec(), &content);
-        Datagram dataGram(Datagram::SOUND, clientId, Datagram::generateTimestamp(), soundChunk);
+        Datagram datagram(Datagram::SOUND, clientId, Datagram::generateTimestamp(), soundChunk);
         //send the data
-        dataGram.sendDatagram(socket, &serverAddress, broadcasting_port);
-        emit dataSent(dataGram.getSize());
+        datagram.sendDatagram(socket, &serverAddress, broadcasting_port);
+        emit dataSent(datagram.getSize());
+        packetLogger->createLogEntry(PacketLogger::OUT, datagram);
         delete soundChunk;
         timestamp++;
     }

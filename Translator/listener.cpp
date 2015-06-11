@@ -2,16 +2,17 @@
 
 const int BufferSize = 14096;
 
-Listener::Listener() :
+Listener::Listener() : Worker(),
     m_audioOutput(0),
     m_buffer(BufferSize, 0)
 {
     isPlaying = false;
     record = NULL;
+
 }
 
 Listener::~Listener() {
-    this->stop();
+//    this->stop();
     if(record != NULL) {
         record->stop();
         delete record;
@@ -31,7 +32,7 @@ void Listener::receiveDatagramm() {
         m_buffer.resize(datagramSize);
         emit dataReceived(datagramSize);
         Datagram datagram(&m_buffer);
-        createLogEntry(datagram);
+        packetLogger->createLogEntry(PacketLogger::IN, datagram);
         temp = datagram.getTimeStamp();
         if(timestamp < temp) {
             QByteArray content = datagram.getContent();
@@ -117,7 +118,7 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
 void Listener::stop() {
     if(isPlaying) {
         m_audioOutput->stop();
-        PacketLogger::stopPacketLog();
+        stopPacketLog();
         delete m_audioOutput;
         disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
         delete socket;
@@ -190,12 +191,4 @@ bool Listener::isRecRunning() {
     return false;
 }
 
-//redirect slots for packetlogger
-void Listener::startPacketLog(QMutex *mutex, QFile *file) {
-    PacketLogger::startPacketLog(mutex, file);
-}
-
-void Listener::stopPacketLog() {
-    PacketLogger::stopPacketLog();
-}
 

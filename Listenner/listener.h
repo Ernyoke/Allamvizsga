@@ -70,7 +70,7 @@ public slots:
     void start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device, QHostAddress serverAddress, qreal volume);
     void stop();
     void volumeChanged(qreal);
-    void startRecord(Settings::CODEC codec, QString path);
+    void startRecord(QString codec, QString path);
     void pauseRecord();
 
 private slots:

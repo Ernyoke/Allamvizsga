@@ -49,7 +49,7 @@ void ManageClients::readPendingDatagrams() {
 }
 
 void ManageClients::processDatagram(Datagram dgram, QHostAddress address, quint16 port) {
-    createLogEntry(dgram);
+    createLogEntry(PacketLogger::IN, dgram);
     switch(dgram.getId()) {
     case Datagram::LOGIN : {
         if(isAvNextClient()) {
@@ -234,6 +234,7 @@ void ManageClients::sendCollectiveMessageToSpeakers(Datagram &dgram) {
 }
 
 void ManageClients::sendDatagram(QHostAddress &address, qint32 port,  Datagram &dgram) {
+    createLogEntry(PacketLogger::OUT, dgram);
     dgram.sendDatagram(socket, &address, port);
 }
 
