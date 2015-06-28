@@ -19,7 +19,10 @@ public:
 
     static const int CODEC_LENGTH;
 
-    quint32 getSize();
+    qint32 getSize() const;
+    qint32 getSampleRate() const;
+    qint32 getSampleSize() const;
+    QString getCodec() const;
 
 private:
     QByteArray soundPacket;

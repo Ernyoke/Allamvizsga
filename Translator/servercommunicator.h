@@ -26,7 +26,6 @@ public:
 
 private:
     QUdpSocket *socket;
-    Settings *settings;
     QTimer *listReqTimer;
     QTimer *refreshTimer;
     QTimer *loginTimer;

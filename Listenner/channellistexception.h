@@ -3,16 +3,15 @@
 
 #include <QObject>
 #include <QDebug>
+#include "baseexception.h"
 
-class ChannelListException : public QObject
+class ChannelListException : public BaseException
 {
     Q_OBJECT
 public:
-    explicit ChannelListException(QObject *parent = 0);
+    explicit ChannelListException(BaseException *parent = 0);
     ~ChannelListException();
 
-    QString message();
-    void setMessage(QString);
 
 private:
     QString msg;

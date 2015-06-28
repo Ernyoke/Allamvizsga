@@ -54,7 +54,7 @@ void Settings::initSettingsValues() {
 
     //initialize recording codec
     recordCodecs.append(QString("wav"));
-    QString recordCodec = settings->value(record_path_label, "wav").toString();
+    QString recordCodec = settings->value(record_codec_label, "wav").toString();
     ui->codecBox->addItem(recordCodec);
     setBoxIndex(ui->codecBox, 0);
 

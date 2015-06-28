@@ -24,6 +24,7 @@ Listener::~Listener() {
 void Listener::receiveDatagramm() {
     qint64 length = socket->bytesAvailable();
     qint64 temp;
+    bool chunkError = false;
     while(length > 0) {
         QByteArray m_buffer;
         m_buffer.resize(length);
@@ -36,6 +37,13 @@ void Listener::receiveDatagramm() {
         if(timestamp < temp) {
             QByteArray content = datagram.getContent();
             SoundChunk soundChunk(&content);
+            //check if received chunk can be played on this channel
+            if((soundChunk.getSampleRate() != channelPlaying->getSampleRate()) ||
+               (soundChunk.getSampleSize() != channelPlaying->getSampleSize()) ||
+               (soundChunk.getCodec().compare(channelPlaying->getCodec()) != 0)) {
+                chunkError = true;
+                break;
+            }
             outputBuffer->insert(temp, soundChunk);
             QByteArray aux;
             if(outputBuffer->size() == 4) {
@@ -56,6 +64,11 @@ void Listener::receiveDatagramm() {
         }
         length = socket->bytesAvailable();
     }
+    if(chunkError) {
+        disconnect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+        emit errorMessage("Invalid channel settings!");
+        this->stop();
+    }
 }
 
 void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo device,
@@ -64,6 +77,7 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
     outputBuffer = new QMap<qint64, SoundChunk>();
     this->binded_port = channel->getOutPort();
     this->serverAddress = serverAddress;
+    channelPlaying = channel;
 
     format.setSampleRate(channel->getSampleRate());
     format.setSampleSize(channel->getSampleSize());
@@ -99,11 +113,11 @@ void Listener::start(QSharedPointer<ChannelInfo> channel, QAudioDeviceInfo devic
 
         m_output = m_audioOutput->start();
         connect(socket, SIGNAL(readyRead()), this, SLOT(receiveDatagramm()));
+        isPlaying = true;
+        emit changePlayButtonState(isPlaying);
         if(socket->bytesAvailable()) {
             receiveDatagramm();
         }
-        isPlaying = true;
-        emit changePlayButtonState(isPlaying);
         }
         catch(NoAudioDeviceException *exception) {
             emit errorMessage(exception->message());

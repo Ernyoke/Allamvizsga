@@ -114,6 +114,7 @@ void ServerCommunicator::sendLoginRequest(QString address) {
     if(!authentificationStatus)  {
         if(Settings::checkIpAddress(address)) {
             serverAddress = QHostAddress(address);
+
         }
         else {
             emit authentificationFailed();

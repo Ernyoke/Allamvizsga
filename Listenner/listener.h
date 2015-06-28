@@ -46,6 +46,7 @@ private:
 
     qint64 timestamp;
     int binded_port;
+    QSharedPointer<ChannelInfo> channelPlaying;
 
     bool isPlaying;
 

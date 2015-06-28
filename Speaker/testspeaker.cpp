@@ -46,7 +46,7 @@ void TestSpeaker::transferData() {
         file->seek(0);
         qDebug() << "seek";
     }
-    char buffer[buffLen];
+    char *buffer = new char[buffLen];
     int bytes = file->read(buffer, buffLen);
     QByteArray content(buffer, buffLen);
 
@@ -60,6 +60,7 @@ void TestSpeaker::transferData() {
         delete soundChunk;
         timestamp++;
     }
+    delete buffer;
 }
 
 void TestSpeaker::stop() {

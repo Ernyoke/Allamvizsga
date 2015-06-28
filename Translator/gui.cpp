@@ -155,9 +155,19 @@ void GUI::startNewChannel() {
         if(newChannelDialog->isChannelAvailable()) {
             const ChannelInfo* chInfo = newChannelDialog->getChannelInformation();
             ui->channelLangText->setText(chInfo->getLanguage());
-            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()));
-            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()));
-            ui->channelNrText->setText(QString::number(chInfo->getChannels()));
+            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()) + QString(" Hz"));
+            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()) + QString(" bits"));
+            if(chInfo->getChannels() == 1) {
+                ui->channelNrText->setText(QString("mono"));
+            }
+            else {
+                if(chInfo->getChannels() == 2) {
+                    ui->channelNrText->setText(QString("stereo"));
+                }
+                else {
+                    ui->channelNrText->setText(QString::number(chInfo->getChannels()));
+                }
+            }
             ui->codecText->setText(chInfo->getCodec());
             ui->newChannelBtn->setText("Close channel");
         }
@@ -291,6 +301,11 @@ void GUI::playbackButtonPushed() {
             delete ex;
             return;
         }
+        catch(NoAudioDeviceException *ex) {
+            errorMessage(ex->message());
+            delete ex;
+            return;
+        }
     }
     else {
         emit stopListening();
@@ -340,8 +355,8 @@ void GUI::changePlayButtonState(bool isPlaying) {
 
         ui->channelPlaying->setText(selectedChannel->getLanguage());
         ui->portPlaying->setText(QString::number(selectedChannel->getOutPort()));
-        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + "Hz");
-        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + "bits");
+        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + " Hz");
+        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + " bits");
 
     }
     else {
@@ -395,7 +410,9 @@ int GUI::getVolume() {
 
 //when volume is changed, emit signal to listener
 void GUI::volumeChangedSlot() {
-    emit volumeChanged(ui->volumeSlider->value());
+    qreal volume = ui->volumeSlider->value() / 100.0;
+    ui->volumeLabel->setText(QString::number(ui->volumeSlider->value()) + QString("%"));
+    emit volumeChanged(volume);
 }
 
 

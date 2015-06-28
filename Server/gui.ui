@@ -98,6 +98,7 @@
     </property>
     <addaction name="actionConnected_Clients"/>
     <addaction name="separator"/>
+    <addaction name="actionSettings"/>
     <addaction name="actionStop_server_and_Exit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -119,6 +120,11 @@
   <action name="actionStop_server_and_Exit">
    <property name="text">
     <string>Stop server and Exit</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>

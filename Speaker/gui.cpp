@@ -111,9 +111,19 @@ void GUI::startNewChannel() {
         if(newChannelDialog->isChannelAvailable()) {
             const ChannelInfo* chInfo = newChannelDialog->getChannelInformation();
             ui->channelLangText->setText(chInfo->getLanguage());
-            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()) + "bits");
-            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()) + "Hz");
-            ui->channelNrText->setText(QString::number(chInfo->getChannels()));
+            ui->sampleRateText->setText(QString::number(chInfo->getSampleRate()) + " Hz");
+            ui->sampleSizeText->setText(QString::number(chInfo->getSampleSize()) + " bits");
+            if(chInfo->getChannels() == 1) {
+                ui->channelNrText->setText("mono");
+            }
+            else {
+                if(chInfo->getChannels() == 2) {
+                    ui->channelNrText->setText("stereo");
+                }
+                else {
+                    ui->channelNrText->setText(QString::number(chInfo->getChannels()));
+                }
+            }
             ui->codecText->setText(chInfo->getCodec());
             ui->newChannelBtn->setText("Close channel");
         }

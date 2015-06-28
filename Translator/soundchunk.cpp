@@ -37,8 +37,20 @@ QByteArray SoundChunk::getRawSound() {
 }
 
 
-quint32 SoundChunk::getSize() {
+qint32 SoundChunk::getSize() const {
     qint32 size = sizeof(sampleRate) + sizeof(sampleSize) + sizeof(channels) + sizeof(quint32) + 2 * codec.length() +
             sizeof(quint32) + soundPacket.size();
     return size;
+}
+
+qint32 SoundChunk::getSampleRate() const {
+    return this->sampleRate;
+}
+
+qint32 SoundChunk::getSampleSize() const {
+    return this->sampleSize;
+}
+
+QString SoundChunk::getCodec() const {
+    return this->codec;
 }

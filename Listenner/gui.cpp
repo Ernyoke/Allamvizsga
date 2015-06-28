@@ -29,9 +29,6 @@ void GUI::initialize() {
     timer.setInterval(1000);
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateTime()));
 
-    //initialize statusbar
-    ui->statusBar->showMessage("Player stopped!");
-
     //create servercommunicator class
     serverCommunicator = new ServerCommunicator(this);
 
@@ -168,7 +165,7 @@ void GUI::createListenerThread() {
     connect(this, SIGNAL(startListening(QSharedPointer<ChannelInfo>, QAudioDeviceInfo, QHostAddress, qreal)),
             listenerWorker, SLOT(start(QSharedPointer<ChannelInfo>, QAudioDeviceInfo, QHostAddress, qreal)));
     connect(this, SIGNAL(stopListening()), listenerWorker, SLOT(stop()));
-    connect(listenerWorker, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)));
+    connect(listenerWorker, SIGNAL(changePlayButtonState(bool)), this, SLOT(changePlayButtonState(bool)), Qt::BlockingQueuedConnection);
     //volume
     connect(this, SIGNAL(volumeChanged(qreal)), listenerWorker, SLOT(volumeChanged(qreal)));
     //record sound
@@ -190,8 +187,8 @@ void GUI::changePlayButtonState(bool isPlaying) {
 
         ui->channelPlaying->setText(selectedChannel->getLanguage());
         ui->portPlaying->setText(QString::number(selectedChannel->getOutPort()));
-        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + "Hz");
-        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + "bits");
+        ui->sampleRatePlaying->setText(QString::number(selectedChannel->getSampleRate()) + " Hz");
+        ui->sampleSizePlaying->setText(QString::number(selectedChannel->getSampleSize()) + " bits");
 
     }
     else {
@@ -228,7 +225,9 @@ int GUI::getVolume() {
 }
 
 void GUI::volumeChangedSlot() {
-    emit volumeChanged(ui->volumeSlider->value() / 100.0);
+    qreal volume = ui->volumeSlider->value() / 100.0;
+    ui->volumeLabel->setText(QString::number(ui->volumeSlider->value()) + QString("%"));
+    emit volumeChanged(volume);
 }
 
 void GUI::changeChannelOnDoubleClick(QModelIndex index) {
